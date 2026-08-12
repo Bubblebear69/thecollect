@@ -334,6 +334,48 @@
 
 <!-- Optional: a copy of a real published day, so demo mode looks full.
      Absent (single-file / offline) → the built-in 3-meeting sample is used. -->
+<style>
+/* ---- The Collect: bottom navigation + Results / Winners / Tomorrow ---- */
+#app{ padding-bottom: 84px; }
+.tabbar{ position:fixed; bottom:0; left:0; right:0; z-index:40; display:flex;
+  background:var(--card, #141a22); border-top:1px solid rgba(128,128,128,.22);
+  padding:6px 4px calc(8px + env(safe-area-inset-bottom)); }
+.tabbar button{ flex:1; background:none; border:0; cursor:pointer; color:var(--faint,#8a94a0);
+  font:inherit; font-size:11px; font-weight:600; letter-spacing:.02em;
+  display:flex; flex-direction:column; align-items:center; gap:3px; padding:4px 2px; }
+.tabbar button.on{ color:var(--turf,#31c47c); }
+.tabbar svg{ width:22px; height:22px; }
+.tally{ display:flex; gap:8px; margin:10px 0 4px; }
+.tally .cell{ flex:1; background:var(--card,#141a22); border:1px solid rgba(128,128,128,.18);
+  border-radius:14px; padding:10px 8px; text-align:center; }
+.tally .n{ font-size:20px; font-weight:800; }
+.tally .l{ font-size:10.5px; color:var(--faint,#8a94a0); margin-top:2px; }
+.tally .good{ color:var(--turf,#31c47c); }
+.res-row{ background:var(--card,#141a22); border:1px solid rgba(128,128,128,.18);
+  border-radius:14px; padding:10px 12px; margin-bottom:8px; }
+.res-head{ display:flex; align-items:center; gap:8px; }
+.res-where{ font-weight:700; flex:1; }
+.res-time{ font-size:12px; color:var(--faint,#8a94a0); }
+.badge{ font-size:12px; font-weight:800; border-radius:999px; padding:3px 10px; white-space:nowrap; }
+.badge.won{ background:rgba(49,196,124,.16); color:var(--turf,#31c47c); }
+.badge.placed{ background:rgba(212,175,55,.14); color:#d4af37; }
+.badge.missed{ background:rgba(128,128,128,.14); color:var(--faint,#8a94a0); }
+.badge.pending{ background:rgba(128,128,128,.10); color:var(--faint,#8a94a0); font-weight:600; }
+.res-pick{ font-size:13.5px; margin-top:5px; }
+.res-div{ font-size:12px; color:var(--faint,#8a94a0); margin-top:4px; line-height:1.5; }
+.win-hero{ background:var(--card,#141a22); border:1px solid rgba(49,196,124,.35);
+  border-radius:16px; padding:14px; margin:10px 0; }
+.win-hero .big{ font-size:26px; font-weight:800; color:var(--turf,#31c47c); }
+.win-hero .sub2{ font-size:13px; color:var(--faint,#8a94a0); margin-top:3px; line-height:1.5; }
+.win-line{ display:flex; justify-content:space-between; gap:10px; padding:9px 2px;
+  border-bottom:1px solid rgba(128,128,128,.14); font-size:13.5px; }
+.win-line:last-child{ border-bottom:0; }
+.win-line .who{ font-weight:700; }
+.win-line .paid{ color:var(--turf,#31c47c); font-weight:800; white-space:nowrap; }
+.tmr-note{ font-size:12px; color:var(--faint,#8a94a0); margin:6px 0 10px; line-height:1.5; }
+.price-pill{ font-weight:800; background:rgba(212,175,55,.14); color:#d4af37;
+  border-radius:999px; padding:3px 10px; font-size:13px; white-space:nowrap; }
+</style>
 
 <script>
 /* ============================================================
@@ -372,6 +414,7 @@ const state = {
   data:  null,
   demo:  false,
   view:  { name: 'home' },
+  tab:   'today',
 };
 
 /* A compact built-in sample so the app renders instantly with no
