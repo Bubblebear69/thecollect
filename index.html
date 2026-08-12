@@ -394,6 +394,19 @@ details.guide[open] summary::before{ transform:rotate(90deg); }
 .g-chip.outsider{ background:rgba(128,128,128,.12); color:var(--faint,#8a94a0); }
 .g-note{ font-size:12.5px; color:var(--faint,#9aa4b0); line-height:1.5; margin-top:1px; }
 
+/* ---- blackbook + money chips ---- */
+.bb-btn{ background:none; border:1.5px solid rgba(128,128,128,.35); color:var(--faint,#8a94a0);
+  border-radius:9px; width:30px; height:30px; font-size:15px; cursor:pointer; flex:none;
+  display:flex; align-items:center; justify-content:center; padding:0; }
+.bb-btn.on{ border-color:rgba(212,175,55,.6); color:#D4AF37; background:rgba(212,175,55,.1); }
+.money-chip{ font-size:10px; font-weight:800; letter-spacing:.03em; border-radius:999px;
+  padding:3px 8px; background:rgba(49,196,124,.14); color:var(--turf,#31C47C);
+  border:1px solid rgba(49,196,124,.35); white-space:nowrap; }
+.bbk-run{ font-size:10.5px; font-weight:800; color:var(--turf,#31C47C); text-transform:uppercase; letter-spacing:.04em; }
+.field textarea{ width:100%; box-sizing:border-box; background:rgba(128,128,128,.1);
+  border:1px solid rgba(128,128,128,.3); border-radius:12px; color:inherit;
+  font:inherit; font-size:14px; padding:11px 12px; resize:vertical; }
+
 /* ---- landing (signed-out) ---- */
 .land-hero{ text-align:center; padding:34px 14px 26px; }
 .land-hero .mark{ width:84px; height:84px; margin:0 auto 14px; }
@@ -479,6 +492,38 @@ async function checkAccess(code){
   } catch(e){ return false; }   // needs a secure context (https)
 }
 function hasAccess(){ return localStorage.getItem(LS.access) === 'yes'; }
+
+/* -------------------------------------------------- blackbook (on-device) */
+function bbList(){
+  try { return JSON.parse(localStorage.getItem('tc_blackbook') || '[]'); }
+  catch(e){ return []; }
+}
+function bbSave(list){ localStorage.setItem('tc_blackbook', JSON.stringify(list)); }
+function bbHas(horse){
+  const h = (horse||'').toLowerCase();
+  return bbList().some(e => e.horse.toLowerCase() === h);
+}
+function bbToggle(horse){
+  let list = bbList();
+  const h = (horse||'').toLowerCase();
+  if (list.some(e => e.horse.toLowerCase() === h)){
+    list = list.filter(e => e.horse.toLowerCase() !== h);
+  } else {
+    list.push({ horse: horse, note: '', added: new Date().toISOString().slice(0,10) });
+  }
+  bbSave(list);
+}
+function bbTodayIndex(){
+  // every horse racing today -> where, so saved horses surface automatically
+  const idx = {};
+  ((state.data||{}).meetings||[]).forEach(m => (m.races||[]).forEach(r => {
+    (r.runners||[]).forEach(g => { idx[(g.horse||'').toLowerCase()] = `${m.track} ${r.race_no} · ${hhmm(r.start_time)}`; });
+    if (r.pick) idx[(r.pick.horse||'').toLowerCase()] = `${m.track} ${r.race_no} · ${hhmm(r.start_time)}`;
+  }));
+  return idx;
+}
+const bbStar = (horse) =>
+  `<button class="bb-btn ${bbHas(horse)?'on':''}" data-bb="${esc(horse)}" aria-label="Blackbook">★</button>`;
 
 // A subscriber can be sent a one-tap link — ?token=… (and optionally ?api=…) —
 // which signs them in and then drops the query so the code isn't left in the bar.
@@ -741,9 +786,11 @@ function raceCard(r, m){
         <div class="r-tags">
           ${best ? '<span class="tag best">★ Best bet</span>' : ''}
           ${val ? '<span class="tag value">Value</span>' : ''}
+          ${p.firming ? '<span class="money-chip">💰 Money coming</span>' : ''}
           <span class="r-time tnum" style="align-self:center">${esc(r.distance||'')}</span>
         </div>
       </div>
+      ${bbStar(p.horse)}
       <div class="grade ${tier}"><div class="g">${esc(p.confidence||'–')}</div><div class="lab">${tierLabel(tier)}</div></div>
     </div>
     <div class="meter"><span style="width:${gradePct(p.confidence)}%"></span></div>
@@ -760,6 +807,7 @@ function raceCard(r, m){
           <div class="g-name">${esc(g.horse)} <span class="g-chip ${esc(g.tier)}">${esc(g.label)}</span></div>
           <div class="g-note">${esc(g.comment)}</div>
         </div>
+        ${bbStar(g.horse)}
       </div>`).join('')}</details>` : ''}
   </div>`;
 }
@@ -794,6 +842,12 @@ function renderLanding(){
     <li><b>The scoreboard</b> — strike rates, streaks and the day's biggest winner</li>
     <li><b>Tomorrow's early value</b> — get set before the market wakes up</li>
   </ul></div>`;
+  if (d.free_race && d.free_race.race){
+    const fr = d.free_race;
+    h += `<div class="eyebrow" style="margin-top:14px">🎁 Today's free race — ${esc(fr.track)}, on the house</div>
+      <div class="tmr-note" style="margin-top:0">Every race looks like this inside — the pick, the reasoning, the exotics and a line on every runner.</div>`;
+    h += raceCard(fr.race, fr);
+  }
   h += `<div class="price-card"><div class="p">$25 / week</div>
     <div class="s">Coming soon. The Collect is currently <b>invite-only</b> while our
     founding testers put it through its paces.</div></div>`;
@@ -874,19 +928,79 @@ const NAV_ICONS = {
   results:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
   winners:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 0 1-10 0Z"/><path d="M17 5h3a2 2 0 0 1-2 4h-1M7 5H4a2 2 0 0 0 2 4h1"/></svg>',
   tomorrow: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3M5.6 6.6l2.1 2.1M3 13h3M18 13h3M16.3 8.7l2.1-2.1M7 17a5 5 0 0 1 10 0"/><path d="M3 21h18"/></svg>',
+  blackbook:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V4a2 2 0 0 0-2-2H6.5A2.5 2.5 0 0 0 4 4.5v15A2.5 2.5 0 0 0 6.5 22H20v-5"/><path d="m12 6 1.2 2.4 2.6.4-1.9 1.9.4 2.6-2.3-1.2-2.3 1.2.4-2.6-1.9-1.9 2.6-.4z" stroke-width="1.4"/></svg>',
 };
 function navBar(){
-  const tabs = [['today','Today'],['results','Results'],['winners','Winners'],['tomorrow','Tomorrow']];
+  const tabs = [['today','Today'],['results','Results'],['winners','Winners'],['tomorrow','Tomorrow'],['blackbook','Blackbook']];
   return '<nav class="tabbar">' + tabs.map(([k,label]) =>
     `<button data-tab="${k}" class="${state.tab===k?'on':''}">${NAV_ICONS[k]}<span>${label}</span></button>`
   ).join('') + '</nav>';
 }
 function renderTab(){
   state.view = { name:'home' };
-  if (state.tab === 'results')  return renderResults();
-  if (state.tab === 'winners')  return renderWinners();
-  if (state.tab === 'tomorrow') return renderTomorrow();
+  if (state.tab === 'results')   return renderResults();
+  if (state.tab === 'winners')   return renderWinners();
+  if (state.tab === 'tomorrow')  return renderTomorrow();
+  if (state.tab === 'blackbook') return renderBlackbook();
   return renderHome();
+}
+
+/* ------------------------------------------- render: blackbook */
+function renderBlackbook(){
+  const d = state.data || {};
+  const eng = d.blackbook || {};
+  const mine = bbList();
+  const today = bbTodayIndex();
+  let h = topBar();
+  h += '<div class="fade">';
+  h += `<div class="datehead"><div class="d">Blackbook</div><div class="c tnum">${esc(prettyDate(d.date))}</div></div>`;
+
+  h += `<div class="eyebrow">★ Your blackbook · ${mine.length}</div>`;
+  if (!mine.length){
+    h += `<div class="banner"><span>★</span><div>Tap the <b>★</b> on any runner — in a race card or the full race guide — and it lands here. When that horse next races, it lights up automatically.</div></div>`;
+  } else {
+    mine.forEach((e, i) => {
+      const running = today[e.horse.toLowerCase()];
+      h += `<div class="res-row ${running?'iswon':''}">
+        <div class="res-head"><span class="res-where">${esc(e.horse)}</span>
+          ${running ? `<span class="bbk-run">Runs today · ${esc(running)}</span>` : `<span class="res-time tnum">saved ${esc(e.added||'')}</span>`}
+          <button class="bb-btn on" data-bbdel="${i}" aria-label="Remove">✕</button></div>
+        <div class="res-div">${e.note ? esc(e.note) : '<i>no note yet</i>'} · <a href="#" data-bbnote="${i}" style="color:var(--turf,#31C47C)">edit note</a></div>
+      </div>`;
+    });
+  }
+
+  const section = (title, hint, list) => {
+    if (!list || !list.length) return '';
+    let s = `<div class="eyebrow">${title}</div><div class="tmr-note" style="margin-top:0">${hint}</div>`;
+    list.forEach(e => {
+      s += `<div class="res-row">
+        <div class="res-head"><span class="res-where">${esc(e.horse)}</span>
+          <span class="res-time tnum">${esc(e.seen)}</span>${bbStar(e.horse)}</div>
+        <div class="res-div">${esc(e.note)}</div>
+      </div>`;
+    });
+    return s;
+  };
+  h += section('The Engine\'s Blackbook — quiet achievers',
+    'Went far better than the result reads. The engine files these itself, every night.', eng.quiet);
+  h += section('The Engine\'s Blackbook — bias victims',
+    'Beaten by the track pattern, not their ability. Forgive the run.', eng.bias);
+  if ((!eng.quiet || !eng.quiet.length) && (!eng.bias || !eng.bias.length)){
+    h += `<div class="eyebrow">The Engine's Blackbook</div>
+      <div class="banner"><span>🤖</span><div>The engine files horses here automatically — unlucky runs, bias victims, quiet achievers. New entries land after each race day.</div></div>`;
+  }
+  h += legal() + '</div>' + navBar();
+  app().innerHTML = h;
+  window.scrollTo(0,0);
+}
+function noteSheet(i){
+  const e = bbList()[i];
+  if (!e) return;
+  openSheet(`<h3>${esc(e.horse)}</h3>
+    <div class="field"><label for="bb-note">Your note</label>
+    <textarea id="bb-note" rows="3" placeholder="why you liked it…">${esc(e.note||'')}</textarea></div>
+    <button class="btn" data-bbnote-save="${i}">Save note</button>`);
 }
 
 /* ------------------------------------------- render: results */
@@ -1064,13 +1178,33 @@ async function boot(){
 }
 
 document.addEventListener('click', async (e) => {
-  const t = e.target.closest('[data-tab],[data-meeting],[data-back],[data-settings],[data-theme-toggle],[data-signin],[data-retry],[data-save-settings],[data-signout],[data-goto],[data-access]');
+  const t = e.target.closest('[data-tab],[data-meeting],[data-back],[data-settings],[data-theme-toggle],[data-signin],[data-retry],[data-save-settings],[data-signout],[data-goto],[data-access],[data-bb],[data-bbdel],[data-bbnote],[data-bbnote-save]');
   if (!t) {
     if (e.target.id === 'scrim') closeSheet();
     return;
   }
 
-  if (t.hasAttribute('data-access')) {
+  if (t.hasAttribute('data-bb')) {
+    e.preventDefault();
+    bbToggle(t.getAttribute('data-bb'));
+    t.classList.toggle('on');
+  }
+  else if (t.hasAttribute('data-bbdel')) {
+    const list = bbList(); list.splice(+t.getAttribute('data-bbdel'), 1); bbSave(list);
+    renderBlackbook();
+  }
+  else if (t.hasAttribute('data-bbnote')) {
+    e.preventDefault();
+    noteSheet(+t.getAttribute('data-bbnote'));
+  }
+  else if (t.hasAttribute('data-bbnote-save')) {
+    const i = +t.getAttribute('data-bbnote-save');
+    const list = bbList();
+    if (list[i]){ list[i].note = (($('#bb-note')||{}).value||'').trim(); bbSave(list); }
+    closeSheet();
+    renderBlackbook();
+  }
+  else if (t.hasAttribute('data-access')) {
     const code = ($('#acc')||{}).value || '';
     const msg = $('#amsg');
     if (msg){ msg.className='msg'; msg.textContent='Checking…'; }
