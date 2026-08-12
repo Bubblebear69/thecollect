@@ -588,7 +588,7 @@ function renderHome(){
     h += '</div></div>';
   }
 
-  h += `<div class="eyebrow">All meetings</div><div class="m-list">`;
+  h += `<div class="eyebrow">All meetings</div><div class="m-list" data-mlist>`;
   (d.meetings||[]).forEach((m, i) => {
     const nb = meetingBB(m);
     h += `<button class="m-card" data-meeting="${i}">
@@ -606,6 +606,7 @@ function renderHome(){
   h += '</div>';
   h += legal();
   h += '</div>';
+  h += navBar();
   app().innerHTML = h;
 }
 
@@ -626,6 +627,7 @@ function renderMeeting(idx){
   h += '</div>';
   h += legal();
   h += '</div>';
+  h += navBar();
   app().innerHTML = h;
   app().scrollIntoView({ block:'start' });
   window.scrollTo(0,0);
@@ -718,6 +720,135 @@ function topBar(minimal){
   </header>`;
 }
 
+/* ------------------------------------------- bottom navigation */
+const NAV_ICONS = {
+  today:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17.3 6.8 20l1-5.8-4.2-4.1 5.8-.8L12 4l2.6 5.3 5.8.8-4.2 4.1 1 5.8z"/></svg>',
+  results:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
+  winners:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 0 1-10 0Z"/><path d="M17 5h3a2 2 0 0 1-2 4h-1M7 5H4a2 2 0 0 0 2 4h1"/></svg>',
+  tomorrow: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3M5.6 6.6l2.1 2.1M3 13h3M18 13h3M16.3 8.7l2.1-2.1M7 17a5 5 0 0 1 10 0"/><path d="M3 21h18"/></svg>',
+};
+function navBar(){
+  const tabs = [['today','Today'],['results','Results'],['winners','Winners'],['tomorrow','Tomorrow']];
+  return '<nav class="tabbar">' + tabs.map(([k,label]) =>
+    `<button data-tab="${k}" class="${state.tab===k?'on':''}">${NAV_ICONS[k]}<span>${label}</span></button>`
+  ).join('') + '</nav>';
+}
+function renderTab(){
+  state.view = { name:'home' };
+  if (state.tab === 'results')  return renderResults();
+  if (state.tab === 'winners')  return renderWinners();
+  if (state.tab === 'tomorrow') return renderTomorrow();
+  return renderHome();
+}
+
+/* ------------------------------------------- render: results */
+function renderResults(){
+  const d = state.data, res = d.results || [];
+  const sb = d.scoreboard || null;
+  let h = topBar();
+  h += '<div class="fade">';
+  h += `<div class="datehead"><div class="d">Results</div><div class="c tnum">${esc(prettyDate(d.date))}</div></div>`;
+  const settled = res.filter(r => r.settled);
+  if (sb && sb.races){
+    const profit = Math.round(sb.returned - sb.outlay);
+    h += `<div class="tally">
+      <div class="cell"><div class="n tnum">${sb.wins}<span style="font-size:13px;color:var(--faint,#8a94a0)">/${sb.races}</span></div><div class="l">Winners</div></div>
+      <div class="cell"><div class="n tnum">${Math.round(sb.win_pct)}%</div><div class="l">Strike rate</div></div>
+      <div class="cell"><div class="n tnum ${profit>=0?'good':''}">${profit>=0?'+':'−'}$${Math.abs(profit)}</div><div class="l">$20 on each pick</div></div>
+    </div>`;
+  }
+  if (!res.length){
+    h += `<div class="banner"><span>⏳</span><div>Results appear here as each race settles through the day.</div></div>`;
+  } else {
+    let lastTrack = '';
+    res.forEach(r => {
+      if (r.track !== lastTrack){ h += `<div class="eyebrow">${esc(r.track)}</div>`; lastTrack = r.track; }
+      const won = r.outcome === 'won';
+      const p1 = (r.placings||[])[0];
+      let badge;
+      if (won && p1 && p1.win_div) badge = `<span class="badge won">WON $${(+p1.win_div).toFixed(2)}</span>`;
+      else if (won) badge = '<span class="badge won">WON</span>';
+      else if (r.outcome === 'placed') badge = '<span class="badge placed">▲ placed</span>';
+      else if (r.settled) badge = '<span class="badge missed">missed</span>';
+      else badge = `<span class="badge pending">${esc(r.time)||'to come'}</span>`;
+      h += `<div class="res-row">
+        <div class="res-head"><span class="res-where">${esc(r.race_no)}</span><span class="res-time tnum">${esc(r.time)}</span>${badge}</div>
+        ${r.pick ? `<div class="res-pick">Our pick: <b>${esc(r.pick)}</b>${r.top5?' <span class="star">★</span>':''}</div>` : ''}
+        ${r.settled && (r.placings||[]).length ? `<div class="res-div">${
+          r.placings.map(p => `${p.pos}. #${esc(p.number)} ${esc(p.horse)}${p.win_div?` $${(+p.win_div).toFixed(2)}`:(p.place_div?` ($${(+p.place_div).toFixed(2)})`:'')}`).join(' &nbsp;·&nbsp; ')
+        }${r.exotics && r.exotics.Trifecta ? ` &nbsp;·&nbsp; Trifecta $${(+r.exotics.Trifecta).toFixed(2)}` : ''}</div>` : ''}
+      </div>`;
+    });
+  }
+  h += legal() + '</div>' + navBar();
+  app().innerHTML = h;
+  window.scrollTo(0,0);
+}
+
+/* ------------------------------------------- render: winners */
+function renderWinners(){
+  const d = state.data, sb = d.scoreboard;
+  let h = topBar();
+  h += '<div class="fade">';
+  h += `<div class="datehead"><div class="d">Winners</div><div class="c tnum">${esc(prettyDate(d.date))}</div></div>`;
+  if (!sb || !sb.races){
+    h += `<div class="banner"><span>🏆</span><div>The scoreboard fills in as today's races settle. Check back after the first results.</div></div>`;
+  } else {
+    h += `<div class="tally">
+      <div class="cell"><div class="n tnum good">${Math.round(sb.win_pct)}%</div><div class="l">Winners</div></div>
+      <div class="cell"><div class="n tnum">${Math.round(sb.place_pct)}%</div><div class="l">Ran top 3</div></div>
+      <div class="cell"><div class="n tnum">${sb.quinellas||0}</div><div class="l">Quinellas</div></div>
+    </div>`;
+    if (sb.biggest){
+      h += `<div class="win-hero"><div class="big">$${(+sb.biggest.price).toFixed(2)} winner</div>
+        <div class="sub2"><b>${esc(sb.biggest.horse)}</b> saluted at ${esc(sb.biggest.race)} — $20 paid $${Math.round(sb.biggest.collect)}.</div></div>`;
+    }
+    if (sb.play){
+      h += `<div class="banner"><span>🎯</span><div><b>Play of the day:</b> ${esc(sb.play)}</div></div>`;
+    }
+    if ((sb.winners||[]).length){
+      h += `<div class="eyebrow">Today's winning picks</div><div class="res-row">`;
+      sb.winners.forEach(w => {
+        h += `<div class="win-line"><span class="who">${esc(w.horse)} <span class="res-time">${esc(w.race)}</span></span><span class="paid tnum">$${(+w.price).toFixed(2)}</span></div>`;
+      });
+      h += `</div>`;
+    }
+    const st = sb.streaks || {};
+    h += `<div class="eyebrow">Form</div><div class="res-row">
+      <div class="win-line"><span>Days in a row with a winning pick</span><b class="tnum">${st.winner_days||0}</b></div>
+      <div class="win-line"><span>Last 7 days — winners / top-3</span><b class="tnum">${Math.round((sb.t7||{}).win_pct||0)}% / ${Math.round((sb.t7||{}).place_pct||0)}%</b></div>
+      <div class="win-line"><span>Last 30 days — winners / top-3</span><b class="tnum">${Math.round((sb.t30||{}).win_pct||0)}% / ${Math.round((sb.t30||{}).place_pct||0)}%</b></div>
+      <div class="win-line"><span>Average winning price today</span><b class="tnum">$${(+(sb.avg_price||0)).toFixed(2)}</b></div>
+    </div>`;
+  }
+  h += legal() + '</div>' + navBar();
+  app().innerHTML = h;
+  window.scrollTo(0,0);
+}
+
+/* ------------------------------------------- render: tomorrow */
+function renderTomorrow(){
+  const d = state.data, tm = d.tomorrow || [];
+  let h = topBar();
+  h += '<div class="fade">';
+  h += `<div class="datehead"><div class="d">Tomorrow</div><div class="c">Early value</div></div>`;
+  h += `<div class="tmr-note">Our strongest early picks at today's fixed price — get set before the market wakes up. Early prices move; fixed-odds bets refund if your horse scratches.</div>`;
+  if (!tm.length){
+    h += `<div class="banner"><span>🌅</span><div>Tomorrow's early picks land here once the fields and prices are up — usually by early evening.</div></div>`;
+  } else {
+    tm.forEach(t => {
+      const when = t.days === 1 ? 'Tomorrow' : `In ${t.days} days`;
+      h += `<div class="res-row">
+        <div class="res-head"><span class="res-where">${esc(t.track)} ${esc(t.race_no)}</span><span class="res-time tnum">${when} · ${esc(t.time)}</span><span class="price-pill tnum">$${(+t.price).toFixed(2)}</span></div>
+        <div class="res-pick">Our early pick: <b>${esc(t.pick)}</b></div>
+      </div>`;
+    });
+  }
+  h += legal() + '</div>' + navBar();
+  app().innerHTML = h;
+  window.scrollTo(0,0);
+}
+
 function legal(){
   return `<footer class="legal">
     <b>18+ only. Please gamble responsibly.</b><br/>
@@ -773,7 +904,7 @@ async function boot(){
   const r = await loadPicks();
   if (r.ok){
     state.view = { name:'home' };
-    renderHome();
+    renderTab();
   } else if (r.gate === 'signin' || r.gate === 'subscribe'){
     const pv = await loadPreview();
     renderGate(r.gate, pv);
@@ -783,13 +914,17 @@ async function boot(){
 }
 
 document.addEventListener('click', async (e) => {
-  const t = e.target.closest('[data-meeting],[data-back],[data-settings],[data-theme-toggle],[data-signin],[data-retry],[data-save-settings],[data-signout],[data-goto]');
+  const t = e.target.closest('[data-tab],[data-meeting],[data-back],[data-settings],[data-theme-toggle],[data-signin],[data-retry],[data-save-settings],[data-signout],[data-goto]');
   if (!t) {
     if (e.target.id === 'scrim') closeSheet();
     return;
   }
 
-  if (t.hasAttribute('data-meeting')) {
+  if (t.hasAttribute('data-tab')) {
+    state.tab = t.getAttribute('data-tab');
+    renderTab();
+  }
+  else if (t.hasAttribute('data-meeting')) {
     const i = +t.getAttribute('data-meeting');
     state.view = { name:'meeting', idx:i };
     renderMeeting(i);
@@ -801,6 +936,7 @@ document.addEventListener('click', async (e) => {
   }
   else if (t.hasAttribute('data-back')) {
     state.view = { name:'home' };
+    state.tab = 'today';
     renderHome();
   }
   else if (t.hasAttribute('data-theme-toggle')) {
