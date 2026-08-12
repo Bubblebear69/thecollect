@@ -493,6 +493,27 @@ async function checkAccess(code){
 }
 function hasAccess(){ return localStorage.getItem(LS.access) === 'yes'; }
 
+/* ------------------------------------------ keep the data fresh, silently */
+let _lastFetch = 0;
+async function refreshIfStale(force){
+  // A PWA resumed from the home screen never reloads itself — so we do.
+  if (!force && Date.now() - _lastFetch < 5 * 60 * 1000) return;
+  const before = (state.data||{}).generated_at || '';
+  const r = await loadPicks();
+  _lastFetch = Date.now();
+  if (r.ok && ((state.data||{}).generated_at || '') !== before){
+    // fresh publish — repaint whatever the user is looking at
+    if (!hasAccess()) return renderLanding();
+    if (state.view && state.view.name === 'meeting') return renderTab();
+    renderTab();
+  }
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') refreshIfStale(false);
+});
+setInterval(() => { if (document.visibilityState === 'visible') refreshIfStale(false); },
+            10 * 60 * 1000);
+
 /* -------------------------------------------------- blackbook (on-device) */
 function bbList(){
   try { return JSON.parse(localStorage.getItem('tc_blackbook') || '[]'); }
