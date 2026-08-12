@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#0E1217" media="(prefers-color-scheme: dark)" />
+<meta name="theme-color" content="#F2F4F1" media="(prefers-color-scheme: light)" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="The Collect" />
+<meta name="description" content="Today's evidence-backed racing selections — every pick with the reasoning behind it." />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="icon" href="icon.svg" type="image/svg+xml" />
+<link rel="apple-touch-icon" href="icon.svg" />
+<title>The Collect — Today's Picks</title>
+<link rel="icon" type="image/svg+xml" href="icon.svg" />
+<style>
+  :root {
+    --ink: #0E1217;
+    --surface: #161C24;
+    --surface-2: #1D2530;
+    --raise: #232C38;
+    --line: #2A343F;
+    --text: #EAF0F4;
+    --muted: #93A1AE;
+    --faint: #63707C;
+    --turf: #3DBE7A;
+    --turf-soft: rgba(61, 190, 122, 0.14);
+    --brass: #E0B357;
+    --brass-soft: rgba(224, 179, 87, 0.14);
+    --value: #74A9FF;
+    --value-soft: rgba(116, 169, 255, 0.14);
+    --shadow: 0 1px 0 rgba(255,255,255,0.02), 0 8px 24px rgba(0,0,0,0.35);
+    --radius: 16px;
+    --radius-sm: 11px;
+    --maxw: 520px;
+    color-scheme: dark;
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      --ink: #EEF1EC;
+      --surface: #FFFFFF;
+      --surface-2: #F5F8F3;
+      --raise: #EDF1EA;
+      --line: #E0E5DD;
+      --text: #131A16;
+      --muted: #5C6960;
+      --faint: #8A968C;
+      --turf: #1C8A50;
+      --turf-soft: rgba(28, 138, 80, 0.10);
+      --brass: #9C7419;
+      --brass-soft: rgba(156, 116, 25, 0.12);
+      --value: #2E6FD6;
+      --value-soft: rgba(46, 111, 214, 0.10);
+      --shadow: 0 1px 2px rgba(20,30,24,0.06), 0 10px 24px rgba(20,30,24,0.08);
+      color-scheme: light;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ink:#0E1217; --surface:#161C24; --surface-2:#1D2530; --raise:#232C38;
+    --line:#2A343F; --text:#EAF0F4; --muted:#93A1AE; --faint:#63707C;
+    --turf:#3DBE7A; --turf-soft:rgba(61,190,122,0.14); --brass:#E0B357;
+    --brass-soft:rgba(224,179,87,0.14); --value:#74A9FF; --value-soft:rgba(116,169,255,0.14);
+    --shadow:0 1px 0 rgba(255,255,255,0.02),0 8px 24px rgba(0,0,0,0.35); color-scheme:dark;
+  }
+  :root[data-theme="light"] {
+    --ink:#EEF1EC; --surface:#FFFFFF; --surface-2:#F5F8F3; --raise:#EDF1EA;
+    --line:#E0E5DD; --text:#131A16; --muted:#5C6960; --faint:#8A968C;
+    --turf:#1C8A50; --turf-soft:rgba(28,138,80,0.10); --brass:#9C7419;
+    --brass-soft:rgba(156,116,25,0.12); --value:#2E6FD6; --value-soft:rgba(46,111,214,0.10);
+    --shadow:0 1px 2px rgba(20,30,24,0.06),0 10px 24px rgba(20,30,24,0.08); color-scheme:light;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--ink);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.45;
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+  #app {
+    max-width: var(--maxw);
+    margin: 0 auto;
+    padding: 0 16px calc(96px + env(safe-area-inset-bottom));
+    padding-top: env(safe-area-inset-top);
+  }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  .tnum { font-variant-numeric: tabular-nums; }
+
+  /* ---------- top bar ---------- */
+  header.bar {
+    position: sticky; top: 0; z-index: 20;
+    display: flex; align-items: center; gap: 12px;
+    padding: calc(env(safe-area-inset-top) + 12px) 2px 12px;
+    background: linear-gradient(var(--ink) 72%, rgba(14,18,23,0));
+  }
+  :root[data-theme="light"] header.bar,
+  @media (prefers-color-scheme: light) { }
+  .brand { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+  .mark {
+    width: 34px; height: 34px; flex: 0 0 auto; border-radius: 9px;
+    background: var(--turf-soft);
+    display: grid; place-items: center;
+    border: 1px solid color-mix(in srgb, var(--turf) 35%, transparent);
+  }
+  .mark svg { width: 20px; height: 20px; display: block; }
+  .brand h1 {
+    margin: 0; font-size: 15px; font-weight: 700; letter-spacing: .2px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .brand .sub {
+    margin: 0; font-size: 11px; color: var(--muted); letter-spacing: .06em;
+    text-transform: uppercase; font-weight: 600;
+  }
+  .icon-btn {
+    width: 38px; height: 38px; flex: 0 0 auto; border-radius: 10px;
+    background: var(--surface); border: 1px solid var(--line);
+    display: grid; place-items: center; color: var(--muted);
+  }
+  .icon-btn:active { transform: scale(0.94); }
+  .icon-btn svg { width: 19px; height: 19px; }
+
+  /* ---------- generic ---------- */
+  .eyebrow {
+    font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--faint); margin: 22px 2px 10px;
+  }
+  .datehead { display: flex; align-items: baseline; justify-content: space-between; margin: 6px 2px 2px; }
+  .datehead .d { font-size: 22px; font-weight: 800; letter-spacing: -.4px; text-wrap: balance; }
+  .datehead .c { font-size: 12px; color: var(--muted); font-weight: 600; }
+
+  .banner {
+    margin: 12px 0 2px; padding: 10px 13px; border-radius: var(--radius-sm);
+    background: var(--brass-soft); border: 1px solid color-mix(in srgb, var(--brass) 34%, transparent);
+    color: var(--text); font-size: 12.5px; display: flex; gap: 9px; align-items: center;
+  }
+  .banner b { color: var(--brass); }
+
+  /* ---------- best bets rail ---------- */
+  .bb-wrap { margin-top: 4px; }
+  .bb-scroll {
+    display: flex; gap: 12px; overflow-x: auto; padding: 4px 2px 10px;
+    scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .bb-scroll::-webkit-scrollbar { display: none; }
+  .bb-card {
+    scroll-snap-align: start; flex: 0 0 78%; max-width: 300px;
+    text-align: left; border-radius: var(--radius);
+    background:
+      radial-gradient(120% 140% at 100% 0%, var(--brass-soft), transparent 60%),
+      var(--surface);
+    border: 1px solid color-mix(in srgb, var(--brass) 40%, var(--line));
+    box-shadow: var(--shadow); padding: 14px 15px; display: block; color: inherit;
+  }
+  .bb-card:active { transform: scale(0.985); }
+  .bb-top { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .star { color: var(--brass); font-size: 13px; }
+  .bb-tag { font-size: 10.5px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--brass); }
+  .bb-where { margin-left: auto; font-size: 11px; color: var(--muted); font-weight: 600; }
+  .bb-runner { display: flex; align-items: center; gap: 10px; }
+  .saddle {
+    width: 34px; height: 34px; flex: 0 0 auto; border-radius: 8px;
+    background: var(--raise); border: 1px solid var(--line);
+    display: grid; place-items: center; font-weight: 800; font-size: 15px;
+  }
+  .bb-card .saddle { background: var(--brass-soft); border-color: color-mix(in srgb, var(--brass) 45%, transparent); color: var(--brass); }
+  .bb-name { font-weight: 700; font-size: 16px; letter-spacing: -.2px; }
+  .bb-race { font-size: 11.5px; color: var(--muted); margin-top: 1px; }
+  .bb-why { margin-top: 11px; font-size: 12.5px; color: var(--muted); line-height: 1.4; }
+
+  /* ---------- meeting list ---------- */
+  .m-list { display: flex; flex-direction: column; gap: 10px; }
+  .m-card {
+    width: 100%; text-align: left; border-radius: var(--radius);
+    background: var(--surface); border: 1px solid var(--line);
+    box-shadow: var(--shadow); padding: 14px 15px; display: flex; align-items: center; gap: 13px;
+  }
+  .m-card:active { transform: scale(0.99); }
+  .m-flag {
+    font-size: 10px; font-weight: 800; letter-spacing: .06em; padding: 3px 6px;
+    border-radius: 6px; background: var(--surface-2); color: var(--muted); border: 1px solid var(--line);
+  }
+  .m-main { flex: 1; min-width: 0; }
+  .m-track { font-weight: 700; font-size: 16px; letter-spacing: -.2px; }
+  .m-meta { font-size: 12px; color: var(--muted); margin-top: 2px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .going {
+    font-weight: 600; padding: 1px 7px; border-radius: 999px; font-size: 11px;
+    background: var(--surface-2); border: 1px solid var(--line);
+  }
+  .m-right { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; }
+  .m-bb {
+    display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 700;
+    color: var(--brass); background: var(--brass-soft); padding: 3px 7px; border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--brass) 30%, transparent);
+  }
+  .chev { color: var(--faint); }
+
+  /* ---------- meeting detail ---------- */
+  .backbar { display: flex; align-items: center; gap: 6px; margin: 6px 0 2px; }
+  .back {
+    display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px 8px 8px;
+    border-radius: 999px; background: var(--surface); border: 1px solid var(--line);
+    font-size: 13px; font-weight: 600; color: var(--text);
+  }
+  .back:active { transform: scale(0.96); }
+  .detail-head { margin: 12px 2px 6px; }
+  .detail-head .t { font-size: 24px; font-weight: 800; letter-spacing: -.5px; }
+  .detail-head .m { font-size: 13px; color: var(--muted); margin-top: 3px; display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
+
+  .r-list { display: flex; flex-direction: column; gap: 11px; margin-top: 4px; }
+  .r-card {
+    border-radius: var(--radius); background: var(--surface); border: 1px solid var(--line);
+    box-shadow: var(--shadow); padding: 14px 15px; position: relative; overflow: hidden;
+  }
+  .r-card.best { border-color: color-mix(in srgb, var(--brass) 50%, var(--line)); }
+  .r-card.best::before {
+    content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--brass);
+  }
+  .r-top { display: flex; align-items: center; gap: 9px; margin-bottom: 12px; }
+  .r-no {
+    font-size: 11px; font-weight: 800; letter-spacing: .04em; color: var(--muted);
+    background: var(--surface-2); border: 1px solid var(--line); padding: 3px 8px; border-radius: 7px;
+  }
+  .r-name { font-size: 12.5px; color: var(--muted); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .r-time { font-size: 12px; color: var(--faint); font-weight: 600; flex: 0 0 auto; }
+
+  .r-runner { display: flex; align-items: center; gap: 12px; }
+  .r-runner .saddle { width: 40px; height: 40px; font-size: 17px; }
+  .r-card.best .saddle { background: var(--brass-soft); border-color: color-mix(in srgb, var(--brass) 45%, transparent); color: var(--brass); }
+  .r-id { flex: 1; min-width: 0; }
+  .r-horse { font-weight: 700; font-size: 18px; letter-spacing: -.3px; line-height: 1.15; }
+  .r-tags { display: flex; gap: 6px; margin-top: 5px; flex-wrap: wrap; }
+  .tag {
+    font-size: 10.5px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase;
+    padding: 3px 7px; border-radius: 999px; display: inline-flex; align-items: center; gap: 3px;
+  }
+  .tag.best { color: var(--brass); background: var(--brass-soft); border: 1px solid color-mix(in srgb, var(--brass) 34%, transparent); }
+  .tag.value { color: var(--value); background: var(--value-soft); border: 1px solid color-mix(in srgb, var(--value) 34%, transparent); }
+
+  .grade {
+    flex: 0 0 auto; text-align: center; min-width: 46px;
+  }
+  .grade .g { font-size: 20px; font-weight: 800; letter-spacing: -.5px; line-height: 1; }
+  .grade.high .g { color: var(--turf); }
+  .grade.solid .g { color: var(--text); }
+  .grade.fair .g { color: var(--muted); }
+  .grade .lab { font-size: 9.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--faint); margin-top: 4px; }
+
+  .meter { height: 5px; border-radius: 999px; background: var(--raise); margin: 13px 0 12px; overflow: hidden; }
+  .meter > span { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, color-mix(in srgb, var(--turf) 55%, var(--surface)), var(--turf)); }
+
+  .verdict { font-size: 14px; font-weight: 650; letter-spacing: -.1px; margin-bottom: 9px; text-wrap: pretty; }
+  .why { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 7px; }
+  .why li { position: relative; padding-left: 18px; font-size: 13px; color: var(--muted); line-height: 1.4; text-wrap: pretty; }
+  .why li::before {
+    content: ""; position: absolute; left: 2px; top: 7px; width: 6px; height: 6px; border-radius: 2px;
+    background: var(--turf); opacity: .85;
+  }
+
+  /* ---------- gate / preview ---------- */
+  .hero { text-align: center; padding: 40px 8px 8px; }
+  .hero .mark { width: 56px; height: 56px; margin: 0 auto 18px; border-radius: 15px; }
+  .hero .mark svg { width: 32px; height: 32px; }
+  .hero h2 { font-size: 27px; font-weight: 800; letter-spacing: -.6px; margin: 0 0 8px; text-wrap: balance; }
+  .hero p { color: var(--muted); font-size: 15px; margin: 0 auto; max-width: 34ch; }
+  .stats-row { display: flex; gap: 10px; margin: 26px 0 20px; }
+  .stat {
+    flex: 1; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 15px 10px; text-align: center; box-shadow: var(--shadow);
+  }
+  .stat .n { font-size: 26px; font-weight: 800; letter-spacing: -.5px; }
+  .stat.gold .n { color: var(--brass); }
+  .stat .l { font-size: 11px; color: var(--muted); margin-top: 3px; font-weight: 600; }
+  .tracks { display: flex; flex-wrap: wrap; gap: 7px; justify-content: center; margin-bottom: 24px; }
+  .tracks span { font-size: 12px; color: var(--muted); background: var(--surface); border: 1px solid var(--line); padding: 4px 10px; border-radius: 999px; }
+  .field { margin: 18px 0 10px; }
+  .field label { display: block; font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); margin-bottom: 7px; }
+  .field input {
+    width: 100%; padding: 14px 15px; border-radius: 13px; background: var(--surface);
+    border: 1px solid var(--line); color: var(--text); font-size: 16px; outline: none;
+  }
+  .field input:focus { border-color: var(--turf); box-shadow: 0 0 0 3px var(--turf-soft); }
+  .btn {
+    width: 100%; padding: 15px; border-radius: 13px; border: none; font-size: 16px; font-weight: 700;
+    background: var(--turf); color: #06130C; letter-spacing: .1px;
+  }
+  :root[data-theme="dark"] .btn, @media (prefers-color-scheme: dark) { }
+  .btn:active { transform: scale(0.985); }
+  .btn.ghost { background: var(--surface); color: var(--text); border: 1px solid var(--line); }
+  .msg { font-size: 13px; margin-top: 12px; text-align: center; min-height: 18px; }
+  .msg.err { color: #E8836B; }
+  .msg.ok { color: var(--turf); }
+
+  /* ---------- sheet ---------- */
+  .scrim { position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 40; opacity: 0; pointer-events: none; transition: opacity .18s ease; }
+  .scrim.open { opacity: 1; pointer-events: auto; }
+  .sheet {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 50;
+    max-width: var(--maxw); margin: 0 auto;
+    background: var(--surface); border: 1px solid var(--line); border-bottom: none;
+    border-radius: 20px 20px 0 0; padding: 8px 18px calc(26px + env(safe-area-inset-bottom));
+    transform: translateY(102%); transition: transform .22s cubic-bezier(.2,.8,.2,1);
+    box-shadow: 0 -14px 40px rgba(0,0,0,.4);
+  }
+  .sheet.open { transform: translateY(0); }
+  .grab { width: 38px; height: 4px; border-radius: 999px; background: var(--line); margin: 8px auto 14px; }
+  .sheet h3 { margin: 0 0 4px; font-size: 18px; font-weight: 800; letter-spacing: -.3px; }
+  .sheet .hint { font-size: 13px; color: var(--muted); margin: 0 0 14px; }
+
+  /* ---------- footer ---------- */
+  footer.legal { margin-top: 30px; padding: 18px 4px 8px; border-top: 1px solid var(--line); color: var(--faint); font-size: 11.5px; line-height: 1.55; }
+  footer.legal b { color: var(--muted); }
+
+  .empty { text-align: center; color: var(--muted); padding: 60px 20px; }
+  .spin { width: 26px; height: 26px; margin: 60px auto; border: 3px solid var(--line); border-top-color: var(--turf); border-radius: 50%; animation: sp .8s linear infinite; }
+  @keyframes sp { to { transform: rotate(360deg); } }
+  .fade { animation: fade .28s ease both; }
+  @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) {
+    *, .sheet, .scrim { transition: none !important; animation: none !important; }
+  }
+</style>
+</head>
+<body>
+  <div id="app"><div class="spin"></div></div>
+
+  <div class="scrim" id="scrim"></div>
+  <div class="sheet" id="sheet"></div>
+
+<!-- Optional: a copy of a real published day, so demo mode looks full.
+     Absent (single-file / offline) → the built-in 3-meeting sample is used. -->
+
+<script>
+/* ============================================================
+   Strategic Logic — phone front-end
+   Talks to the cloud backend (cloud/main.py). No method, no
+   scores, no internals ever reach this file — it only renders
+   the sanitised package: picks + a short, varied "why".
+   ============================================================ */
+
+/* Set this to your deployed picks service before shipping to customers, e.g.
+   "https://strategic-logic-api.onrender.com". Left blank it runs in demo mode
+   (renders the sample) so the app is never blank during development. */
+const DEFAULT_API = "";
+
+const LS = {
+  api:  'sl_api',
+  token:'sl_token',
+  theme:'sl_theme',
+};
+
+// A subscriber can be sent a one-tap link — ?token=… (and optionally ?api=…) —
+// which signs them in and then drops the query so the code isn't left in the bar.
+(function absorbLink(){
+  try {
+    const q = new URLSearchParams(location.search);
+    let touched = false;
+    if (q.get('api'))   { localStorage.setItem(LS.api,   q.get('api').trim());   touched = true; }
+    if (q.get('token')) { localStorage.setItem(LS.token, q.get('token').trim()); touched = true; }
+    if (touched) history.replaceState(null, '', location.pathname);
+  } catch (e) { /* ignore */ }
+})();
+
+const state = {
+  api:   localStorage.getItem(LS.api)   || DEFAULT_API,
+  token: localStorage.getItem(LS.token) || '',
+  data:  null,
+  demo:  false,
+  view:  { name: 'home' },
+};
+
+/* A compact built-in sample so the app renders instantly with no
+   backend — replaced the moment a live API + access code are set.
+   If a sibling demo-data.js defines window.SL_DEMO (a copy of a real
+   published day), that richer set is used instead. */
+const BUILTIN_DEMO = {
+  date: "2026-08-01",
+  meeting_count: 3,
+  meetings: [
+    { track: "Riccarton", country: "NZ", condition: "Heavy9", races: [
+      { race_no:"R1", race_name:"Speight's Maiden Hurdles", distance:"3100m", start_time:"11:20:00",
+        pick:{number:"2", horse:"Billy", confidence:"A", best_bet:true},
+        verdict:"Bet of the race — evidence and market point the same way.",
+        why:["A genuine finisher — quick through the closing stages.","The way this track is racing is a plus for it."] },
+      { race_no:"R6", race_name:"Gold Club Rating 65", distance:"1600m", start_time:"14:22:00",
+        pick:{number:"1", horse:"Don Pauly", confidence:"A", best_bet:false},
+        verdict:"A standout on the evidence — it ticks the boxes that matter.",
+        why:["Records the kind of closing speed that wins these.","The day's track lean suits its style."] },
+      { race_no:"R8", race_name:"Zilco Rating 75", distance:"1400m", start_time:"15:32:00",
+        pick:{number:"2", horse:"Shawshank", confidence:"B+", best_bet:true},
+        verdict:"Bet of the race — evidence and market point the same way.",
+        why:["Its best form is a cut above these rivals.","Comfortable on the heavy (5w from 15)."] },
+      { race_no:"R10", race_name:"Group 1 Raceday Rating 75", distance:"1800m", start_time:"16:41:00",
+        pick:{number:"3", horse:"Go Lotte", confidence:"B+", best_bet:false},
+        verdict:"Overs on offer: our read has it better than the market does.",
+        why:["Sprints home better than most of its rivals.","Ideally suited by the way the track is playing today."] },
+    ]},
+    { track: "Flemington", country: "AUS", condition: "Good4", races: [
+      { race_no:"R3", race_name:"Phar Lap 100th Birthday Hcp (Bm100)", distance:"2000m", start_time:"15:25:00",
+        pick:{number:"1", horse:"Smokin' Romans", confidence:"A", best_bet:true},
+        verdict:"Bet of the race — evidence and market point the same way.",
+        why:["Ideally suited by the way the track is playing today.","Its best form is a cut above these rivals."] },
+      { race_no:"R5", race_name:"Horses' Birthday Hcp (Bm78)", distance:"1410m", start_time:"16:35:00",
+        pick:{number:"7", horse:"Cherish Me", confidence:"A+", best_bet:true},
+        verdict:"Best bet — our evidence model and the market both land on it.",
+        why:["Has been competitive well above this grade.","Today's track pattern falls its way."] },
+      { race_no:"R7", race_name:"Aurie's Star Hcp (G3)", distance:"1200m", start_time:"17:50:00",
+        pick:{number:"2", horse:"Arkansaw Kid", confidence:"B", best_bet:false},
+        verdict:"Value pick — we rate it well over the market's price.",
+        why:["Its class is a clear notch above most of these.","The current track bias is in its favour."] },
+      { race_no:"R9", race_name:"VRC Sprint Hcp (Bm78)", distance:"1100m", start_time:"18:55:00",
+        pick:{number:"11", horse:"Just Like Gaby", confidence:"A+", best_bet:true},
+        verdict:"Our strongest play here: the model and the market agree.",
+        why:["Its class is a clear notch above most of these.","The day's track lean suits its style."] },
+    ]},
+    { track: "Broome", country: "AUS", condition: "Good", races: [
+      { race_no:"R1", race_name:"Dntl Code Hcp (C2)", distance:"1615m", start_time:"16:46:00",
+        pick:{number:"5", horse:"Power To Rule", confidence:"A", best_bet:true},
+        verdict:"Bet of the race — evidence and market point the same way.",
+        why:["The current track bias is in its favour.","Proven on the good (2w from 17)."] },
+      { race_no:"R3", race_name:"Divers Tavern Hcp (50+)", distance:"1100m", start_time:"18:04:00",
+        pick:{number:"3", horse:"Dust Aside", confidence:"A+", best_bet:false},
+        verdict:"A standout on the evidence — it ticks the boxes that matter.",
+        why:["Class relief is the big tick here.","How the track is riding today plays to its strengths."] },
+      { race_no:"R7", race_name:"Kimberley Cup", distance:"2070m", start_time:"20:24:00",
+        pick:{number:"10", horse:"Fortune's Luck", confidence:"B+", best_bet:false},
+        verdict:"Value pick — we rate it well over the market's price.",
+        why:["Ideally suited by the way the track is playing today.","Has already won at this exact track and trip."] },
+    ]},
+  ],
+};
+
+/* -------------------------------------------------- helpers */
+const $ = (sel) => document.querySelector(sel);
+const app = () => $('#app');
+
+function esc(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+const GRADE_PCT = { 'A+':97, 'A':91, 'A-':85, 'B+':77, 'B':69, 'B-':61 };
+function gradePct(g){ return GRADE_PCT[g] != null ? GRADE_PCT[g] : 55; }
+function gradeTier(g){ if (g && g[0] === 'A') return 'high'; if (g === 'B+') return 'solid'; return 'fair'; }
+function tierLabel(t){ return t === 'high' ? 'Confident' : t === 'solid' ? 'Solid' : 'Fair'; }
+function isValue(v){ v = (v||'').toLowerCase(); return v.includes('value') || v.includes('overs') || v.includes('market'); }
+function hhmm(t){ return (t||'').slice(0,5); }
+
+function prettyDate(iso){
+  if(!iso) return '';
+  const p = iso.split('-'); if(p.length !== 3) return iso;
+  const d = new Date(Date.UTC(+p[0], +p[1]-1, +p[2]));
+  const days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const mons=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return days[d.getUTCDay()] + ' ' + d.getUTCDate() + ' ' + mons[d.getUTCMonth()];
+}
+
+function bestBets(data){
+  const out = [];
+  (data.meetings||[]).forEach(m => (m.races||[]).forEach(r => {
+    if (r.pick && r.pick.best_bet) out.push({ m, r });
+  }));
+  return out;
+}
+function meetingBB(m){ return (m.races||[]).filter(r => r.pick && r.pick.best_bet).length; }
+
+const LOGO = '<svg viewBox="0 0 24 24" fill="none" stroke="var(--turf)" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5"/><path d="M4 6c4-2.5 7 1 11-.5V13c-4 1.5-7-2-11 .5"/></svg>';
+
+/* -------------------------------------------------- data */
+async function loadPicks(){
+  // No API configured → static mode: the engine publishes data.json next to
+  // this file on every sync. Demo only if even that is missing.
+  if (!state.api){
+    try {
+      const res = await fetch('./data.json', { cache: 'no-store' });
+      if (res.ok){
+        state.demo = false;
+        state.data = await res.json();
+        return { ok:true };
+      }
+    } catch (e){ /* fall through to demo */ }
+    state.demo = true;
+    state.data = (window.SL_DEMO || BUILTIN_DEMO);
+    return { ok:true };
+  }
+  try {
+    const res = await fetch(state.api.replace(/\/+$/,'') + '/picks', {
+      headers: state.token ? { 'Authorization': 'Bearer ' + state.token } : {},
+    });
+    if (res.status === 401) return { ok:false, gate:'signin' };
+    if (res.status === 402) return { ok:false, gate:'subscribe' };
+    if (res.status === 404) return { ok:false, gate:'empty' };
+    if (!res.ok) return { ok:false, gate:'error', detail:'Server error ' + res.status };
+    state.demo = false;
+    state.data = await res.json();
+    return { ok:true };
+  } catch (e){
+    return { ok:false, gate:'offline' };
+  }
+}
+
+async function loadPreview(){
+  if (!state.api) return null;
+  try {
+    const res = await fetch(state.api.replace(/\/+$/,'') + '/preview');
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (e){ return null; }
+}
+
+/* -------------------------------------------------- render: home */
+function renderHome(){
+  const d = state.data;
+  const bb = bestBets(d);
+  let h = '';
+
+  h += topBar();
+  h += '<div class="fade">';
+  h += `<div class="datehead"><div class="d">Today's Picks</div><div class="c tnum">${esc(prettyDate(d.date))}</div></div>`;
+  h += `<div class="eyebrow" style="margin-top:8px">${d.meeting_count||d.meetings.length} meetings · backed by evidence</div>`;
+
+  if (state.demo){
+    h += `<div class="banner"><span>🔒</span><div><b>Sample day.</b> Add your access code in settings to load live picks.</div></div>`;
+  }
+
+  if (bb.length){
+    h += `<div class="eyebrow">★ Best bets today · ${bb.length}</div>`;
+    h += '<div class="bb-wrap"><div class="bb-scroll">';
+    bb.forEach(({m,r}, i) => {
+      h += `<button class="bb-card" data-goto="${esc(m.track)}">
+        <div class="bb-top"><span class="star">★</span><span class="bb-tag">Best bet</span><span class="bb-where">${esc(m.track)} · ${esc(r.race_no)}</span></div>
+        <div class="bb-runner">
+          <div class="saddle tnum">${esc(r.pick.number)}</div>
+          <div><div class="bb-name">${esc(r.pick.horse)}</div><div class="bb-race tnum">${esc(r.distance)} · ${esc(hhmm(r.start_time))}</div></div>
+        </div>
+        <div class="bb-why">${esc((r.why&&r.why[0])||r.verdict||'')}</div>
+      </button>`;
+    });
+    h += '</div></div>';
+  }
+
+  h += `<div class="eyebrow">All meetings</div><div class="m-list">`;
+  (d.meetings||[]).forEach((m, i) => {
+    const nb = meetingBB(m);
+    h += `<button class="m-card" data-meeting="${i}">
+      <span class="m-flag">${esc(m.country||'')}</span>
+      <div class="m-main">
+        <div class="m-track">${esc(m.track)}</div>
+        <div class="m-meta"><span>${(m.races||[]).length} races</span><span class="going">${esc(m.condition||'—')}</span></div>
+      </div>
+      <div class="m-right">
+        ${nb ? `<span class="m-bb"><span class="star">★</span>${nb} best</span>` : ''}
+        <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+      </div>
+    </button>`;
+  });
+  h += '</div>';
+  h += legal();
+  h += '</div>';
+  app().innerHTML = h;
+}
+
+/* -------------------------------------------------- render: meeting */
+function renderMeeting(idx){
+  const m = state.data.meetings[idx];
+  if (!m){ state.view = {name:'home'}; return renderHome(); }
+  let h = topBar();
+  h += '<div class="fade">';
+  h += `<div class="backbar"><button class="back" data-back>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></svg>All meetings</button></div>`;
+  h += `<div class="detail-head">
+      <div class="t">${esc(m.track)}</div>
+      <div class="m"><span class="m-flag">${esc(m.country||'')}</span><span class="going">${esc(m.condition||'—')}</span><span>${(m.races||[]).length} races</span></div>
+    </div>`;
+  h += '<div class="r-list">';
+  (m.races||[]).forEach(r => { h += raceCard(r, m); });
+  h += '</div>';
+  h += legal();
+  h += '</div>';
+  app().innerHTML = h;
+  app().scrollIntoView({ block:'start' });
+  window.scrollTo(0,0);
+}
+
+function raceCard(r, m){
+  const p = r.pick || {};
+  const best = !!p.best_bet;
+  const val = !best && isValue(r.verdict);
+  const tier = gradeTier(p.confidence);
+  const whys = (r.why||[]).slice(0,2);
+  return `<div class="r-card ${best?'best':''}">
+    <div class="r-top">
+      <span class="r-no">${esc(r.race_no)}</span>
+      <span class="r-name">${esc(r.race_name||'')}</span>
+      <span class="r-time tnum">${esc(hhmm(r.start_time))}</span>
+    </div>
+    <div class="r-runner">
+      <div class="saddle tnum">${esc(p.number)}</div>
+      <div class="r-id">
+        <div class="r-horse">${esc(p.horse)}</div>
+        <div class="r-tags">
+          ${best ? '<span class="tag best">★ Best bet</span>' : ''}
+          ${val ? '<span class="tag value">Value</span>' : ''}
+          <span class="r-time tnum" style="align-self:center">${esc(r.distance||'')}</span>
+        </div>
+      </div>
+      <div class="grade ${tier}"><div class="g">${esc(p.confidence||'–')}</div><div class="lab">${tierLabel(tier)}</div></div>
+    </div>
+    <div class="meter"><span style="width:${gradePct(p.confidence)}%"></span></div>
+    <div class="verdict">${esc(r.verdict||'')}</div>
+    ${whys.length ? '<ul class="why">' + whys.map(w=>`<li>${esc(w)}</li>`).join('') + '</ul>' : ''}
+  </div>`;
+}
+
+/* -------------------------------------------------- render: gate */
+function renderGate(kind, preview){
+  const titles = {
+    signin:   ['Enter your access code', 'Your code unlocks every pick for the day, with the evidence behind each one.'],
+    subscribe:['Your access has lapsed', 'Renew to see today’s picks. Your code stays the same once it’s active again.'],
+    empty:    ['No picks published yet', 'Today’s selections aren’t up yet. Check back a little later.'],
+    error:    ['Something went wrong', 'We couldn’t reach the picks service. Try again in a moment.'],
+    offline:  ['Can’t connect', 'Check your internet connection, then try again.'],
+  };
+  const [title, sub] = titles[kind] || titles.error;
+
+  let h = topBar(true);
+  h += '<div class="fade"><div class="hero">';
+  h += `<div class="mark">${LOGO}</div>`;
+  h += `<h2>${title}</h2><p>${sub}</p></div>`;
+
+  if (preview && preview.available){
+    h += `<div class="stats-row">
+      <div class="stat"><div class="n tnum">${preview.meetings||0}</div><div class="l">Meetings</div></div>
+      <div class="stat"><div class="n tnum">${preview.races_rated||0}</div><div class="l">Races rated</div></div>
+      <div class="stat gold"><div class="n tnum">${preview.best_bets||0}</div><div class="l">Best bets</div></div>
+    </div>`;
+    if (preview.tracks && preview.tracks.length){
+      h += '<div class="tracks">' + preview.tracks.slice(0,14).map(t=>`<span>${esc(t)}</span>`).join('') + '</div>';
+    }
+  }
+
+  if (kind === 'signin' || kind === 'subscribe'){
+    h += `<div class="field"><label for="tok">Access code</label>
+      <input id="tok" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="paste your code" value="${esc(state.token)}" /></div>
+      <button class="btn" data-signin>Unlock today’s picks</button>
+      <div class="msg" id="gmsg"></div>`;
+  } else {
+    h += `<button class="btn" data-retry>Try again</button>`;
+  }
+  h += `<button class="btn ghost" style="margin-top:10px" data-settings>Settings</button>`;
+  h += legal();
+  h += '</div>';
+  app().innerHTML = h;
+}
+
+/* -------------------------------------------------- shared chrome */
+function topBar(minimal){
+  return `<header class="bar">
+    <div class="brand">
+      <div class="mark">${LOGO}</div>
+      <div><h1>The Collect</h1><p class="sub">powered by the Strategic Logic engine</p></div>
+    </div>
+    <button class="icon-btn" data-theme-toggle aria-label="Theme">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+    </button>
+    <button class="icon-btn" data-settings aria-label="Settings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.2.61.79 1.05 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>
+    </button>
+  </header>`;
+}
+
+function legal(){
+  return `<footer class="legal">
+    <b>18+ only. Please gamble responsibly.</b><br/>
+    Our selections are opinions based on evidence — not guarantees, and not financial advice.
+    Racing involves risk; never stake more than you can afford to lose.
+    Need to talk? In NZ call the Gambling Helpline on 0800 654 655; in Australia, Gambling Help on 1800 858 858.
+  </footer>`;
+}
+
+/* -------------------------------------------------- settings sheet */
+function openSheet(html){
+  $('#sheet').innerHTML = '<div class="grab"></div>' + html;
+  $('#sheet').classList.add('open');
+  $('#scrim').classList.add('open');
+}
+function closeSheet(){
+  $('#sheet').classList.remove('open');
+  $('#scrim').classList.remove('open');
+}
+function settingsSheet(){
+  openSheet(`
+    <h3>Settings</h3>
+    <p class="hint">Point the app at your picks service and sign in.</p>
+    <div class="field"><label for="s-api">Picks service URL</label>
+      <input id="s-api" type="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="https://your-service.onrender.com" value="${esc(state.api)}" /></div>
+    <div class="field"><label for="s-tok">Access code</label>
+      <input id="s-tok" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="your subscriber code" value="${esc(state.token)}" /></div>
+    <button class="btn" data-save-settings>Save &amp; reload</button>
+    ${state.api || state.token ? '<button class="btn ghost" style="margin-top:10px" data-signout>Sign out</button>' : ''}
+    <div class="msg" id="smsg"></div>
+  `);
+}
+
+/* -------------------------------------------------- theme */
+function applyTheme(t){
+  if (t === 'dark' || t === 'light') document.documentElement.setAttribute('data-theme', t);
+  else document.documentElement.removeAttribute('data-theme');
+}
+function currentTheme(){
+  const saved = localStorage.getItem(LS.theme);
+  if (saved) return saved;
+  return window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+}
+function toggleTheme(){
+  const next = currentTheme() === 'dark' ? 'light' : 'dark';
+  localStorage.setItem(LS.theme, next);
+  applyTheme(next);
+}
+
+/* -------------------------------------------------- boot + routing */
+async function boot(){
+  app().innerHTML = '<div class="spin"></div>';
+  const r = await loadPicks();
+  if (r.ok){
+    state.view = { name:'home' };
+    renderHome();
+  } else if (r.gate === 'signin' || r.gate === 'subscribe'){
+    const pv = await loadPreview();
+    renderGate(r.gate, pv);
+  } else {
+    renderGate(r.gate || 'error');
+  }
+}
+
+document.addEventListener('click', async (e) => {
+  const t = e.target.closest('[data-meeting],[data-back],[data-settings],[data-theme-toggle],[data-signin],[data-retry],[data-save-settings],[data-signout],[data-goto]');
+  if (!t) {
+    if (e.target.id === 'scrim') closeSheet();
+    return;
+  }
+
+  if (t.hasAttribute('data-meeting')) {
+    const i = +t.getAttribute('data-meeting');
+    state.view = { name:'meeting', idx:i };
+    renderMeeting(i);
+  }
+  else if (t.hasAttribute('data-goto')) {
+    const track = t.getAttribute('data-goto');
+    const i = (state.data.meetings||[]).findIndex(m => m.track === track);
+    if (i >= 0){ state.view = { name:'meeting', idx:i }; renderMeeting(i); }
+  }
+  else if (t.hasAttribute('data-back')) {
+    state.view = { name:'home' };
+    renderHome();
+  }
+  else if (t.hasAttribute('data-theme-toggle')) {
+    toggleTheme();
+  }
+  else if (t.hasAttribute('data-settings')) {
+    settingsSheet();
+  }
+  else if (t.hasAttribute('data-retry')) {
+    boot();
+  }
+  else if (t.hasAttribute('data-signin')) {
+    const v = ($('#tok')||{}).value || '';
+    state.token = v.trim();
+    localStorage.setItem(LS.token, state.token);
+    const msg = $('#gmsg'); if (msg){ msg.className='msg'; msg.textContent='Checking…'; }
+    const r = await loadPicks();
+    if (r.ok){ renderHome(); }
+    else if (r.gate === 'subscribe'){ if(msg){msg.className='msg err'; msg.textContent='That code isn’t active. Renew to unlock.';} }
+    else if (r.gate === 'signin'){ if(msg){msg.className='msg err'; msg.textContent='Code not recognised. Check and try again.';} }
+    else if (msg){ msg.className='msg err'; msg.textContent='Couldn’t connect. Try again.'; }
+  }
+  else if (t.hasAttribute('data-save-settings')) {
+    const api = ($('#s-api')||{}).value || '';
+    const tok = ($('#s-tok')||{}).value || '';
+    state.api = api.trim();
+    state.token = tok.trim();
+    localStorage.setItem(LS.api, state.api);
+    localStorage.setItem(LS.token, state.token);
+    closeSheet();
+    boot();
+  }
+  else if (t.hasAttribute('data-signout')) {
+    state.token = '';
+    localStorage.removeItem(LS.token);
+    closeSheet();
+    boot();
+  }
+});
+
+// keep in sync if the OS theme flips while open and user hasn't chosen
+if (window.matchMedia){
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+    if (!localStorage.getItem(LS.theme)) applyTheme(currentTheme());
+  });
+}
+
+applyTheme(currentTheme());
+boot();
+</script>
+</body>
+</html>
