@@ -394,6 +394,26 @@ details.guide[open] summary::before{ transform:rotate(90deg); }
 .g-chip.outsider{ background:rgba(128,128,128,.12); color:var(--faint,#8a94a0); }
 .g-note{ font-size:12.5px; color:var(--faint,#9aa4b0); line-height:1.5; margin-top:1px; }
 
+/* ---- landing (signed-out) ---- */
+.land-hero{ text-align:center; padding:34px 14px 26px; }
+.land-hero .mark{ width:84px; height:84px; margin:0 auto 14px; }
+.land-hero h2{ font-size:32px; font-weight:800; letter-spacing:-.01em; margin:0; }
+.land-hero .tag{ color:var(--faint,#9aa4b0); font-size:15px; margin-top:8px; line-height:1.5; }
+.proof{ display:flex; gap:8px; margin:16px 0; }
+.proof .cell{ flex:1; background:var(--card,#141a22); border:1px solid rgba(212,175,55,.3);
+  border-radius:14px; padding:12px 6px; text-align:center; }
+.proof .n{ font-size:21px; font-weight:800; color:#F0D078; }
+.proof .l{ font-size:10.5px; color:var(--faint,#8a94a0); margin-top:3px; }
+.sell{ background:var(--card,#141a22); border:1px solid rgba(128,128,128,.18);
+  border-radius:16px; padding:14px 16px; margin:10px 0; }
+.sell h3{ margin:0 0 8px; font-size:15px; }
+.sell li{ font-size:13.5px; line-height:1.65; color:var(--faint,#aab4c0); }
+.sell li b{ color:inherit; filter:brightness(1.25); }
+.price-card{ text-align:center; background:linear-gradient(135deg,#0B3D2E,#123526 60%,#10151B);
+  border:1px solid rgba(212,175,55,.35); border-radius:16px; padding:18px 14px; margin:12px 0; }
+.price-card .p{ font-size:26px; font-weight:800; color:#F2EAD3; }
+.price-card .s{ font-size:12.5px; color:rgba(242,234,211,.75); margin-top:5px; line-height:1.5; }
+
 /* ---- The Collect identity: colour, texture, silks ---- */
 .hero-band{ position:relative; overflow:hidden; border-radius:18px; margin:10px 0 4px;
   padding:18px 16px 22px; background:linear-gradient(135deg, #0B3D2E 0%, #123526 45%, #10151B 100%);
@@ -439,7 +459,26 @@ const LS = {
   api:  'sl_api',
   token:'sl_token',
   theme:'sl_theme',
+  access:'tc_access',
 };
+
+/* Founding access codes, stored as SHA-256 digests — the codes themselves
+   never appear in this file. Real subscriber auth arrives with payments;
+   this gate keeps the testing phase invite-only. */
+const ACCESS_DIGESTS = [
+  "6027735188474088b3f3068efe27b2dab3a538697e0f9a7ac5e98e44c08868ee",
+  "321e0ba4a0d68e5e5ceb3e01af8b76d61cb9481cfddeecb6b736420b305a568d",
+];
+async function checkAccess(code){
+  const clean = (code||'').trim().toUpperCase();
+  if (!clean) return false;
+  try {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(clean));
+    const hex = [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('');
+    return ACCESS_DIGESTS.includes(hex);
+  } catch(e){ return false; }   // needs a secure context (https)
+}
+function hasAccess(){ return localStorage.getItem(LS.access) === 'yes'; }
 
 // A subscriber can be sent a one-tap link — ?token=… (and optionally ?api=…) —
 // which signs them in and then drops the query so the code isn't left in the bar.
@@ -725,6 +764,53 @@ function raceCard(r, m){
   </div>`;
 }
 
+/* -------------------------------------------------- render: landing */
+function renderLanding(){
+  const d = state.data || {};
+  const sb = d.scoreboard || {};
+  let h = topBar(true);
+  h += '<div class="fade">';
+  h += `<div class="land-hero">
+    <div class="mark">${LOGO}</div>
+    <h2>The Collect</h2>
+    <div class="tag">Real winners, picked by the numbers —<br/>proven in public, every single day.</div>
+  </div>`;
+  if (sb.races){
+    h += `<div class="proof">
+      <div class="cell"><div class="n tnum">${sb.wins}</div><div class="l">Winners today</div></div>
+      <div class="cell"><div class="n tnum">${Math.round(sb.win_pct)}%</div><div class="l">Strike rate</div></div>
+      <div class="cell"><div class="n tnum">${(sb.streaks||{}).winner_days||0}</div><div class="l">Day win streak</div></div>
+    </div>`;
+  }
+  h += `<div class="sell"><h3>How it works</h3><ul class="why">
+    <li>Our engine studies <b>every runner in every race</b> in NZ and Australia — form, class, track patterns, the lot.</li>
+    <li>Only the picks that pass <b>every test</b> make your board.</li>
+    <li>Every result is published, <b>win or lose</b> — the scoreboard never hides a bad day.</li>
+  </ul></div>`;
+  h += `<div class="sell"><h3>What you get, every race day</h3><ul class="why">
+    <li><b>Today's picks</b> — every meeting, with the best bets starred</li>
+    <li><b>The full race guide</b> — a line on every runner, plus trifecta &amp; first-4 plays</li>
+    <li><b>Live results</b> — every collect as it lands, dividends included</li>
+    <li><b>The scoreboard</b> — strike rates, streaks and the day's biggest winner</li>
+    <li><b>Tomorrow's early value</b> — get set before the market wakes up</li>
+  </ul></div>`;
+  h += `<div class="price-card"><div class="p">$25 / week</div>
+    <div class="s">Coming soon. The Collect is currently <b>invite-only</b> while our
+    founding testers put it through its paces.</div></div>`;
+  h += `<div class="field"><label for="acc">Have an invite code?</label>
+    <input id="acc" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="enter your code" /></div>
+    <button class="btn" data-access>Unlock The Collect</button>
+    <div class="msg" id="amsg"></div>`;
+  h += legal();
+  h += `<div style="text-align:center;padding:4px 0 18px;font-size:11.5px">
+    <a href="terms.html" style="color:var(--faint,#8a94a0)">Terms</a> ·
+    <a href="privacy.html" style="color:var(--faint,#8a94a0)">Privacy</a> ·
+    <a href="responsible.html" style="color:var(--faint,#8a94a0)">Responsible gambling</a></div>`;
+  h += '</div>';
+  app().innerHTML = h;
+  window.scrollTo(0,0);
+}
+
 /* -------------------------------------------------- render: gate */
 function renderGate(kind, preview){
   const titles = {
@@ -940,7 +1026,7 @@ function settingsSheet(){
     <div class="field"><label for="s-tok">Access code</label>
       <input id="s-tok" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="your subscriber code" value="${esc(state.token)}" /></div>
     <button class="btn" data-save-settings>Save &amp; reload</button>
-    ${state.api || state.token ? '<button class="btn ghost" style="margin-top:10px" data-signout>Sign out</button>' : ''}
+    ${state.api || state.token || hasAccess() ? '<button class="btn ghost" style="margin-top:10px" data-signout>Sign out</button>' : ''}
     <div class="msg" id="smsg"></div>
   `);
 }
@@ -967,6 +1053,7 @@ async function boot(){
   const r = await loadPicks();
   if (r.ok){
     state.view = { name:'home' };
+    if (!hasAccess()) return renderLanding();
     renderTab();
   } else if (r.gate === 'signin' || r.gate === 'subscribe'){
     const pv = await loadPreview();
@@ -977,13 +1064,26 @@ async function boot(){
 }
 
 document.addEventListener('click', async (e) => {
-  const t = e.target.closest('[data-tab],[data-meeting],[data-back],[data-settings],[data-theme-toggle],[data-signin],[data-retry],[data-save-settings],[data-signout],[data-goto]');
+  const t = e.target.closest('[data-tab],[data-meeting],[data-back],[data-settings],[data-theme-toggle],[data-signin],[data-retry],[data-save-settings],[data-signout],[data-goto],[data-access]');
   if (!t) {
     if (e.target.id === 'scrim') closeSheet();
     return;
   }
 
-  if (t.hasAttribute('data-tab')) {
+  if (t.hasAttribute('data-access')) {
+    const code = ($('#acc')||{}).value || '';
+    const msg = $('#amsg');
+    if (msg){ msg.className='msg'; msg.textContent='Checking…'; }
+    if (await checkAccess(code)){
+      localStorage.setItem(LS.access, 'yes');
+      state.tab = 'today';
+      renderTab();
+    } else if (msg){
+      msg.className='msg err';
+      msg.textContent = 'That code isn’t recognised. Check it and try again.';
+    }
+  }
+  else if (t.hasAttribute('data-tab')) {
     state.tab = t.getAttribute('data-tab');
     renderTab();
   }
@@ -1035,6 +1135,7 @@ document.addEventListener('click', async (e) => {
   else if (t.hasAttribute('data-signout')) {
     state.token = '';
     localStorage.removeItem(LS.token);
+    localStorage.removeItem(LS.access);
     closeSheet();
     boot();
   }
