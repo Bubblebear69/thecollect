@@ -393,6 +393,31 @@ details.guide[open] summary::before{ transform:rotate(90deg); }
 .g-chip.chance{ background:rgba(90,150,220,.14); color:#7aa9e0; }
 .g-chip.outsider{ background:rgba(128,128,128,.12); color:var(--faint,#8a94a0); }
 .g-note{ font-size:12.5px; color:var(--faint,#9aa4b0); line-height:1.5; margin-top:1px; }
+
+/* ---- The Collect identity: colour, texture, silks ---- */
+.hero-band{ position:relative; overflow:hidden; border-radius:18px; margin:10px 0 4px;
+  padding:18px 16px 22px; background:linear-gradient(135deg, #0B3D2E 0%, #123526 45%, #10151B 100%);
+  border:1px solid rgba(212,175,55,.28); }
+:root[data-theme="light"] .hero-band{ background:linear-gradient(135deg, #0E4A38 0%, #16593F 55%, #0B3D2E 100%); }
+.hero-band .hb-kicker{ color:#F0D078; font-size:12px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; }
+.hero-band .hb-title{ color:#F2EAD3; font-size:26px; font-weight:800; margin-top:4px; letter-spacing:-.01em; }
+.hero-band .hb-date{ color:rgba(242,234,211,.75); font-size:13px; margin-top:4px; }
+.hero-band .hb-mark{ position:absolute; right:-18px; top:-14px; width:120px; height:120px; opacity:.13; }
+.hero-band .checker{ position:absolute; left:0; right:0; bottom:0; height:7px; opacity:.5;
+  background:repeating-conic-gradient(#F2EAD3 0% 25%, #0E1217 0% 50%) 0 0 / 14px 14px; }
+.m-flag{ font-size:10px; font-weight:800; letter-spacing:.05em; border-radius:7px; padding:4px 7px; }
+.m-flag.nz{ background:#1B1F26; color:#CBD5DF; border:1px solid #3A4450; }
+.m-flag.aus{ background:#123A26; color:#F0D078; border:1px solid #2C5A3C; }
+.grade.high .g{ color:#F0D078; }
+.grade.high{ border-color:rgba(212,175,55,.5); background:rgba(212,175,55,.08); }
+.r-card.best{ border-color:rgba(212,175,55,.55);
+  background:linear-gradient(180deg, rgba(212,175,55,.07), rgba(212,175,55,.015) 55%); }
+.res-row.iswon{ border-color:rgba(49,196,124,.5);
+  background:linear-gradient(180deg, rgba(49,196,124,.09), rgba(49,196,124,.015)); }
+.win-hero{ background:linear-gradient(135deg, rgba(49,196,124,.13), rgba(212,175,55,.07) 70%);
+  position:relative; overflow:hidden; }
+.win-hero .hb-mark{ position:absolute; right:-10px; bottom:-22px; width:110px; height:110px; opacity:.10; }
+.bb-card{ background:linear-gradient(160deg, rgba(212,175,55,.12), var(--card,#141a22) 55%); }
 .price-pill{ font-weight:800; background:rgba(212,175,55,.14); color:#d4af37;
   border-radius:999px; padding:3px 10px; font-size:13px; white-space:nowrap; }
 </style>
@@ -533,7 +558,7 @@ function bestBets(data){
 }
 function meetingBB(m){ return (m.races||[]).filter(r => r.pick && r.pick.best_bet).length; }
 
-const LOGO = '<svg viewBox="0 0 24 24" fill="none" stroke="var(--turf)" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5"/><path d="M4 6c4-2.5 7 1 11-.5V13c-4 1.5-7-2-11 .5"/></svg>';
+const LOGO = '<svg viewBox="0 0 48 48" fill="none"><path d="M 33 12 A 15 15 0 1 0 33 36" stroke="#D4AF37" stroke-width="5" stroke-linecap="round"/><circle cx="24" cy="9.2" r="1.1" fill="#0E1217"/><circle cx="15.4" cy="13" r="1.1" fill="#0E1217"/><circle cx="10.6" cy="21.5" r="1.1" fill="#0E1217"/><circle cx="12" cy="31" r="1.1" fill="#0E1217"/><path d="M 37 21 l 1.3 3.2 3.2 1.3 -3.2 1.3 -1.3 3.2 -1.3 -3.2 -3.2 -1.3 3.2 -1.3 z" fill="#D4AF37"/></svg>';
 
 /* -------------------------------------------------- data */
 async function loadPicks(){
@@ -585,8 +610,13 @@ function renderHome(){
 
   h += topBar();
   h += '<div class="fade">';
-  h += `<div class="datehead"><div class="d">Today's Picks</div><div class="c tnum">${esc(prettyDate(d.date))}</div></div>`;
-  h += `<div class="eyebrow" style="margin-top:8px">${d.meeting_count||d.meetings.length} meetings · backed by evidence</div>`;
+  h += `<div class="hero-band">
+    <div class="hb-kicker">★ ${bb.length} best bet${bb.length===1?'':'s'} today</div>
+    <div class="hb-title">Today's Picks</div>
+    <div class="hb-date tnum">${esc(prettyDate(d.date))} · ${d.meeting_count||d.meetings.length} meetings · backed by evidence</div>
+    <div class="hb-mark">${LOGO}</div>
+    <div class="checker"></div>
+  </div>`;
 
   if (state.demo){
     h += `<div class="banner"><span>🔒</span><div><b>Sample day.</b> Add your access code in settings to load live picks.</div></div>`;
@@ -612,7 +642,7 @@ function renderHome(){
   (d.meetings||[]).forEach((m, i) => {
     const nb = meetingBB(m);
     h += `<button class="m-card" data-meeting="${i}">
-      <span class="m-flag">${esc(m.country||'')}</span>
+      <span class="m-flag ${(m.country||'')==='NZ'?'nz':'aus'}">${esc(m.country||'')}</span>
       <div class="m-main">
         <div class="m-track">${esc(m.track)}</div>
         <div class="m-meta"><span>${(m.races||[]).length} races</span><span class="going">${esc(m.condition||'—')}</span></div>
@@ -803,7 +833,7 @@ function renderResults(){
       else if (r.outcome === 'placed') badge = '<span class="badge placed">▲ placed</span>';
       else if (r.settled) badge = '<span class="badge missed">missed</span>';
       else badge = `<span class="badge pending">${esc(r.time)||'to come'}</span>`;
-      h += `<div class="res-row">
+      h += `<div class="res-row ${won?'iswon':''}">
         <div class="res-head"><span class="res-where">${esc(r.race_no)}</span><span class="res-time tnum">${esc(r.time)}</span>${badge}</div>
         ${r.pick ? `<div class="res-pick">Our pick: <b>${esc(r.pick)}</b>${r.top5?' <span class="star">★</span>':''}</div>` : ''}
         ${r.settled && (r.placings||[]).length ? `<div class="res-div">${
@@ -833,7 +863,8 @@ function renderWinners(){
     </div>`;
     if (sb.biggest){
       h += `<div class="win-hero"><div class="big">$${(+sb.biggest.price).toFixed(2)} winner</div>
-        <div class="sub2"><b>${esc(sb.biggest.horse)}</b> saluted at ${esc(sb.biggest.race)} — $20 paid $${Math.round(sb.biggest.collect)}.</div></div>`;
+        <div class="sub2"><b>${esc(sb.biggest.horse)}</b> saluted at ${esc(sb.biggest.race)} — $20 paid $${Math.round(sb.biggest.collect)}.</div>
+        <div class="hb-mark">${LOGO}</div></div>`;
     }
     if (sb.play){
       h += `<div class="banner"><span>🎯</span><div><b>Play of the day:</b> ${esc(sb.play)}</div></div>`;
