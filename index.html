@@ -497,7 +497,7 @@ function hasAccess(){ return localStorage.getItem(LS.access) === 'yes'; }
 // Stamped by the publisher at deploy time. When data.json carries a NEWER
 // shell version than the code that's running, the app reloads itself once —
 // so an always-open home-screen app picks up new features without sign-outs.
-const SHELL_VERSION = "8a4a6ea2e87a";
+const SHELL_VERSION = "cbf2b46407fb";
 
 function localToday(){
   const d = new Date();
@@ -1098,34 +1098,73 @@ function renderResults(){
 }
 
 /* ------------------------------------------- render: winners */
+function scoreBlock(sb, label){
+  // One day's glory, reusable for Today and Yesterday.
+  let h = '';
+  h += `<div class="tally">
+    <div class="cell"><div class="n tnum good">${Math.round(sb.win_pct)}%</div><div class="l">Winners</div></div>
+    <div class="cell"><div class="n tnum">${Math.round(sb.place_pct)}%</div><div class="l">Ran top 3</div></div>
+    <div class="cell"><div class="n tnum">${sb.wins}/${sb.races}</div><div class="l">Picks won</div></div>
+  </div>`;
+  if (sb.biggest){
+    h += `<div class="win-hero"><div class="big">$${(+sb.biggest.price).toFixed(2)} winner</div>
+      <div class="sub2"><b>${esc(sb.biggest.horse)}</b> saluted at ${esc(sb.biggest.race)} — $20 paid $${Math.round(sb.biggest.collect)}.</div>
+      <div class="hb-mark">${LOGO}</div></div>`;
+  }
+  if (sb.play){
+    h += `<div class="banner"><span>🎯</span><div><b>Play of the day:</b> ${esc(sb.play)}</div></div>`;
+  }
+  if ((sb.winners||[]).length){
+    h += `<div class="eyebrow">${label} winning picks</div><div class="res-row">`;
+    sb.winners.forEach(w => {
+      h += `<div class="win-line"><span class="who">${esc(w.horse)} <span class="res-time">${esc(w.race)}</span></span><span class="paid tnum">$${(+w.price).toFixed(2)}</span></div>`;
+    });
+    h += `</div>`;
+  }
+  return h;
+}
+
+function weekBlock(wk){
+  if (!wk || !wk.races) return '';
+  let h = `<div class="eyebrow">🏆 This week's best</div>`;
+  h += `<div class="tally">
+    <div class="cell"><div class="n tnum good">${wk.wins}</div><div class="l">Winners this week</div></div>
+    <div class="cell"><div class="n tnum">${Math.round(wk.win_pct)}%</div><div class="l">Strike rate</div></div>
+    <div class="cell"><div class="n tnum">$${wk.exotic_collect||0}</div><div class="l">Exotics collected</div></div>
+  </div>`;
+  if ((wk.best||[]).length){
+    h += `<div class="res-row">`;
+    wk.best.forEach(w => {
+      h += `<div class="win-line"><span class="who">${esc(w.horse)} <span class="res-time">${esc(w.race)} · ${esc(prettyDate(w.date).replace(/^\w+ /,''))}</span></span><span class="paid tnum">$${(+w.price).toFixed(2)}</span></div>`;
+    });
+    h += `</div>`;
+  }
+  if (wk.best_day){
+    h += `<div class="banner"><span>🔥</span><div><b>Best day:</b> ${wk.best_day.wins} winners from ${wk.best_day.races} picks on ${esc(prettyDate(wk.best_day.date))}.</div></div>`;
+  }
+  return h;
+}
+
 function renderWinners(){
-  const d = state.data, sb = d.scoreboard;
+  const d = state.data, sb = d.scoreboard, y = d.yesterday, wk = d.week;
+  const todayLive = sb && sb.races > 0;
   let h = topBar();
   h += '<div class="fade">';
   h += `<div class="datehead"><div class="d">Winners</div><div class="c tnum">${esc(prettyDate(d.date))}</div></div>`;
-  if (!sb || !sb.races){
-    h += `<div class="banner"><span>🏆</span><div>The scoreboard fills in as today's races settle. Check back after the first results.</div></div>`;
+
+  if (todayLive){
+    h += `<div class="eyebrow">Today so far</div>` + scoreBlock(sb, "Today's");
+    if (y && y.races) h += `<div class="eyebrow">Yesterday — ${esc(prettyDate(y.date))}</div>` + scoreBlock(y, "Yesterday's");
+    h += weekBlock(wk);
   } else {
-    h += `<div class="tally">
-      <div class="cell"><div class="n tnum good">${Math.round(sb.win_pct)}%</div><div class="l">Winners</div></div>
-      <div class="cell"><div class="n tnum">${Math.round(sb.place_pct)}%</div><div class="l">Ran top 3</div></div>
-      <div class="cell"><div class="n tnum">${sb.quinellas||0}</div><div class="l">Quinellas</div></div>
-    </div>`;
-    if (sb.biggest){
-      h += `<div class="win-hero"><div class="big">$${(+sb.biggest.price).toFixed(2)} winner</div>
-        <div class="sub2"><b>${esc(sb.biggest.horse)}</b> saluted at ${esc(sb.biggest.race)} — $20 paid $${Math.round(sb.biggest.collect)}.</div>
-        <div class="hb-mark">${LOGO}</div></div>`;
+    if (y && y.races){
+      h += `<div class="eyebrow">Yesterday — ${esc(prettyDate(y.date))}</div>` + scoreBlock(y, "Yesterday's");
     }
-    if (sb.play){
-      h += `<div class="banner"><span>🎯</span><div><b>Play of the day:</b> ${esc(sb.play)}</div></div>`;
-    }
-    if ((sb.winners||[]).length){
-      h += `<div class="eyebrow">Today's winning picks</div><div class="res-row">`;
-      sb.winners.forEach(w => {
-        h += `<div class="win-line"><span class="who">${esc(w.horse)} <span class="res-time">${esc(w.race)}</span></span><span class="paid tnum">$${(+w.price).toFixed(2)}</span></div>`;
-      });
-      h += `</div>`;
-    }
+    h += weekBlock(wk);
+    h += `<div class="banner"><span>🏆</span><div>Today's scoreboard starts filling from the first race — picks are already up on the Today tab.</div></div>`;
+  }
+
+  if (sb){
     const st = sb.streaks || {};
     h += `<div class="eyebrow">Form</div><div class="res-row">
       <div class="win-line"><span>Days in a row with a winning pick</span><b class="tnum">${st.winner_days||0}</b></div>
