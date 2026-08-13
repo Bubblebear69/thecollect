@@ -494,23 +494,52 @@ async function checkAccess(code){
 function hasAccess(){ return localStorage.getItem(LS.access) === 'yes'; }
 
 /* ------------------------------------------ keep the data fresh, silently */
+// Stamped by the publisher at deploy time. When data.json carries a NEWER
+// shell version than the code that's running, the app reloads itself once —
+// so an always-open home-screen app picks up new features without sign-outs.
+const SHELL_VERSION = "8a4a6ea2e87a";
+
+function localToday(){
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0')
+       + '-' + String(d.getDate()).padStart(2,'0');
+}
+
 let _lastFetch = 0;
 async function refreshIfStale(force){
   // A PWA resumed from the home screen never reloads itself — so we do.
-  if (!force && Date.now() - _lastFetch < 5 * 60 * 1000) return;
+  // Showing yesterday's date is ALWAYS stale, no matter what the timer says.
+  const dateStale = state.data && state.data.date &&
+                    state.data.date !== localToday();
+  if (!force && !dateStale && Date.now() - _lastFetch < 5 * 60 * 1000) return;
   const before = (state.data||{}).generated_at || '';
   const r = await loadPicks();
   _lastFetch = Date.now();
-  if (r.ok && ((state.data||{}).generated_at || '') !== before){
+  if (!r.ok) return;
+
+  // Newer app code has shipped: reload the shell itself (once per version,
+  // so a caching hiccup can never loop us).
+  const shipped = (state.data||{}).shell_version || '';
+  if (shipped && SHELL_VERSION.indexOf('__') !== 0 && shipped !== SHELL_VERSION){
+    try {
+      if (sessionStorage.getItem('tc_reloaded_for') !== shipped){
+        sessionStorage.setItem('tc_reloaded_for', shipped);
+        location.reload();
+        return;
+      }
+    } catch(e){ /* private mode — carry on with data-only refresh */ }
+  }
+
+  if (((state.data||{}).generated_at || '') !== before){
     // fresh publish — repaint whatever the user is looking at
     if (!hasAccess()) return renderLanding();
-    if (state.view && state.view.name === 'meeting') return renderTab();
     renderTab();
   }
 }
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') refreshIfStale(false);
 });
+window.addEventListener('pageshow', () => refreshIfStale(false));
 setInterval(() => { if (document.visibilityState === 'visible') refreshIfStale(false); },
             10 * 60 * 1000);
 
