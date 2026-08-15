@@ -123,6 +123,16 @@
   }
   .icon-btn:active { transform: scale(0.94); }
   .icon-btn svg { width: 19px; height: 19px; }
+  .icon-btn.spin svg { animation: tcspin 0.9s linear infinite; }
+  @keyframes tcspin { to { transform: rotate(360deg); } }
+  .tc-toast {
+    position: fixed; left: 50%; bottom: 84px; transform: translateX(-50%) translateY(12px);
+    background: var(--ink, #10151B); color: #F2E9CF; font-size: 13px; font-weight: 600;
+    padding: 9px 16px; border-radius: 20px; border: 1px solid rgba(212,175,55,0.45);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.35); opacity: 0; transition: all 0.3s ease;
+    z-index: 300; pointer-events: none; white-space: nowrap;
+  }
+  .tc-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
   /* ---------- generic ---------- */
   .eyebrow {
@@ -497,7 +507,7 @@ function hasAccess(){ return localStorage.getItem(LS.access) === 'yes'; }
 // Stamped by the publisher at deploy time. When data.json carries a NEWER
 // shell version than the code that's running, the app reloads itself once —
 // so an always-open home-screen app picks up new features without sign-outs.
-const SHELL_VERSION = "cbf2b46407fb";
+const SHELL_VERSION = "289f44c2b93b";
 
 function localToday(){
   const d = new Date();
@@ -536,6 +546,26 @@ async function refreshIfStale(force){
     renderTab();
   }
 }
+function toast(msg){
+  const el = document.createElement('div');
+  el.className = 'tc-toast';
+  el.textContent = msg;
+  document.body.appendChild(el);
+  requestAnimationFrame(() => el.classList.add('show'));
+  setTimeout(() => { el.classList.remove('show');
+                     setTimeout(() => el.remove(), 400); }, 2200);
+}
+
+async function manualRefresh(btn){
+  if (btn) btn.classList.add('spin');
+  _lastFetch = 0;                       // defeat the 5-minute throttle
+  await refreshIfStale(true);
+  const b = document.querySelector('[data-refresh]');
+  if (b) b.classList.remove('spin');
+  const g = ((state.data||{}).generated_at || '').slice(11,16);
+  toast(g ? `Up to date — engine data ${g}` : 'Up to date');
+}
+
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') refreshIfStale(false);
 });
@@ -963,6 +993,9 @@ function topBar(minimal){
       <div class="mark">${LOGO}</div>
       <div><h1>The Collect</h1><p class="sub">powered by the Strategic Logic engine</p></div>
     </div>
+    <button class="icon-btn" data-refresh aria-label="Refresh">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6"/></svg>
+    </button>
     <button class="icon-btn" data-theme-toggle aria-label="Theme">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
     </button>
@@ -1267,7 +1300,7 @@ async function boot(){
 }
 
 document.addEventListener('click', async (e) => {
-  const t = e.target.closest('[data-tab],[data-meeting],[data-back],[data-settings],[data-theme-toggle],[data-signin],[data-retry],[data-save-settings],[data-signout],[data-goto],[data-access],[data-bb],[data-bbdel],[data-bbnote],[data-bbnote-save]');
+  const t = e.target.closest('[data-tab],[data-meeting],[data-back],[data-settings],[data-theme-toggle],[data-refresh],[data-signin],[data-retry],[data-save-settings],[data-signout],[data-goto],[data-access],[data-bb],[data-bbdel],[data-bbnote],[data-bbnote-save]');
   if (!t) {
     if (e.target.id === 'scrim') closeSheet();
     return;
@@ -1327,6 +1360,9 @@ document.addEventListener('click', async (e) => {
   }
   else if (t.hasAttribute('data-theme-toggle')) {
     toggleTheme();
+  }
+  else if (t.hasAttribute('data-refresh')) {
+    manualRefresh(t);
   }
   else if (t.hasAttribute('data-settings')) {
     settingsSheet();
