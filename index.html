@@ -292,9 +292,14 @@
       const best = (w.best && w.best[0]) ? w.best[0] : null;
       document.getElementById('pBest').textContent =
         best ? '$' + Math.round(best.collect) : '—';
+      let upd = '';
+      try {
+        upd = new Date(d.generated_at).toLocaleTimeString([],
+              {hour:'numeric', minute:'2-digit'});
+      } catch(e){}
       document.getElementById('proofNote').textContent =
-        'live from the engine — last 7 days, ' + w.races + ' races, updated ' +
-        String((d.generated_at||'').slice(11,16));
+        'live from the engine — last 7 days, ' + w.races + ' races' +
+        (upd ? ', updated ' + upd : '');
     }
     // free race
     const fr = d.free_race;
