@@ -1,0 +1,25 @@
+# The Collect — freshness watchdog.
+# Runs on GitHub's servers (NOT Blair's machine) every 2 hours and fails
+# loudly if the published data is more than ~2 hours old — GitHub then
+# emails the repo owner automatically. The point: we learn the engine's
+# machine has gone dark before a paying customer does.
+name: freshness
+on:
+  schedule:
+    - cron: "13 */2 * * *"
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: data must be fresh
+        run: |
+          gen=$(curl -s https://thecollect.nz/app/data.json | python3 -c \
+            "import json,sys; print(json.load(sys.stdin)['generated_at'])")
+          age=$(( $(date -u +%s) - $(date -u -d "$gen" +%s) ))
+          echo "published: $gen — age: $((age/60)) minutes"
+          if [ "$age" -gt 7800 ]; then
+            echo "::error::thecollect.nz data is $((age/60)) minutes old — the engine machine is asleep or the pipeline is broken"
+            exit 1
+          fi
