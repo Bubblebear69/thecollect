@@ -349,7 +349,7 @@ function renderGate(){
 
 function tabs(){
   const t = [['home','Home'],['today','Today’s card'],['results','Results'],
-             ['picks','Our picks'],['horses','Horse stats'],
+             ['picks','Our picks'],['stats','Stats'],['horses','Horse stats'],
              ['blackbook','Blackbook']];
   return '<div class="tabs">' + t.map(([k,l]) =>
     `<button data-t="${k}" class="${TAB===k?'on':''}">${l}</button>`).join('') +
@@ -617,9 +617,75 @@ function renderTab(){
   if (TAB==='home') return renderHome();
   if (TAB==='results') return renderResults();
   if (TAB==='picks') return renderArchive();
+  if (TAB==='stats') return renderStats();
   if (TAB==='horses') return renderHorses();
   if (TAB==='blackbook') return renderBlackbook();
   renderToday();
+}
+
+/* ---------------------------------------------- our stats / insights */
+let INSIGHTS = null;
+async function renderStats(){
+  let h = tabs() + '<h2>The Collect, by the numbers</h2>' +
+    '<div class="sub">where we shine — straight from our published record</div>';
+  if (!INSIGHTS){
+    page().innerHTML = h + '<p class="sub">Crunching the numbers…</p>';
+    try { INSIGHTS = await (await fetch('insights.json',{cache:'no-store'})).json(); }
+    catch(e){ INSIGHTS = {}; }
+  }
+  const s = INSIGHTS || {};
+  if (!s.picks){ page().innerHTML = h + '<p class="sub">Not enough settled races yet — this fills out fast.</p>'; return; }
+
+  const best = (s.horses||[])[0];
+  h += `<div class="tile-row">
+    <div class="tile"><div class="tn">${(s.pct||0).toFixed(1)}%</div><div class="tl">win strike, all-time</div></div>
+    <div class="tile"><div class="tn">${nf(s.wins)}</div><div class="tl">winners called</div></div>
+    <div class="tile"><div class="tn">${best?('$'+best.div.toFixed(2)):'—'}</div><div class="tl">longest-priced winner</div></div>
+  </div>`;
+
+  // Best tracks
+  if (s.tracks && s.tracks.length){
+    h += `<article class="rc"><header class="rc-head"><span class="rc-name">Tracks we shine at</span>
+      <span class="rc-meta"><span class="pill">win strike</span></span></header><div class="placings">`;
+    s.tracks.forEach((t, i) => {
+      h += `<div class="pl-row"><span class="saddle ${i===0?'pl-1':i===1?'pl-2':i===2?'pl-3':'pl-4'}">${i+1}</span>
+        <div class="pl-txt"><b>${t.track}</b><span class="frow-c">${t.wins} winners from ${t.picks} runners</span></div>
+        <span class="op-badge ob-won">${t.pct}%</span></div>`;
+    });
+    h += '</div></article>';
+  }
+
+  // Best days out
+  if (s.days && s.days.length){
+    h += `<article class="rc"><header class="rc-head"><span class="rc-name">Our best days out</span></header><div class="placings">`;
+    s.days.forEach((d, i) => {
+      h += `<div class="pl-row"><span class="saddle ${i===0?'pl-1':i===1?'pl-2':'pl-3'}">${i+1}</span>
+        <div class="pl-txt"><b>${d.date}</b><span class="frow-c">${d.wins} winners from ${d.races} picks</span></div>
+        <span class="op-badge ob-won">${d.pct}%</span></div>`;
+    });
+    h += '</div></article>';
+  }
+
+  // Most successful meeting
+  if (s.meeting){
+    h += `<article class="rc"><header class="rc-head"><span class="rc-name">Our biggest meeting</span></header>
+      <div class="ourpick ourpick-won"><span class="op-lab">${s.meeting.date}</span>
+        <span class="op-horse">${s.meeting.track}</span>
+        <span class="op-badge">${s.meeting.wins} winners / ${s.meeting.races}</span></div></article>`;
+  }
+
+  // Best-priced winners we called
+  if (s.horses && s.horses.length){
+    h += `<article class="rc"><header class="rc-head"><span class="rc-name">Biggest winners we called</span>
+      <span class="rc-meta"><span class="pill">$ collect</span></span></header><div class="placings">`;
+    s.horses.forEach((x, i) => {
+      h += `<div class="pl-row"><span class="saddle ${i<3?'pl-'+(i+1):'pl-4'}">★</span>
+        <div class="pl-txt"><b>${x.horse}</b><span class="frow-c">${x.track} · ${x.date}</span></div>
+        <span class="pl-div"><span class="dv">$${x.div.toFixed(2)}</span></span></div>`;
+    });
+    h += '</div></article>';
+  }
+  page().innerHTML = h;
 }
 
 /* ---------------------------------------------- results (all races) */
