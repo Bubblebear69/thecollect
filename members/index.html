@@ -44,6 +44,35 @@
   .race-line{ display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; }
   .race-line b{ font-size:15.5px; }
   .race-line .t{ color:var(--faint); font-size:12.5px; }
+  .hero-in{ padding:26px 4px 8px; }
+  .hero-in h1{ font-family:Georgia,serif; font-size:clamp(28px,5vw,40px);
+        line-height:1.12; font-weight:700; }
+  .hero-in h1 span{ color:var(--gold); }
+  .hero-in .lead{ color:var(--dim); font-size:16px; max-width:640px; margin-top:10px; }
+  .tile-row{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin:12px 0; }
+  .tile{ background:var(--card); border:1px solid var(--line); border-radius:14px;
+        padding:16px 14px; text-align:center; }
+  .tile .tn{ font-size:clamp(20px,3.4vw,28px); font-weight:800; color:var(--gold-hi);
+        font-variant-numeric:tabular-nums; }
+  .tile .tl{ font-size:11.5px; color:var(--faint); margin-top:3px; letter-spacing:.3px; }
+  .panel{ background:var(--card); border:1px solid var(--line); border-radius:16px;
+        padding:22px 24px; margin:16px 0; }
+  .panel h3{ font-family:Georgia,serif; font-size:20px; margin-bottom:10px; }
+  ul.how{ list-style:none; display:grid; gap:11px; }
+  ul.how li{ padding-left:22px; position:relative; font-size:14.5px; color:var(--dim); }
+  ul.how li b{ color:var(--paper); }
+  ul.how li::before{ content:"◆"; position:absolute; left:0; color:var(--gold);
+        font-size:11px; top:3px; }
+  .panel.learn{ background:linear-gradient(135deg,var(--turf-deep),#123526 55%,var(--card));
+        border-color:rgba(28,138,80,.4); }
+  .panel.learn p{ color:var(--paper); font-size:15px; margin-bottom:10px; }
+  .panel.learn b{ color:var(--gold-hi); }
+  .cta-in{ text-align:center; margin:8px 0 24px; }
+  .go-today{ background:linear-gradient(135deg,var(--gold-hi),var(--gold)); color:#171204;
+        border:0; border-radius:10px; padding:13px 26px; font-size:15px; font-weight:800;
+        cursor:pointer; }
+  @media(max-width:560px){ .tile-row{ grid-template-columns:repeat(3,1fr); }
+        .tile .tn{ font-size:19px; } .tile .tl{ font-size:10px; } }
   .meet-pick{ margin:6px 0 4px; padding:11px 14px; border-radius:10px; font-size:15px;
         font-weight:700; background:var(--card); color:var(--paper);
         border:1px solid var(--line); width:100%; max-width:420px; cursor:pointer; }
@@ -129,7 +158,7 @@ const DIGESTS = [
   "321e0ba4a0d68e5e5ceb3e01af8b76d61cb9481cfddeecb6b736420b305a568d",
   "712bd1b83cd1e0527d0a9e292fcd9ad78e43584c8c40cd68b7a9ee91496d87f0",
 ];
-let DATA = null, ARCHIVE = null, TAB = 'today', MEET = 0;
+let DATA = null, ARCHIVE = null, TAB = 'home', MEET = 0;
 const page = () => document.getElementById('page');
 
 function wireMeetPick(){
@@ -172,12 +201,94 @@ function renderGate(){
 }
 
 function tabs(){
-  const t = [['today','Today’s card'],['results','Results'],
+  const t = [['home','Home'],['today','Today’s card'],['results','Results'],
              ['picks','Our picks'],['horses','Horse stats'],
              ['blackbook','Blackbook']];
   return '<div class="tabs">' + t.map(([k,l]) =>
     `<button data-t="${k}" class="${TAB===k?'on':''}">${l}</button>`).join('') +
     '</div>';
+}
+
+/* ---------------------------------------------- welcome / home */
+let STATS = null;
+function nf(n){ return (n||0).toLocaleString('en-NZ'); }
+async function renderHome(){
+  const d = DATA || {}, w = d.week || {};
+  if (!STATS){
+    try { STATS = await (await fetch('stats.json',{cache:'no-store'})).json(); }
+    catch(e){ STATS = {}; }
+  }
+  const s = STATS || {};
+  const best = (w.best && w.best[0]) ? w.best[0] : null;
+  let h = tabs();
+  h += `<div class="hero-in">
+    <h1>Welcome to <span>The Collect</span></h1>
+    <p class="lead">The whole desk is yours — every meeting, every race, the
+    reasoning behind every pick, and the honest record to check us on. Here's
+    the machine you're now holding.</p>
+  </div>`;
+
+  // Live form tiles
+  h += '<div class="tile-row">';
+  h += tile(w.wins, 'winners this week');
+  h += tile((w.win_pct||0).toFixed(1)+'%', 'win strike rate');
+  h += tile(best ? '$'+Math.round(best.collect) : '—', 'biggest collect this week');
+  h += '</div>';
+
+  // Engine-scale tiles (smoke, but all true)
+  h += '<div class="tile-row">';
+  h += tile(nf(s.races), 'races analysed');
+  h += tile(nf(s.horses), 'horses in our book');
+  h += tile(nf(s.assessments), 'runner assessments made');
+  h += '</div><div class="tile-row">';
+  h += tile(nf(s.sectionals), 'sectional splits held');
+  h += tile(nf(s.tracks), 'tracks profiled');
+  h += tile(nf(s.meetings), 'meetings covered');
+  h += '</div>';
+
+  // How we do it — 5 bullets (small secrets, not the recipe)
+  h += `<div class="panel"><h3>How we do what we do</h3><ul class="how">
+    <li><b>Around thirty checks on every runner.</b> Class off official
+      ratings, career and recent form, track and distance records, the speed
+      map, track bias and sectional times — each weighed on its own before a
+      single pick is made.</li>
+    <li><b>We commit before we look at the odds.</b> The engine locks its order
+      on the evidence first; the market only ever gets a small, capped say.
+      We're reading the race — not chasing the money.</li>
+    <li><b>We read how the race will be run.</b> Who leads, who's stuck wide,
+      where the tempo pressure falls. The best horse doesn't win if it can't
+      get the trip it needs — so we map that first.</li>
+    <li><b>Our strongest signal is agreement.</b> When our top-rated horse is
+      also the one the market is backing, that convergence is the sweet spot —
+      and it's the pattern we wait for before we star a best bet.</li>
+    <li><b>Every result is published, win or lose.</b> The scoreboard you can
+      see is the entire business. No deleted losers, no cherry-picked weeks —
+      the honesty is the product.</li>
+  </ul></div>`;
+
+  // The learning spiel
+  h += `<div class="panel learn"><h3>It gets smarter every single race</h3>
+    <p>The engine never stops learning. The moment a race is run it feeds
+    straight back in: every horse's form is updated, every track's bias is
+    re-measured — which barriers and which running styles are winning
+    <i>now</i>, not last season — and our own strike-rate is re-checked
+    against what actually happened, so the confidence we put on a pick stays
+    honest.</p>
+    <p>That's the quiet edge. Tomorrow the engine knows more about every horse
+    and every track than it did today, and the day after it knows more again.
+    It has already read <b>${nf(s.races)} races</b> across
+    <b>${nf(s.horses)} horses</b> — and every meeting we cover, that book gets
+    deeper and the read gets sharper. You're not buying a tip. You're renting a
+    machine that's been doing the form, honestly, every day, and never forgets
+    a thing.</p></div>`;
+
+  h += `<div class="cta-in"><button data-t="today" class="go-today">See today's
+    full card →</button></div>`;
+  page().innerHTML = h;
+}
+function tile(n, label){
+  return `<div class="tile"><div class="tn">${n==null?'—':n}</div>` +
+         `<div class="tl">${label}</div></div>`;
 }
 
 const CONF_TEXT = {
@@ -327,6 +438,7 @@ function renderBlackbook(){
 }
 
 function renderTab(){
+  if (TAB==='home') return renderHome();
   if (TAB==='results') return renderResults();
   if (TAB==='picks') return renderArchive();
   if (TAB==='horses') return renderHorses();
