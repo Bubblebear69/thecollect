@@ -266,7 +266,7 @@ function renderBlackbook(){
     if (!list || !list.length) return '';
     let s = `<div class="meeting"><h3>${title}</h3><div class="sub">${note}</div><div class="board">`;
     list.forEach(x => {
-      s += `<div class="brow"><span class="r">${x.date||''} ${x.race||''}</span>
+      s += `<div class="brow"><span class="r">${x.seen||''}</span>
             <span class="p"><b>${x.horse}</b>${x.note ? ' — '+x.note : ''}</span></div>`;
     });
     return s + '</div></div>';
