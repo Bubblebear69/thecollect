@@ -183,6 +183,37 @@
   .hs-sect{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; padding:8px 18px 0; }
   .hs-sect-k{ font-size:10.5px; letter-spacing:.8px; text-transform:uppercase;
         color:var(--gold); font-weight:800; margin-right:2px; }
+  /* ---- King-Zone-beaters ---- */
+  .steer{ display:flex; gap:9px; align-items:flex-start; margin:8px 18px;
+        padding:8px 12px; border-radius:0 8px 8px 0; font-size:13px; color:var(--dim);
+        background:rgba(224,123,84,.1); border-left:3px solid #E07B54; }
+  .steer-x{ color:#E9906B; font-weight:800; }
+  .steer b{ color:#E9906B; }
+  .roughie{ border-color:rgba(212,175,55,.4); }
+  .roughie .rc-no{ background:linear-gradient(135deg,#E9906B,#C7643F); color:#1a0e07; }
+  .ntj{ margin:14px 0; }
+  .ntj-head{ font-size:11px; letter-spacing:1.4px; text-transform:uppercase;
+        color:var(--gold); font-weight:800; margin-bottom:8px; }
+  .ntj-row{ display:flex; gap:10px; overflow-x:auto; padding-bottom:4px; }
+  .ntj-card{ flex:0 0 auto; min-width:140px; background:var(--card);
+        border:1px solid var(--line); border-radius:12px; padding:11px 14px; }
+  .ntj-when{ font-size:19px; font-weight:800; color:var(--gold-hi);
+        font-variant-numeric:tabular-nums; }
+  .ntj-race{ font-size:11.5px; color:var(--faint); margin-top:1px; }
+  .ntj-pick{ font-size:13.5px; font-weight:700; margin-top:5px;
+        white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .print-btn{ margin-left:auto; background:transparent; color:var(--dim);
+        border:1px solid var(--line); border-radius:8px; padding:6px 12px;
+        font-size:12.5px; font-weight:700; cursor:pointer; }
+  .print-btn:hover{ color:var(--gold-hi); border-color:var(--gold); }
+  @media print{
+    body{ background:#fff; color:#111; }
+    .top, .tabs, .meet-pick, .print-btn, .ntj, footer{ display:none !important; }
+    .rc, .track-band{ break-inside:avoid; border-color:#ccc; background:#fff; }
+    .pick-name, .rc-name, .track-name{ color:#111 !important; }
+    .why, .verdict, .conf-line, .frow-c, .market-read{ color:#222 !important; }
+    .saddle{ box-shadow:none; }
+  }
   .meeting{ background:var(--card); border:1px solid var(--line); border-radius:16px;
             padding:20px 22px; margin-bottom:18px; }
   .meeting > h3{ font-size:18px; display:flex; gap:10px; align-items:baseline; }
@@ -375,6 +406,25 @@ async function renderHome(){
     the machine you're now holding.</p>
   </div>`;
 
+  // Next to jump (client-side, live)
+  h += nextToJump(d);
+
+  // Roughie of the day
+  const rgh = d.roughie;
+  if (rgh){
+    h += `<article class="rc roughie"><header class="rc-head">
+      <span class="rc-no">ROUGHIE</span>
+      <span class="rc-name">Roughie of the day</span>
+      <span class="rc-meta"><span class="pill pill-win">$${rgh.price.toFixed(2)}</span></span></header>
+      <div class="pick-hero"><span class="saddle saddle-lg s-pick">${rgh.number}</span>
+        <div class="pick-body"><div class="pick-name">${rgh.horse}</div>
+        <div class="conf-line">${rgh.track} R${rgh.race_no.replace('R','')}` +
+        `${rgh.start_time?(' · jumps '+rgh.start_time.slice(0,5)):''} — a big price we're happy to be on.</div></div></div>`;
+    if (rgh.verdict) h += `<p class="verdict">${rgh.verdict}</p>`;
+    if (rgh.why && rgh.why.length) h += `<p class="why">${rgh.why.join(' ')}</p>`;
+    h += '</article>';
+  }
+
   // Live form tiles
   h += '<div class="tile-row">';
   h += tile(w.wins, 'winners this week');
@@ -437,6 +487,30 @@ function tile(n, label){
   return `<div class="tile"><div class="tn">${n==null?'—':n}</div>` +
          `<div class="tl">${label}</div></div>`;
 }
+function nextToJump(d){
+  // upcoming races across all meetings, soonest first, with our pick
+  const now = new Date();
+  const rows = [];
+  (d.meetings||[]).forEach(m => (m.races||[]).forEach(r => {
+    if (!r.start_time) return;
+    const t = new Date(d.date + 'T' + r.start_time);
+    if (isNaN(t)) return;
+    if (t.getTime() > now.getTime() - 120000)   // not long gone
+      rows.push({t, track:m.track, race:r.race_no, pick:r.pick||{}});
+  }));
+  rows.sort((a,b) => a.t - b.t);
+  const up = rows.slice(0, 5);
+  if (!up.length) return '';
+  let h = '<div class="ntj"><div class="ntj-head">Next to jump</div><div class="ntj-row">';
+  up.forEach(x => {
+    const mins = Math.round((x.t - now)/60000);
+    const when = mins <= 0 ? 'now' : (mins < 60 ? mins+'m' : x.t.toTimeString().slice(0,5));
+    h += `<div class="ntj-card"><div class="ntj-when">${when}</div>
+      <div class="ntj-race">${x.track} ${x.race}</div>
+      <div class="ntj-pick">#${x.pick.number||''} ${x.pick.horse||''}</div></div>`;
+  });
+  return h + '</div></div>';
+}
 
 const CONF_TEXT = {
   "A+": "Top confidence — the evidence and the market both point here.",
@@ -469,7 +543,8 @@ function renderToday(){
            wireMeetPick(); return; }
 
   h += `<div class="track-band"><span class="track-name">${m.track}</span>
-        <span class="track-cond">${m.country||''} · ${m.condition||''}</span></div>`;
+        <span class="track-cond">${m.country||''} · ${m.condition||''}</span>
+        <button class="print-btn" onclick="window.print()">⎙ Print sheet</button></div>`;
   (m.races||[]).forEach(r => {
     const p = r.pick || {};
     const conf = (p.confidence || "").trim();
@@ -496,6 +571,11 @@ function renderToday(){
       </div>`;
     if (p.market_read)
       h += `<div class="market-read">${p.market_read}</div>`;
+    if (r.steer_clear)
+      h += `<div class="steer"><span class="steer-x">✕</span>
+        <span><b>Steer clear</b> of the favourite #${r.steer_clear.number}
+        ${r.steer_clear.horse} ($${r.steer_clear.price.toFixed(2)}) — we don't
+        rate it where the market does.</span></div>`;
     if (r.verdict) h += `<p class="verdict">${r.verdict}</p>`;
     if (r.why) h += `<p class="why">${Array.isArray(r.why) ? r.why.join(' ') : r.why}</p>`;
     if (r.runners && r.runners.length){
