@@ -632,35 +632,52 @@ function renderWeek(){
   page().innerHTML = h;
 }
 
+let PICKS_SEL = '';
 function renderArchive(){
   const days = (ARCHIVE||{}).days || [];
   let h = tabs();
-  h += `<h2>Our picks, day by day</h2><div class="sub">every board we've put up,
-        kept honestly — the record no tipster shows you</div>`;
-  if (!days.length) h += '<p class="sub">The record builds itself daily — check back tomorrow.</p>';
-  days.forEach((day, i) => {
-    h += `<article class="rc"><details ${i===0?'open':''}>
-      <summary class="day-sum">
-        <span class="day-date">${day.date}</span>
-        <span class="day-stat"><b class="day-w">${day.wins}</b> from
-          ${day.races} <span class="day-pct">${day.win_pct}%</span></span>
-        ${day.best ? `<span class="day-best">best: ${day.best.horse}
-          <b>$${(day.best.div||0).toFixed(2)}</b></span>` : ''}
-      </summary>
-      <div class="placings">`;
-    (day.board||[]).forEach(r => {
-      const won = r.outcome === 'WON';
-      const out = r.outcome === 'unplaced' ? 'out' : (won ? 'won' : 'plc');
-      h += `<div class="pl-row ${won?'pl-ours':''}">
-        <span class="saddle ${won?'pl-1':'pl-4'}">${(r.pick.match(/#(\d+)/)||[])[1]||'·'}</span>
-        <div class="pl-txt"><span class="pl-pos">${r.race}</span>
-          <b>${r.pick.replace(/#\d+\s*/,'')}</b></div>
-        <span class="op-badge ob-${out}">${r.outcome}${r.div?' · $'+r.div.toFixed(2):''}</span>
-      </div>`;
-    });
-    h += '</div></details></article>';
+  h += `<h2>Our resulted picks</h2><div class="sub">every board we've put up,
+        settled and kept honestly — the record no tipster shows you</div>`;
+  if (!days.length){
+    page().innerHTML = h + '<p class="sub">The record builds itself daily — check back tomorrow.</p>';
+    return;
+  }
+  if (!PICKS_SEL || !days.some(d => d.date === PICKS_SEL))
+    PICKS_SEL = days[0].date;
+  h += '<select class="meet-pick" id="picksDate">';
+  days.forEach((d, i) => {
+    const lbl = i===0 ? d.date + ' (latest)' : d.date;
+    h += `<option value="${d.date}" ${d.date===PICKS_SEL?'selected':''}>` +
+         `${lbl} — ${d.wins}/${d.races} (${d.win_pct}%)</option>`;
   });
+  h += '</select><div id="picksBody"></div>';
   page().innerHTML = h;
+  document.getElementById('picksDate').onchange = e => {
+    PICKS_SEL = e.target.value; paintPicks();
+  };
+  paintPicks();
+}
+function paintPicks(){
+  const body = document.getElementById('picksBody');
+  if (!body) return;
+  const day = ((ARCHIVE||{}).days||[]).find(d => d.date === PICKS_SEL);
+  if (!day){ body.innerHTML = '<p class="sub">No board for that day.</p>'; return; }
+  let h = `<div class="tile-row">
+    <div class="tile"><div class="tn">${day.wins}</div><div class="tl">winners</div></div>
+    <div class="tile"><div class="tn">${day.races}</div><div class="tl">picks</div></div>
+    <div class="tile"><div class="tn">${day.win_pct}%</div><div class="tl">strike rate</div></div>
+  </div><article class="rc"><div class="placings">`;
+  (day.board||[]).forEach(r => {
+    const won = r.outcome === 'WON';
+    const out = r.outcome === 'unplaced' ? 'out' : (won ? 'won' : 'plc');
+    h += `<div class="pl-row ${won?'pl-ours':''}">
+      <span class="saddle ${won?'pl-1':'pl-4'}">${(r.pick.match(/#(\d+)/)||[])[1]||'·'}</span>
+      <div class="pl-txt"><span class="pl-pos">${r.race}</span>
+        <b>${r.pick.replace(/#\d+\s*/,'')}</b></div>
+      <span class="op-badge ob-${out}">${r.outcome}${r.div?' · $'+r.div.toFixed(2):''}</span>
+    </div>`;
+  });
+  body.innerHTML = h + '</div></article>';
 }
 
 function renderBlackbook(){
