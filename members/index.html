@@ -154,6 +154,35 @@
   .hit-tag{ font-size:9px; font-weight:800; letter-spacing:.5px; color:#171204;
         background:linear-gradient(135deg,var(--gold-hi),var(--gold)); border-radius:3px;
         padding:1px 6px; margin-left:6px; }
+  /* ---- Our picks (day boards) ---- */
+  .day-sum{ display:flex; align-items:center; gap:12px; padding:14px 18px;
+        cursor:pointer; list-style:none; flex-wrap:wrap; }
+  .day-sum::-webkit-details-marker{ display:none; }
+  .day-sum::after{ content:"+"; color:var(--gold); font-size:18px; margin-left:auto; }
+  details[open] .day-sum::after{ content:"–"; }
+  .day-date{ font-family:Georgia,serif; font-weight:700; font-size:16px; }
+  .day-stat{ font-size:13.5px; color:var(--dim); }
+  .day-w{ color:var(--gold-hi); font-size:16px; }
+  .day-pct{ color:var(--faint); }
+  .day-best{ font-size:12.5px; color:var(--faint); }
+  .day-best b{ color:var(--gold-hi); }
+  .ob-won{ background:linear-gradient(135deg,var(--gold-hi),var(--gold)); color:#171204; }
+  .ob-plc{ background:rgba(28,138,80,.2); color:#8FD9AE; }
+  .ob-out{ background:rgba(242,234,211,.08); color:var(--faint); }
+  /* ---- Blackbook ---- */
+  .bb-head.bb-quiet{ background:rgba(212,175,55,.08); }
+  .bb-head.bb-bias{ background:rgba(92,124,144,.1); }
+  .bb-note{ padding:8px 18px 2px; color:var(--dim); font-size:13.5px; font-style:italic; }
+  .bb-seen{ font-size:11.5px; color:var(--faint); white-space:nowrap; }
+  /* ---- Horse stats ---- */
+  .hs-rec{ display:grid; grid-template-columns:repeat(4,1fr); gap:8px; padding:14px 18px 4px; }
+  .hs-tile{ background:rgba(242,234,211,.04); border:1px solid var(--line);
+        border-radius:10px; padding:9px 4px; text-align:center; }
+  .hs-n{ font-size:20px; font-weight:800; color:var(--gold-hi); font-variant-numeric:tabular-nums; }
+  .hs-l{ font-size:10.5px; color:var(--faint); }
+  .hs-sect{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; padding:8px 18px 0; }
+  .hs-sect-k{ font-size:10.5px; letter-spacing:.8px; text-transform:uppercase;
+        color:var(--gold); font-weight:800; margin-right:2px; }
   .meeting{ background:var(--card); border:1px solid var(--line); border-radius:16px;
             padding:20px 22px; margin-bottom:18px; }
   .meeting > h3{ font-size:18px; display:flex; gap:10px; align-items:baseline; }
@@ -526,22 +555,30 @@ function renderWeek(){
 function renderArchive(){
   const days = (ARCHIVE||{}).days || [];
   let h = tabs();
-  h += `<h2>The archive</h2><div class="sub">every day's board, kept honestly —
-        the record no tipster shows you</div>`;
-  if (!days.length) h += '<p class="sub">The archive builds itself daily — check back tomorrow.</p>';
-  days.forEach(day => {
-    h += `<details class="day"><summary>
-      <span class="d">${day.date}</span>
-      <span class="s">${day.wins} winners / ${day.races} races (${day.win_pct}%)</span>
-      ${day.best ? `<span class="b">best: ${day.best.horse} $${(day.best.div||0).toFixed(2)}</span>` : ''}
-      </summary><div class="board">`;
+  h += `<h2>Our picks, day by day</h2><div class="sub">every board we've put up,
+        kept honestly — the record no tipster shows you</div>`;
+  if (!days.length) h += '<p class="sub">The record builds itself daily — check back tomorrow.</p>';
+  days.forEach((day, i) => {
+    h += `<article class="rc"><details ${i===0?'open':''}>
+      <summary class="day-sum">
+        <span class="day-date">${day.date}</span>
+        <span class="day-stat"><b class="day-w">${day.wins}</b> from
+          ${day.races} <span class="day-pct">${day.win_pct}%</span></span>
+        ${day.best ? `<span class="day-best">best: ${day.best.horse}
+          <b>$${(day.best.div||0).toFixed(2)}</b></span>` : ''}
+      </summary>
+      <div class="placings">`;
     (day.board||[]).forEach(r => {
-      const cls = r.outcome === 'WON' ? 'win' : (r.outcome === 'unplaced' ? 'no' : 'plc');
-      h += `<div class="brow"><span class="r">${r.race}</span>
-            <span class="p">${r.pick}</span>
-            <span class="o ${cls}">${r.outcome}${r.div ? ' $'+r.div.toFixed(2) : ''}</span></div>`;
+      const won = r.outcome === 'WON';
+      const out = r.outcome === 'unplaced' ? 'out' : (won ? 'won' : 'plc');
+      h += `<div class="pl-row ${won?'pl-ours':''}">
+        <span class="saddle ${won?'pl-1':'pl-4'}">${(r.pick.match(/#(\d+)/)||[])[1]||'·'}</span>
+        <div class="pl-txt"><span class="pl-pos">${r.race}</span>
+          <b>${r.pick.replace(/#\d+\s*/,'')}</b></div>
+        <span class="op-badge ob-${out}">${r.outcome}${r.div?' · $'+r.div.toFixed(2):''}</span>
+      </div>`;
     });
-    h += '</div></details>';
+    h += '</div></details></article>';
   });
   page().innerHTML = h;
 }
@@ -549,20 +586,28 @@ function renderArchive(){
 function renderBlackbook(){
   const bb = (DATA||{}).blackbook || {};
   let h = tabs();
-  h += `<h2>The Engine's Blackbook</h2><div class="sub">horses the machine says to follow</div>`;
-  const block = (title, list, note) => {
+  h += `<h2>The Engine's Blackbook</h2><div class="sub">horses the machine says to
+        follow — watch for them next start</div>`;
+  const block = (title, list, note, cls) => {
     if (!list || !list.length) return '';
-    let s = `<div class="meeting"><h3>${title}</h3><div class="sub">${note}</div><div class="board">`;
+    let s = `<article class="rc"><header class="rc-head bb-head ${cls}">
+      <span class="rc-name">${title}</span>
+      <span class="rc-meta"><span class="pill">${list.length}</span></span></header>
+      <div class="bb-note">${note}</div><div class="placings">`;
     list.forEach(x => {
-      s += `<div class="brow"><span class="r">${x.seen||''}</span>
-            <span class="p"><b>${x.horse}</b>${x.note ? ' — '+x.note : ''}</span></div>`;
+      s += `<div class="pl-row">
+        <span class="saddle ${cls==='bb-quiet'?'pl-1':'s-chance'}">★</span>
+        <div class="pl-txt"><b>${x.horse}</b>
+          ${x.note ? `<span class="frow-c">${x.note}</span>` : ''}</div>
+        ${x.seen ? `<span class="bb-seen">${x.seen}</span>` : ''}
+      </div>`;
     });
-    return s + '</div></div>';
+    return s + '</div></article>';
   };
   h += block('Quiet achievers', bb.quiet,
-             'flashed home at big odds — the market will be slow to catch up');
+             'Flashed home at odds — the market will be slow to catch up.', 'bb-quiet');
   h += block('Bias victims', bb.bias,
-             'beaten by the track pattern, not by ability');
+             'Beaten by the track pattern, not by ability.', 'bb-bias');
   if (!(bb.quiet||[]).length && !(bb.bias||[]).length)
     h += '<p class="sub">Nothing qualifying right now — the bar is deliberately high.</p>';
   page().innerHTML = h;
@@ -699,26 +744,40 @@ function runHorseSearch(q){
   body.innerHTML = hits.map(horseCard).join('');
 }
 function horseCard(h){
-  const rec = `${h.starts} starts · ${h.wins}W ${h.secs||0}‑${h.thirds||0}`;
-  let s = `<div class="meeting"><h3>${h.name} <span class="cond">${rec}</span></h3>`;
+  let s = `<article class="rc">
+    <header class="rc-head"><span class="rc-name">${h.name}</span></header>
+    <div class="hs-rec">
+      <div class="hs-tile"><div class="hs-n">${h.starts}</div><div class="hs-l">starts</div></div>
+      <div class="hs-tile"><div class="hs-n">${h.wins}</div><div class="hs-l">wins</div></div>
+      <div class="hs-tile"><div class="hs-n">${h.secs||0}</div><div class="hs-l">2nds</div></div>
+      <div class="hs-tile"><div class="hs-n">${h.thirds||0}</div><div class="hs-l">3rds</div></div>
+    </div>`;
   if (h.sect)
-    s += `<div class="conf-line">Best sectionals we hold — 600m ${h.sect.l600}s · ` +
-         `400m ${h.sect.l400}s · 200m ${h.sect.l200}s</div>`;
+    s += `<div class="hs-sect"><span class="hs-sect-k">Best sectionals we hold</span>
+      <span class="pill">600m ${h.sect.l600}s</span>
+      <span class="pill">400m ${h.sect.l400}s</span>
+      <span class="pill">200m ${h.sect.l200}s</span></div>`;
   if (h.runs && h.runs.length){
-    s += '<div class="board">';
+    s += '<div class="placings">';
     h.runs.forEach(r => {
       const d = (r.date||'').slice(0,10);
       const run = r.run ? r.run.replace(/finish,\d+;?/,'').replace(/;/g,' ').trim() : '';
-      s += `<div class="brow"><span class="r">${d} ${r.track||''}</span>` +
-           `<span class="p">${r.dist||''}m ${r.going||''} · ` +
-           `fin ${r.fin}/${r.field||'?'}${r.margin!=null?(' · '+r.margin+'L'):''}` +
-           `${r.sp?(' · $'+r.sp):''}${run?(' · '+run):''}</span></div>`;
+      const fin = parseInt(r.fin,10);
+      const badge = fin>=1 && fin<=4 ? 'pl-'+fin : 'pl-4';
+      s += `<div class="pl-row">
+        <span class="saddle ${badge}">${r.fin||'·'}</span>
+        <div class="pl-txt"><span class="pl-pos">${d}</span> <b>${r.track||''}</b>
+          <span class="frow-c">${r.dist||''}m ${r.going||''}` +
+          `${r.field?(' · field of '+r.field):''}` +
+          `${r.margin!=null?(' · '+r.margin+'L'):''}${run?(' · '+run):''}</span></div>` +
+        (r.sp ? `<span class="pl-div"><span class="dv">$${r.sp}</span></span>` : '') +
+      `</div>`;
     });
     s += '</div>';
   } else {
-    s += '<div class="conf-line">No detailed form stored for this one yet.</div>';
+    s += '<div class="bb-note">No detailed form stored for this one yet.</div>';
   }
-  return s + '</div>';
+  return s + '</article>';
 }
 
 document.addEventListener('click', e => {
