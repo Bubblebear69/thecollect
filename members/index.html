@@ -145,6 +145,15 @@
         color:#171204; }
   .ourpick-plc .op-badge{ background:rgba(28,138,80,.2); color:#8FD9AE; }
   .ourpick-out .op-badge{ background:rgba(242,234,211,.08); color:var(--faint); }
+  .pl-ours{ background:rgba(212,175,55,.05); }
+  .in-top3{ font-size:9.5px; font-weight:800; letter-spacing:.6px; text-transform:uppercase;
+        color:var(--gold); background:rgba(212,175,55,.14); border-radius:4px;
+        padding:1px 7px; margin-left:8px; vertical-align:1px; }
+  .exo-hit{ border-style:solid; border-color:rgba(212,175,55,.5);
+        background:rgba(212,175,55,.08); }
+  .hit-tag{ font-size:9px; font-weight:800; letter-spacing:.5px; color:#171204;
+        background:linear-gradient(135deg,var(--gold-hi),var(--gold)); border-radius:3px;
+        padding:1px 6px; margin-left:6px; }
   .meeting{ background:var(--card); border:1px solid var(--line); border-radius:16px;
             padding:20px 22px; margin-bottom:18px; }
   .meeting > h3{ font-size:18px; display:flex; gap:10px; align-items:baseline; }
@@ -630,9 +639,11 @@ async function paintResults(){
       }
       h += `<div class="placings">`;
       (r.placings||[]).forEach(p => {
-        h += `<div class="pl-row">
+        h += `<div class="pl-row${p.ours?' pl-ours':''}">
           <span class="saddle pl-${p.pos}">${p.no}</span>
-          <div class="pl-txt"><span class="pl-pos">${ord(p.pos)}</span> <b>${p.horse}</b></div>
+          <div class="pl-txt"><span class="pl-pos">${ord(p.pos)}</span> <b>${p.horse}</b>` +
+          (p.ours ? '<span class="in-top3">in our top 3</span>' : '') +
+          `</div>
           <span class="pl-div">` +
           (p.win ? `<span class="dv">$${p.win.toFixed(2)}</span> win` : '') +
           (p.place ? `${p.win?' · ':''}<span class="dv">$${p.place.toFixed(2)}</span> plc` : '') +
@@ -644,8 +655,12 @@ async function paintResults(){
       if (keys.length){
         h += '<div class="exo">';
         keys.forEach(k => {
-          h += `<div class="exo-ticket"><span class="exo-k">${k}</span>` +
-               `$${(ex[k]||0).toFixed(2)}</div>`;
+          const kl = k.toLowerCase();
+          const hit = (kl.indexOf('trifecta')>=0 && r.tri_hit) ||
+                      ((kl.indexOf('first four')>=0 || kl.indexOf('first 4')>=0) && r.ff_hit);
+          h += `<div class="exo-ticket${hit?' exo-hit':''}"><span class="exo-k">${k}` +
+               (hit ? ' <span class="hit-tag">WE BOXED IT</span>' : '') +
+               `</span>$${(ex[k]||0).toFixed(2)}</div>`;
         });
         h += '</div>';
       }
