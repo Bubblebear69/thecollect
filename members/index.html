@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>The Collect — members</title>
+<meta name="robots" content="noindex" />
+<link rel="icon" href="../app/icon.svg" type="image/svg+xml" />
+<style>
+  :root{
+    --ink:#0E1217; --card:#161E27; --line:rgba(212,175,55,.16);
+    --gold:#D4AF37; --gold-hi:#F0D078; --turf:#1C8A50; --turf-deep:#0B3D2E;
+    --paper:#F2EAD3; --dim:rgba(242,234,211,.68); --faint:rgba(242,234,211,.42);
+  }
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  body{ background:var(--ink); color:var(--paper);
+        font:15.5px/1.55 -apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }
+  a{ color:var(--gold); text-decoration:none; }
+  .wrap{ max-width:1120px; margin:0 auto; padding:0 20px; }
+
+  .top{ position:sticky; top:0; z-index:50; background:rgba(14,18,23,.94);
+        backdrop-filter:blur(8px); border-bottom:1px solid var(--line); }
+  .top .wrap{ display:flex; align-items:center; gap:12px; height:60px; }
+  .top img{ width:32px; height:32px; border-radius:8px; }
+  .top .name{ font-family:Georgia,serif; font-weight:700; font-size:17px; }
+  .top .spacer{ flex:1; }
+  .top a.plain{ color:var(--dim); font-size:13.5px; margin-left:14px; }
+
+  .tabs{ display:flex; gap:6px; margin:22px 0 6px; flex-wrap:wrap; }
+  .tabs button{ background:var(--card); color:var(--dim); border:1px solid var(--line);
+        border-radius:999px; padding:9px 20px; font-size:14px; font-weight:700;
+        cursor:pointer; }
+  .tabs button.on{ background:linear-gradient(135deg,var(--gold-hi),var(--gold));
+        color:#171204; border-color:transparent; }
+
+  h2{ font-family:Georgia,serif; font-size:24px; margin:22px 0 4px; }
+  .sub{ color:var(--faint); font-size:13px; margin-bottom:14px; }
+
+  .meeting{ background:var(--card); border:1px solid var(--line); border-radius:16px;
+            padding:20px 22px; margin-bottom:18px; }
+  .meeting > h3{ font-size:18px; display:flex; gap:10px; align-items:baseline; }
+  .meeting > h3 .cond{ font-size:12px; color:var(--faint); font-weight:400; }
+  .race{ border-top:1px solid rgba(242,234,211,.08); margin-top:14px; padding-top:14px; }
+  .race-line{ display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+  .race-line b{ font-size:15.5px; }
+  .race-line .t{ color:var(--faint); font-size:12.5px; }
+  .pick{ font-size:17px; font-weight:800; color:var(--gold-hi); margin:6px 0 2px; }
+  .pick .star{ color:var(--gold); font-size:12px; font-weight:800;
+               border:1px solid var(--line); border-radius:999px; padding:2px 10px;
+               margin-left:8px; vertical-align:2px; }
+  .why{ color:var(--dim); font-size:14px; max-width:760px; }
+  .runners{ margin-top:10px; display:grid; gap:5px; }
+  .runner{ display:flex; gap:10px; font-size:13.5px; }
+  .runner .no{ min-width:26px; color:var(--faint); font-variant-numeric:tabular-nums; }
+  .runner .lab{ min-width:96px; font-weight:700; }
+  .runner.pick .lab{ color:var(--gold); }
+  .runner.danger .lab{ color:#E07B54; }
+  .runner .c{ color:var(--dim); }
+  .exotics{ margin-top:10px; font-size:13.5px; color:var(--dim); }
+  .exotics b{ color:var(--paper); }
+
+  .chips{ display:flex; gap:10px; flex-wrap:wrap; margin:14px 0; }
+  .chip{ background:var(--card); border:1px solid var(--line); border-radius:12px;
+         padding:10px 18px; }
+  .chip .n{ font-size:21px; font-weight:800; color:var(--gold-hi);
+            font-variant-numeric:tabular-nums; }
+  .chip .l{ font-size:11px; color:var(--faint); }
+
+  .day{ background:var(--card); border:1px solid var(--line); border-radius:16px;
+        padding:18px 20px; margin-bottom:14px; }
+  .day summary{ cursor:pointer; list-style:none; display:flex; gap:14px;
+                align-items:baseline; flex-wrap:wrap; font-size:15px; }
+  .day summary::-webkit-details-marker{ display:none; }
+  .day .d{ font-weight:800; min-width:120px; }
+  .day .s{ color:var(--dim); }
+  .day .b{ color:var(--gold-hi); font-weight:700; margin-left:auto; }
+  .board{ margin-top:12px; display:grid; gap:4px; }
+  .brow{ display:flex; gap:10px; font-size:13.5px;
+         border-top:1px solid rgba(242,234,211,.06); padding-top:4px; }
+  .brow .r{ min-width:170px; color:var(--dim); }
+  .brow .p{ flex:1; }
+  .brow .o{ min-width:90px; text-align:right; font-weight:700; }
+  .brow .o.win{ color:var(--gold-hi); }
+  .brow .o.plc{ color:var(--turf); }
+  .brow .o.no{ color:var(--faint); font-weight:400; }
+
+  .gate{ max-width:420px; margin:80px auto; text-align:center; }
+  .gate img{ width:72px; height:72px; border-radius:16px; margin-bottom:16px; }
+  .gate h1{ font-family:Georgia,serif; font-size:26px; margin-bottom:8px; }
+  .gate p{ color:var(--dim); font-size:14.5px; margin-bottom:18px; }
+  .gate input{ width:100%; padding:13px 16px; border-radius:10px; font-size:16px;
+        background:var(--card); color:var(--paper); border:1px solid var(--line);
+        text-transform:uppercase; text-align:center; letter-spacing:1px; }
+  .gate button{ width:100%; margin-top:12px; padding:13px; border-radius:10px;
+        border:0; font-weight:800; font-size:15px; cursor:pointer;
+        background:linear-gradient(135deg,var(--gold-hi),var(--gold)); color:#171204; }
+  .gate .err{ color:#E07B54; font-size:13.5px; margin-top:10px; min-height:18px; }
+  footer{ padding:34px 0; color:var(--faint); font-size:12.5px; }
+</style>
+</head>
+<body>
+
+<div class="top"><div class="wrap">
+  <img src="../logo.png" alt="" /><span class="name">THE COLLECT · members</span>
+  <span class="spacer"></span>
+  <a class="plain" href="../app/">Phone app</a>
+  <a class="plain" href="../">Public site</a>
+</div></div>
+
+<div id="page" class="wrap"></div>
+
+<footer><div class="wrap">R18 · Please gamble responsibly · NZ 0800 654 655 · AU 1800 858 858
+  · Opinions based on evidence, not guarantees.</div></footer>
+
+<script>
+const DIGESTS = [
+  "6027735188474088b3f3068efe27b2dab3a538697e0f9a7ac5e98e44c08868ee",
+  "321e0ba4a0d68e5e5ceb3e01af8b76d61cb9481cfddeecb6b736420b305a568d",
+  "712bd1b83cd1e0527d0a9e292fcd9ad78e43584c8c40cd68b7a9ee91496d87f0",
+];
+let DATA = null, ARCHIVE = null, TAB = 'today';
+const page = () => document.getElementById('page');
+
+function hasAccess(){ return localStorage.getItem('tc_access') === 'yes'; }
+
+async function checkCode(code){
+  const clean = (code||'').trim().toUpperCase();
+  if (!clean) return false;
+  const buf = await crypto.subtle.digest('SHA-256',
+      new TextEncoder().encode(clean));
+  const hex = [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('');
+  return DIGESTS.includes(hex);
+}
+
+function renderGate(){
+  page().innerHTML = `<div class="gate">
+    <img src="../logo.png" alt="" />
+    <h1>Members only</h1>
+    <p>This is the full desk — every meeting, every race, the archive.
+       Enter your invite code once and this browser stays signed in.</p>
+    <input id="code" placeholder="INVITE CODE" autocomplete="off" />
+    <button id="go">Unlock</button>
+    <div class="err" id="err"></div>
+    <p style="margin-top:16px"><a href="../">Back to the public site</a></p>
+  </div>`;
+  document.getElementById('go').onclick = async () => {
+    if (await checkCode(document.getElementById('code').value)){
+      localStorage.setItem('tc_access', 'yes');
+      boot();
+    } else {
+      document.getElementById('err').textContent =
+        'That code isn’t recognised. Check it and try again.';
+    }
+  };
+}
+
+function tabs(){
+  const t = [['today','Today’s full card'],['week','This week'],
+             ['archive','The archive'],['blackbook','Blackbook']];
+  return '<div class="tabs">' + t.map(([k,l]) =>
+    `<button data-t="${k}" class="${TAB===k?'on':''}">${l}</button>`).join('') +
+    '</div>';
+}
+
+function renderToday(){
+  const d = DATA || {};
+  let h = tabs();
+  h += `<h2>Today — ${d.date||''}</h2>
+        <div class="sub">${d.meeting_count||0} meetings · updated
+        ${(d.generated_at||'').slice(11,16)} · re-checked to a minute before
+        every jump</div>`;
+  (d.meetings||[]).forEach(m => {
+    h += `<div class="meeting"><h3>${m.track}
+          <span class="cond">${m.country||''} · ${m.condition||''}</span></h3>`;
+    (m.races||[]).forEach(r => {
+      const p = r.pick || {};
+      h += `<div class="race">
+        <div class="race-line"><b>R${r.race_no}${r.race_name ? ' · '+r.race_name : ''}</b>
+          <span class="t">${r.distance||''} · jumps ${(r.start_time||'').slice(0,5)}</span></div>
+        <div class="pick">#${p.number} ${p.horse}
+          ${p.best_bet ? '<span class="star">BEST BET</span>' : ''}
+          ${p.firming ? '<span class="star">MONEY COMING</span>' : ''}</div>`;
+      if (r.verdict) h += `<div class="why"><b>${r.verdict}</b></div>`;
+      if (r.why) h += `<div class="why">${r.why}</div>`;
+      if (r.runners && r.runners.length){
+        h += '<div class="runners">';
+        r.runners.forEach(u => {
+          h += `<div class="runner ${u.tier||''}">
+                <span class="no">${u.number}</span>
+                <span class="lab">${u.label||''}</span>
+                <span class="c">${u.horse}${u.comment ? ' — ' + u.comment : ''}</span>
+                </div>`;
+        });
+        h += '</div>';
+      }
+      if (r.exotics){
+        const e = r.exotics;
+        h += '<div class="exotics">' +
+             (e.trifecta ? `<div><b>Trifecta:</b> ${e.trifecta}</div>` : '') +
+             (e.first_four ? `<div><b>First four:</b> ${e.first_four}</div>` : '') +
+             '</div>';
+      }
+      h += '</div>';
+    });
+    h += '</div>';
+  });
+  page().innerHTML = h;
+}
+
+function renderWeek(){
+  const w = (DATA||{}).week || {};
+  let h = tabs();
+  h += `<h2>This week</h2><div class="sub">rolling 7 days, straight from the engine</div>`;
+  h += `<div class="chips">
+    <div class="chip"><div class="n">${w.wins??'—'}</div><div class="l">winners</div></div>
+    <div class="chip"><div class="n">${w.races??'—'}</div><div class="l">races</div></div>
+    <div class="chip"><div class="n">${w.win_pct??'—'}%</div><div class="l">strike rate</div></div>
+  </div>`;
+  if (w.best && w.best.length){
+    h += '<div class="meeting"><h3>The board of the week</h3><div class="board" style="margin-top:10px">';
+    w.best.forEach(b => {
+      h += `<div class="brow"><span class="r">${b.date||''}</span>
+            <span class="p">${b.race} — <b>${b.horse}</b> won at $${(b.price||0).toFixed(2)}</span>
+            <span class="o win">$${(b.collect||0).toFixed(2)}</span></div>`;
+    });
+    h += '</div></div>';
+  }
+  const y = (DATA||{}).yesterday;
+  if (y){
+    h += `<div class="meeting"><h3>Yesterday — ${y.date}</h3>
+      <div class="chips"><div class="chip"><div class="n">${y.wins}</div><div class="l">winners</div></div>
+      <div class="chip"><div class="n">${y.win_pct}%</div><div class="l">win strike</div></div>
+      <div class="chip"><div class="n">${y.place_pct}%</div><div class="l">top-3 rate</div></div></div></div>`;
+  }
+  page().innerHTML = h;
+}
+
+function renderArchive(){
+  const days = (ARCHIVE||{}).days || [];
+  let h = tabs();
+  h += `<h2>The archive</h2><div class="sub">every day's board, kept honestly —
+        the record no tipster shows you</div>`;
+  if (!days.length) h += '<p class="sub">The archive builds itself daily — check back tomorrow.</p>';
+  days.forEach(day => {
+    h += `<details class="day"><summary>
+      <span class="d">${day.date}</span>
+      <span class="s">${day.wins} winners / ${day.races} races (${day.win_pct}%)</span>
+      ${day.best ? `<span class="b">best: ${day.best.horse} $${(day.best.div||0).toFixed(2)}</span>` : ''}
+      </summary><div class="board">`;
+    (day.board||[]).forEach(r => {
+      const cls = r.outcome === 'WON' ? 'win' : (r.outcome === 'unplaced' ? 'no' : 'plc');
+      h += `<div class="brow"><span class="r">${r.race}</span>
+            <span class="p">${r.pick}</span>
+            <span class="o ${cls}">${r.outcome}${r.div ? ' $'+r.div.toFixed(2) : ''}</span></div>`;
+    });
+    h += '</div></details>';
+  });
+  page().innerHTML = h;
+}
+
+function renderBlackbook(){
+  const bb = (DATA||{}).blackbook || {};
+  let h = tabs();
+  h += `<h2>The Engine's Blackbook</h2><div class="sub">horses the machine says to follow</div>`;
+  const block = (title, list, note) => {
+    if (!list || !list.length) return '';
+    let s = `<div class="meeting"><h3>${title}</h3><div class="sub">${note}</div><div class="board">`;
+    list.forEach(x => {
+      s += `<div class="brow"><span class="r">${x.date||''} ${x.race||''}</span>
+            <span class="p"><b>${x.horse}</b>${x.note ? ' — '+x.note : ''}</span></div>`;
+    });
+    return s + '</div></div>';
+  };
+  h += block('Quiet achievers', bb.quiet,
+             'flashed home at big odds — the market will be slow to catch up');
+  h += block('Bias victims', bb.bias,
+             'beaten by the track pattern, not by ability');
+  if (!(bb.quiet||[]).length && !(bb.bias||[]).length)
+    h += '<p class="sub">Nothing qualifying right now — the bar is deliberately high.</p>';
+  page().innerHTML = h;
+}
+
+function renderTab(){
+  if (TAB==='week') return renderWeek();
+  if (TAB==='archive') return renderArchive();
+  if (TAB==='blackbook') return renderBlackbook();
+  renderToday();
+}
+
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-t]');
+  if (t){ TAB = t.getAttribute('data-t'); renderTab(); }
+});
+
+async function boot(){
+  if (!hasAccess()) return renderGate();
+  page().innerHTML = '<p class="sub" style="margin-top:40px">Loading the desk…</p>';
+  try {
+    const [a, b] = await Promise.all([
+      fetch('../app/data.json', {cache:'no-store'}),
+      fetch('archive.json', {cache:'no-store'}).catch(() => null),
+    ]);
+    DATA = await a.json();
+    ARCHIVE = b && b.ok ? await b.json() : {days: []};
+  } catch(e){
+    page().innerHTML = '<p class="sub" style="margin-top:40px">Couldn’t load — check your connection and refresh.</p>';
+    return;
+  }
+  renderTab();
+}
+boot();
+</script>
+</body>
+</html>
