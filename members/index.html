@@ -181,7 +181,7 @@ function renderToday(){
           ${p.best_bet ? '<span class="star">BEST BET</span>' : ''}
           ${p.firming ? '<span class="star">MONEY COMING</span>' : ''}</div>`;
       if (r.verdict) h += `<div class="why"><b>${r.verdict}</b></div>`;
-      if (r.why) h += `<div class="why">${r.why}</div>`;
+      if (r.why) h += `<div class="why">${Array.isArray(r.why) ? r.why.join(' ') : r.why}</div>`;
       if (r.runners && r.runners.length){
         h += '<div class="runners">';
         r.runners.forEach(u => {
