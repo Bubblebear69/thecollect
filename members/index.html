@@ -172,8 +172,9 @@ function renderGate(){
 }
 
 function tabs(){
-  const t = [['today','Today’s full card'],['week','This week'],
-             ['archive','The archive'],['blackbook','Blackbook']];
+  const t = [['today','Today’s card'],['results','Results'],
+             ['picks','Our picks'],['horses','Horse stats'],
+             ['blackbook','Blackbook']];
   return '<div class="tabs">' + t.map(([k,l]) =>
     `<button data-t="${k}" class="${TAB===k?'on':''}">${l}</button>`).join('') +
     '</div>';
@@ -326,10 +327,117 @@ function renderBlackbook(){
 }
 
 function renderTab(){
-  if (TAB==='week') return renderWeek();
-  if (TAB==='archive') return renderArchive();
+  if (TAB==='results') return renderResults();
+  if (TAB==='picks') return renderArchive();
+  if (TAB==='horses') return renderHorses();
   if (TAB==='blackbook') return renderBlackbook();
   renderToday();
+}
+
+/* ---------------------------------------------- results (all races) */
+let RES_DATES = null, RES_SEL = '';
+async function renderResults(){
+  let h = tabs() + '<h2>Race results</h2>' +
+    '<div class="sub">every placing and dividend — today back 60 days</div>';
+  if (!RES_DATES){
+    page().innerHTML = h + '<p class="sub">Loading dates…</p>';
+    try {
+      const r = await fetch('results/index.json', {cache:'no-store'});
+      RES_DATES = (await r.json()).dates || [];
+      RES_SEL = RES_DATES[0] || '';
+    } catch(e){ RES_DATES = []; }
+  }
+  if (!RES_DATES.length){
+    page().innerHTML = h + '<p class="sub">No results loaded yet.</p>'; return; }
+  h += '<select class="meet-pick" id="resDate">';
+  RES_DATES.forEach(d => {
+    const lbl = d === RES_DATES[0] ? d + ' (latest)' : d;
+    h += `<option value="${d}" ${d===RES_SEL?'selected':''}>${lbl}</option>`;
+  });
+  h += '</select><div id="resBody"><p class="sub">Loading…</p></div>';
+  page().innerHTML = h;
+  document.getElementById('resDate').onchange = e => {
+    RES_SEL = e.target.value; paintResults();
+  };
+  paintResults();
+}
+async function paintResults(){
+  const body = document.getElementById('resBody');
+  if (!body) return;
+  let day;
+  try {
+    const r = await fetch('results/' + RES_SEL + '.json', {cache:'no-store'});
+    day = await r.json();
+  } catch(e){ body.innerHTML = '<p class="sub">Couldn’t load that day.</p>'; return; }
+  let h = '';
+  (day.meetings||[]).forEach(m => {
+    h += `<div class="meeting"><h3>${m.track} <span class="cond">${m.country||''}</span></h3>`;
+    (m.races||[]).forEach(r => {
+      h += `<div class="race"><div class="race-line"><b>${r.race_no}</b></div><div class="board">`;
+      (r.placings||[]).forEach(p => {
+        h += `<div class="brow"><span class="r">${p.pos}. #${p.no} <b>${p.horse}</b></span>` +
+             `<span class="o">${p.win?('$'+p.win.toFixed(2)+' win'):''}` +
+             `${p.place?('  $'+p.place.toFixed(2)+' plc'):''}</span></div>`;
+      });
+      const ex = r.exotics||{};
+      const exl = Object.keys(ex).map(k => `${k} $${(ex[k]||0).toFixed(2)}`).join('  ·  ');
+      if (exl) h += `<div class="exotics">${exl}</div>`;
+      h += '</div></div>';
+    });
+    h += '</div>';
+  });
+  body.innerHTML = h || '<p class="sub">No races for that day.</p>';
+}
+
+/* ---------------------------------------------- horse stats (search) */
+let HORSES = null;
+async function renderHorses(){
+  let h = tabs() + '<h2>Horse stats</h2>' +
+    '<div class="sub">search any horse — record, recent runs, sectional times</div>' +
+    '<input class="meet-pick" id="hSearch" placeholder="Type a horse name…" autocomplete="off" />' +
+    '<div id="hBody"></div>';
+  page().innerHTML = h;
+  const inp = document.getElementById('hSearch');
+  inp.focus();
+  inp.oninput = () => runHorseSearch(inp.value);
+  if (!HORSES){
+    document.getElementById('hBody').innerHTML = '<p class="sub">Loading the form book (one-off, a moment)…</p>';
+    try {
+      const r = await fetch('horses.json', {cache:'force-cache'});
+      HORSES = (await r.json()).horses || [];
+    } catch(e){ HORSES = []; }
+    document.getElementById('hBody').innerHTML = '';
+  }
+}
+function runHorseSearch(q){
+  const body = document.getElementById('hBody');
+  q = (q||'').trim().toLowerCase();
+  if (q.length < 2){ body.innerHTML = '<p class="sub">Type at least two letters.</p>'; return; }
+  const hits = (HORSES||[]).filter(h => (h.name||'').toLowerCase().includes(q)).slice(0, 12);
+  if (!hits.length){ body.innerHTML = '<p class="sub">No horse by that name in our data.</p>'; return; }
+  body.innerHTML = hits.map(horseCard).join('');
+}
+function horseCard(h){
+  const rec = `${h.starts} starts · ${h.wins}W ${h.secs||0}‑${h.thirds||0}`;
+  let s = `<div class="meeting"><h3>${h.name} <span class="cond">${rec}</span></h3>`;
+  if (h.sect)
+    s += `<div class="conf-line">Best sectionals we hold — 600m ${h.sect.l600}s · ` +
+         `400m ${h.sect.l400}s · 200m ${h.sect.l200}s</div>`;
+  if (h.runs && h.runs.length){
+    s += '<div class="board">';
+    h.runs.forEach(r => {
+      const d = (r.date||'').slice(0,10);
+      const run = r.run ? r.run.replace(/finish,\d+;?/,'').replace(/;/g,' ').trim() : '';
+      s += `<div class="brow"><span class="r">${d} ${r.track||''}</span>` +
+           `<span class="p">${r.dist||''}m ${r.going||''} · ` +
+           `fin ${r.fin}/${r.field||'?'}${r.margin!=null?(' · '+r.margin+'L'):''}` +
+           `${r.sp?(' · $'+r.sp):''}${run?(' · '+run):''}</span></div>`;
+    });
+    s += '</div>';
+  } else {
+    s += '<div class="conf-line">No detailed form stored for this one yet.</div>';
+  }
+  return s + '</div>';
 }
 
 document.addEventListener('click', e => {
