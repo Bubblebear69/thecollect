@@ -897,7 +897,7 @@ async function renderHorses(){
   if (!HORSES){
     document.getElementById('hBody').innerHTML = '<p class="sub">Loading the form book (one-off, a moment)…</p>';
     try {
-      const r = await fetch('horses.json', {cache:'force-cache'});
+      const r = await fetch('horses.json', {cache:'no-store'});
       HORSES = (await r.json()).horses || [];
     } catch(e){ HORSES = []; }
     document.getElementById('hBody').innerHTML = '';
