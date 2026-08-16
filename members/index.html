@@ -36,6 +36,84 @@
   h2{ font-family:Georgia,serif; font-size:24px; margin:22px 0 4px; }
   .sub{ color:var(--faint); font-size:13px; margin-bottom:14px; }
 
+  /* ---- Today's card: racing-native treatment ---- */
+  .track-band{ display:flex; align-items:baseline; gap:12px; margin:16px 0 12px;
+        padding-bottom:8px; border-bottom:1px solid var(--line); }
+  .track-name{ font-family:Georgia,serif; font-size:22px; font-weight:700; }
+  .track-cond{ font-size:12.5px; color:var(--faint); text-transform:uppercase;
+        letter-spacing:1px; }
+  .rc{ background:var(--card); border:1px solid var(--line); border-radius:16px;
+        padding:0; margin-bottom:16px; overflow:hidden; }
+  .rc-head{ display:flex; align-items:center; gap:12px; padding:14px 18px;
+        background:rgba(212,175,55,.06); border-bottom:1px solid var(--line); }
+  .rc-no{ font-family:Georgia,serif; font-weight:800; font-size:15px; color:#171204;
+        background:linear-gradient(135deg,var(--gold-hi),var(--gold)); border-radius:7px;
+        padding:3px 11px; letter-spacing:.5px; }
+  .rc-name{ font-family:Georgia,serif; font-size:16px; font-weight:600; flex:1;
+        min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .rc-meta{ display:flex; gap:6px; flex-shrink:0; }
+  .pill{ font-size:11.5px; font-weight:700; color:var(--dim); background:rgba(242,234,211,.07);
+        border:1px solid var(--line); border-radius:999px; padding:3px 10px;
+        font-variant-numeric:tabular-nums; }
+
+  .saddle{ display:inline-flex; align-items:center; justify-content:center;
+        font-weight:800; font-variant-numeric:tabular-nums; border-radius:7px;
+        width:30px; height:34px; font-size:16px; flex-shrink:0;
+        box-shadow:inset 0 -2px 0 rgba(0,0,0,.22); }
+  .saddle-lg{ width:46px; height:52px; font-size:24px; border-radius:9px; }
+  .s-pick{ background:linear-gradient(160deg,var(--gold-hi),var(--gold) 60%,var(--gold-lo));
+        color:#171204; }
+  .s-danger{ background:linear-gradient(160deg,#E9906B,#C7643F); color:#1a0e07; }
+  .s-chance{ background:linear-gradient(160deg,#5C7C90,#3C5568); color:#eaf2f7; }
+  .s-out{ background:#2A333C; color:var(--dim); }
+
+  .pick-hero{ display:flex; gap:15px; align-items:center; padding:16px 18px 12px; }
+  .pick-body{ min-width:0; }
+  .pick-name{ font-family:Georgia,serif; font-size:22px; font-weight:700;
+        color:var(--gold-hi); line-height:1.15; display:flex; align-items:center;
+        gap:9px; flex-wrap:wrap; }
+  .ribbon{ font-size:10.5px; font-weight:800; letter-spacing:1px; color:#171204;
+        background:linear-gradient(135deg,var(--gold-hi),var(--gold)); border-radius:5px;
+        padding:3px 9px; }
+  .chip-money{ font-size:10.5px; font-weight:800; letter-spacing:1px; color:var(--turf);
+        background:rgba(28,138,80,.16); border:1px solid rgba(28,138,80,.5);
+        border-radius:5px; padding:2px 8px; }
+  .pick-conf{ display:flex; align-items:center; gap:10px; margin-top:7px; }
+  .medallion{ display:inline-flex; align-items:center; justify-content:center;
+        width:34px; height:34px; border-radius:50%; font-weight:800; font-size:14px;
+        color:var(--gold-hi); border:2px solid var(--gold); background:rgba(212,175,55,.1);
+        flex-shrink:0; }
+  .pick-conf .conf-line{ margin:0; }
+
+  .verdict{ font-weight:700; font-size:15px; padding:0 18px; margin:4px 0 2px; }
+  .rc .why{ padding:0 18px; margin:2px 0 6px; }
+  .rc .market-read{ margin:8px 18px; }
+
+  .field{ padding:8px 18px 14px; }
+  .field-head{ font-size:10.5px; letter-spacing:1.4px; text-transform:uppercase;
+        color:var(--faint); margin:4px 0 8px; }
+  .frow{ display:flex; gap:12px; align-items:flex-start; padding:7px 0;
+        border-top:1px solid rgba(242,234,211,.06); }
+  .frow-txt{ min-width:0; }
+  .frow-top{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; font-size:14.5px; }
+  .frow-lab{ font-size:10px; font-weight:800; letter-spacing:.6px; text-transform:uppercase;
+        border-radius:4px; padding:1px 7px; }
+  .frow-lab.s-pick{ background:rgba(212,175,55,.16); color:var(--gold); }
+  .frow-lab.s-danger{ background:rgba(224,123,84,.16); color:#E9906B; }
+  .frow-lab.s-chance{ background:rgba(92,124,144,.18); color:#9DBCCE; }
+  .frow-lab.s-out{ background:rgba(242,234,211,.07); color:var(--faint); }
+  .frow-c{ display:block; color:var(--dim); font-size:13px; margin-top:1px; }
+
+  .exo{ display:flex; gap:10px; flex-wrap:wrap; padding:2px 18px 16px; }
+  .exo-ticket{ font-size:13px; color:var(--dim); background:rgba(242,234,211,.04);
+        border:1px dashed var(--line); border-radius:8px; padding:8px 12px; flex:1;
+        min-width:230px; }
+  .exo-k{ display:block; font-size:10px; letter-spacing:1px; text-transform:uppercase;
+        color:var(--gold); font-weight:800; margin-bottom:2px; }
+  @media(prefers-reduced-motion:no-preference){
+    .pick-hero .saddle-lg{ transition:transform .15s ease; }
+    .rc:hover .saddle-lg{ transform:translateY(-1px); }
+  }
   .meeting{ background:var(--card); border:1px solid var(--line); border-radius:16px;
             padding:20px 22px; margin-bottom:18px; }
   .meeting > h3{ font-size:18px; display:flex; gap:10px; align-items:baseline; }
@@ -321,45 +399,58 @@ function renderToday(){
   if (!m){ page().innerHTML = h + '<p class="sub">No meetings loaded yet.</p>';
            wireMeetPick(); return; }
 
-  h += `<div class="meeting"><h3>${m.track}
-        <span class="cond">${m.country||''} · ${m.condition||''}</span></h3>`;
+  h += `<div class="track-band"><span class="track-name">${m.track}</span>
+        <span class="track-cond">${m.country||''} · ${m.condition||''}</span></div>`;
   (m.races||[]).forEach(r => {
     const p = r.pick || {};
     const conf = (p.confidence || "").trim();
-    h += `<div class="race">
-      <div class="race-line"><b>${r.race_no}${r.race_name ? ' · '+r.race_name : ''}</b>
-        <span class="t">${r.distance||''} · jumps ${(r.start_time||'').slice(0,5)}</span></div>
-      <div class="pick">#${p.number} ${p.horse}
-        ${conf ? `<span class="grade">${conf}</span>` : ''}
-        ${p.best_bet ? '<span class="star">BEST BET</span>' : ''}
-        ${p.firming ? '<span class="star">MONEY COMING</span>' : ''}</div>`;
-    if (conf && CONF_TEXT[conf])
-      h += `<div class="conf-line">${CONF_TEXT[conf]}</div>`;
+    const tierClass = t => ({pick:'s-pick', danger:'s-danger',
+                             chance:'s-chance'}[t] || 's-out');
+    h += `<article class="rc">
+      <header class="rc-head">
+        <span class="rc-no">${r.race_no}</span>
+        <span class="rc-name">${r.race_name || 'Race ' + r.race_no.replace('R','')}</span>
+        <span class="rc-meta">
+          ${r.distance ? `<span class="pill">${r.distance}</span>` : ''}
+          ${r.start_time ? `<span class="pill">${(r.start_time).slice(0,5)}</span>` : ''}
+        </span>
+      </header>
+      <div class="pick-hero">
+        <span class="saddle saddle-lg s-pick">${p.number}</span>
+        <div class="pick-body">
+          <div class="pick-name">${p.horse}
+            ${p.best_bet ? '<span class="ribbon">BEST BET</span>' : ''}
+            ${p.firming ? '<span class="chip-money">MONEY COMING</span>' : ''}</div>
+          ${conf ? `<div class="pick-conf"><span class="medallion">${conf}</span>` +
+                   `<span class="conf-line">${CONF_TEXT[conf]||''}</span></div>` : ''}
+        </div>
+      </div>`;
     if (p.market_read)
       h += `<div class="market-read">${p.market_read}</div>`;
-    if (r.verdict) h += `<div class="why"><b>${r.verdict}</b></div>`;
-    if (r.why) h += `<div class="why">${Array.isArray(r.why) ? r.why.join(' ') : r.why}</div>`;
+    if (r.verdict) h += `<p class="verdict">${r.verdict}</p>`;
+    if (r.why) h += `<p class="why">${Array.isArray(r.why) ? r.why.join(' ') : r.why}</p>`;
     if (r.runners && r.runners.length){
-      h += '<div class="runners"><div class="runners-head">The read on every runner</div>';
+      h += '<div class="field"><div class="field-head">The field, read top to bottom</div>';
       r.runners.forEach(u => {
-        h += `<div class="runner ${u.tier||''}">
-              <span class="no">${u.number}</span>
-              <span class="lab">${u.label||''}</span>
-              <span class="c">${u.horse}${u.comment ? ' — ' + u.comment : ''}</span>
-              </div>`;
+        h += `<div class="frow">
+              <span class="saddle ${tierClass(u.tier)}">${u.number}</span>
+              <div class="frow-txt">
+                <span class="frow-top"><b>${u.horse}</b>
+                  <span class="frow-lab ${tierClass(u.tier)}">${u.label||''}</span></span>
+                ${u.comment ? `<span class="frow-c">${u.comment}</span>` : ''}
+              </div></div>`;
       });
       h += '</div>';
     }
     if (r.exotics){
       const e = r.exotics;
-      h += '<div class="exotics">' +
-           (e.trifecta ? `<div><b>Trifecta:</b> ${e.trifecta}</div>` : '') +
-           (e.first_four ? `<div><b>First four:</b> ${e.first_four}</div>` : '') +
-           '</div>';
+      h += '<div class="exo">';
+      if (e.trifecta) h += `<div class="exo-ticket"><span class="exo-k">Trifecta</span>${e.trifecta}</div>`;
+      if (e.first_four) h += `<div class="exo-ticket"><span class="exo-k">First four</span>${e.first_four}</div>`;
+      h += '</div>';
     }
-    h += '</div>';
+    h += '</article>';
   });
-  h += '</div>';
   page().innerHTML = h;
   wireMeetPick();
 }
