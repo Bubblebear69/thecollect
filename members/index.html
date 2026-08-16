@@ -173,6 +173,18 @@
   .bb-head.bb-quiet{ background:rgba(212,175,55,.08); }
   .bb-head.bb-bias{ background:rgba(92,124,144,.1); }
   .bb-note{ padding:8px 18px 2px; color:var(--dim); font-size:13.5px; font-style:italic; }
+  .bb-star{ background:transparent; border:0; color:var(--faint); font-size:20px;
+        cursor:pointer; padding:0 2px; line-height:1; flex-shrink:0; align-self:center; }
+  .bb-star.on{ color:var(--gold-hi); }
+  .bb-star:hover{ color:var(--gold); }
+  .bb-input{ width:100%; margin-top:4px; background:rgba(242,234,211,.04);
+        border:1px solid var(--line); border-radius:7px; padding:6px 10px;
+        color:var(--paper); font-size:13px; }
+  .bb-input:focus{ outline:none; border-color:var(--gold); }
+  .bb-del{ background:transparent; border:1px solid var(--line); color:var(--faint);
+        border-radius:7px; padding:4px 10px; font-size:11.5px; cursor:pointer;
+        white-space:nowrap; align-self:center; }
+  .bb-del:hover{ color:#E9906B; border-color:#E07B54; }
   .bb-seen{ font-size:11.5px; color:var(--faint); white-space:nowrap; }
   /* ---- Horse stats ---- */
   .hs-rec{ display:grid; grid-template-columns:repeat(4,1fr); gap:8px; padding:14px 18px 4px; }
@@ -348,6 +360,25 @@ function wireMeetPick(){
   const sel = document.getElementById('meetPick');
   if (sel) sel.onchange = () => { MEET = parseInt(sel.value, 10) || 0;
                                   renderToday(); };
+}
+
+/* ---- personal blackbook (on-device, shared with the phone app) ---- */
+function esc(s){ return String(s||'').replace(/[&<>"]/g,
+  c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function bbList(){ try { return JSON.parse(localStorage.getItem('tc_blackbook')||'[]'); }
+                  catch(e){ return []; } }
+function bbSave(l){ localStorage.setItem('tc_blackbook', JSON.stringify(l)); }
+function bbHas(horse){ return bbList().some(x => x.horse === horse); }
+function bbToggle(horse){
+  const l = bbList(); const i = l.findIndex(x => x.horse === horse);
+  if (i >= 0) l.splice(i, 1);
+  else l.push({horse: horse, note: '',
+               added: new Date().toISOString().slice(0,10)});
+  bbSave(l);
+}
+function bbStar(horse){
+  return `<button class="bb-star${bbHas(horse)?' on':''}" data-bb="${esc(horse)}"` +
+         ` title="Blackbook this runner">${bbHas(horse)?'★':'☆'}</button>`;
 }
 
 function hasAccess(){ return localStorage.getItem('tc_access') === 'yes'; }
@@ -592,7 +623,7 @@ function renderToday(){
                 <span class="frow-top"><b>${u.horse}</b>
                   <span class="frow-lab ${tierClass(u.tier)}">${u.label||''}</span></span>
                 ${u.comment ? `<span class="frow-c">${u.comment}</span>` : ''}
-              </div></div>`;
+              </div>${bbStar(u.horse)}</div>`;
       });
       h += '</div>';
     }
@@ -688,8 +719,33 @@ function paintPicks(){
 function renderBlackbook(){
   const bb = (DATA||{}).blackbook || {};
   let h = tabs();
-  h += `<h2>The Engine's Blackbook</h2><div class="sub">horses the machine says to
-        follow — watch for them next start</div>`;
+  h += `<h2>Blackbook</h2><div class="sub">your own runners to follow, and the
+        ones the engine is watching</div>`;
+
+  // Your blackbook (personal, on-device)
+  const mine = bbList();
+  h += `<article class="rc"><header class="rc-head">
+    <span class="rc-name">Your blackbook</span>
+    <span class="rc-meta"><span class="pill">${mine.length}</span></span></header>`;
+  if (!mine.length){
+    h += `<div class="bb-note">Tap the ☆ next to any runner on Today's card to
+      add it here — then jot down why you liked it.</div>`;
+  } else {
+    h += '<div class="placings">';
+    mine.forEach((x, i) => {
+      h += `<div class="pl-row">
+        <span class="saddle s-pick">★</span>
+        <div class="pl-txt"><b>${esc(x.horse)}</b>
+          <input class="bb-input" data-bbnote="${i}"
+            value="${esc(x.note)}" placeholder="your note — why you liked it…" /></div>
+        <button class="bb-del" data-bbdel="${i}">remove</button></div>`;
+    });
+    h += '</div>';
+  }
+  h += '</article>';
+
+  h += `<h2 style="margin-top:22px">The Engine's Blackbook</h2>
+        <div class="sub">horses the machine is watching — follow them next start</div>`;
   const block = (title, list, note, cls) => {
     if (!list || !list.length) return '';
     let s = `<article class="rc"><header class="rc-head bb-head ${cls}">
@@ -995,8 +1051,21 @@ function horseCard(h){
 }
 
 document.addEventListener('click', e => {
+  const bb = e.target.closest('[data-bb]');
+  if (bb){ e.preventDefault(); bbToggle(bb.getAttribute('data-bb'));
+           // update just the star, no full re-render (keeps scroll)
+           bb.classList.toggle('on'); bb.textContent = bb.classList.contains('on')?'★':'☆';
+           return; }
+  const del = e.target.closest('[data-bbdel]');
+  if (del){ const l = bbList(); l.splice(+del.getAttribute('data-bbdel'), 1);
+            bbSave(l); renderBlackbook(); return; }
   const t = e.target.closest('[data-t]');
   if (t){ TAB = t.getAttribute('data-t'); renderTab(); }
+});
+document.addEventListener('change', e => {
+  const n = e.target.closest('[data-bbnote]');
+  if (n){ const l = bbList(); const i = +n.getAttribute('data-bbnote');
+          if (l[i]){ l[i].note = n.value; bbSave(l); } }
 });
 
 async function boot(){
