@@ -50,6 +50,9 @@
   .grade{ font-size:12px; font-weight:800; color:#171204; background:var(--gold);
           border-radius:6px; padding:1px 8px; margin-left:8px; vertical-align:2px; }
   .conf-line{ font-size:13px; color:var(--faint); margin:2px 0 4px; font-style:italic; }
+  .market-read{ font-size:13.5px; color:var(--paper); margin:6px 0; padding:8px 12px;
+        background:rgba(28,138,80,.12); border-left:3px solid var(--turf);
+        border-radius:0 8px 8px 0; }
   .runners-head{ font-size:11px; letter-spacing:1px; text-transform:uppercase;
                  color:var(--faint); margin-bottom:4px; }
   .pick{ font-size:17px; font-weight:800; color:var(--gold-hi); margin:6px 0 2px; }
@@ -220,6 +223,8 @@ function renderToday(){
         ${p.firming ? '<span class="star">MONEY COMING</span>' : ''}</div>`;
     if (conf && CONF_TEXT[conf])
       h += `<div class="conf-line">${CONF_TEXT[conf]}</div>`;
+    if (p.market_read)
+      h += `<div class="market-read">${p.market_read}</div>`;
     if (r.verdict) h += `<div class="why"><b>${r.verdict}</b></div>`;
     if (r.why) h += `<div class="why">${Array.isArray(r.why) ? r.why.join(' ') : r.why}</div>`;
     if (r.runners && r.runners.length){
