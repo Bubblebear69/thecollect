@@ -306,7 +306,7 @@
     if (fr && fr.race){
       const race = fr.race, pick = race.pick || {};
       let h = '<span class="tag">TODAY\'S FREE RACE</span>';
-      h += '<div class="race-head"><b>' + fr.track + ' — Race ' + race.race_no +
+      h += '<div class="race-head"><b>' + fr.track + ' ' + race.race_no +
            (race.race_name ? ' · ' + race.race_name : '') + '</b>' +
            '<span class="muted">' + (race.distance||'') +
            (race.start_time ? ' · jumps ' + race.start_time.slice(0,5) : '') + '</span></div>';
