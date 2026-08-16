@@ -114,6 +114,37 @@
     .pick-hero .saddle-lg{ transition:transform .15s ease; }
     .rc:hover .saddle-lg{ transform:translateY(-1px); }
   }
+  /* ---- Results: podium treatment ---- */
+  .pill-win{ background:linear-gradient(135deg,var(--gold-hi),var(--gold));
+        color:#171204; border:0; }
+  .placings{ padding:8px 18px 12px; }
+  .pl-row{ display:flex; align-items:center; gap:12px; padding:8px 0;
+        border-top:1px solid rgba(242,234,211,.06); }
+  .pl-1{ background:linear-gradient(160deg,var(--gold-hi),var(--gold) 60%,var(--gold-lo));
+        color:#171204; }
+  .pl-2{ background:linear-gradient(160deg,#DBE0E6,#9AA3AD); color:#1a1e22; }
+  .pl-3{ background:linear-gradient(160deg,#D3A06E,#A0693C); color:#1a0e05; }
+  .pl-4{ background:#2A333C; color:var(--dim); }
+  .pl-txt{ flex:1; min-width:0; font-size:14.5px; }
+  .pl-pos{ font-size:11px; font-weight:800; letter-spacing:.5px; color:var(--faint);
+        text-transform:uppercase; margin-right:5px; }
+  .pl-div{ font-size:12.5px; color:var(--faint); white-space:nowrap;
+        font-variant-numeric:tabular-nums; }
+  .pl-div .dv{ color:var(--gold-hi); font-weight:800; }
+  .ourpick{ display:flex; align-items:center; gap:10px; margin:0 18px;
+        padding:9px 12px; border-radius:0 8px 8px 0; border-left:3px solid; font-size:13.5px; }
+  .ourpick-won{ background:rgba(212,175,55,.14); border-color:var(--gold); }
+  .ourpick-plc{ background:rgba(28,138,80,.12); border-color:var(--turf); }
+  .ourpick-out{ background:rgba(242,234,211,.04); border-color:rgba(242,234,211,.2); }
+  .op-lab{ font-size:10px; font-weight:800; letter-spacing:1px; text-transform:uppercase;
+        color:var(--faint); }
+  .op-horse{ flex:1; min-width:0; font-weight:700; }
+  .op-badge{ font-size:11.5px; font-weight:800; letter-spacing:.5px; padding:2px 10px;
+        border-radius:5px; white-space:nowrap; }
+  .ourpick-won .op-badge{ background:linear-gradient(135deg,var(--gold-hi),var(--gold));
+        color:#171204; }
+  .ourpick-plc .op-badge{ background:rgba(28,138,80,.2); color:#8FD9AE; }
+  .ourpick-out .op-badge{ background:rgba(242,234,211,.08); color:var(--faint); }
   .meeting{ background:var(--card); border:1px solid var(--line); border-radius:16px;
             padding:20px 22px; margin-bottom:18px; }
   .meeting > h3{ font-size:18px; display:flex; gap:10px; align-items:baseline; }
@@ -564,6 +595,7 @@ async function renderResults(){
   };
   paintResults();
 }
+function ord(n){ return {1:'1st',2:'2nd',3:'3rd',4:'4th'}[n] || (n+'th'); }
 async function paintResults(){
   const body = document.getElementById('resBody');
   if (!body) return;
@@ -574,20 +606,51 @@ async function paintResults(){
   } catch(e){ body.innerHTML = '<p class="sub">Couldn’t load that day.</p>'; return; }
   let h = '';
   (day.meetings||[]).forEach(m => {
-    h += `<div class="meeting"><h3>${m.track} <span class="cond">${m.country||''}</span></h3>`;
+    h += `<div class="track-band"><span class="track-name">${m.track}</span>
+          <span class="track-cond">${m.country||''}</span></div>`;
     (m.races||[]).forEach(r => {
-      h += `<div class="race"><div class="race-line"><b>${r.race_no}</b></div><div class="board">`;
+      const win = (r.placings||[])[0];
+      h += `<article class="rc">
+        <header class="rc-head">
+          <span class="rc-no">${r.race_no}</span>
+          ${win ? `<span class="rc-name">Won by <b>${win.horse}</b></span>` : ''}
+          ${win && win.win ? `<span class="rc-meta"><span class="pill pill-win">` +
+            `$${win.win.toFixed(2)}</span></span>` : ''}
+        </header>`;
+      const pk = r.pick;
+      if (pk){
+        const won = pk.won, placed = pk.pos && pk.pos <= 3;
+        const cls = won ? 'ourpick-won' : (placed ? 'ourpick-plc' : 'ourpick-out');
+        const badge = won ? `WON${pk.div?(' · $'+pk.div.toFixed(2)):''}` :
+                      (pk.pos ? ord(pk.pos) : 'unplaced');
+        h += `<div class="ourpick ${cls}">
+          <span class="op-lab">Our pick</span>
+          <span class="op-horse">#${pk.no} ${pk.horse}</span>
+          <span class="op-badge">${badge}</span></div>`;
+      }
+      h += `<div class="placings">`;
       (r.placings||[]).forEach(p => {
-        h += `<div class="brow"><span class="r">${p.pos}. #${p.no} <b>${p.horse}</b></span>` +
-             `<span class="o">${p.win?('$'+p.win.toFixed(2)+' win'):''}` +
-             `${p.place?('  $'+p.place.toFixed(2)+' plc'):''}</span></div>`;
+        h += `<div class="pl-row">
+          <span class="saddle pl-${p.pos}">${p.no}</span>
+          <div class="pl-txt"><span class="pl-pos">${ord(p.pos)}</span> <b>${p.horse}</b></div>
+          <span class="pl-div">` +
+          (p.win ? `<span class="dv">$${p.win.toFixed(2)}</span> win` : '') +
+          (p.place ? `${p.win?' · ':''}<span class="dv">$${p.place.toFixed(2)}</span> plc` : '') +
+          `</span></div>`;
       });
-      const ex = r.exotics||{};
-      const exl = Object.keys(ex).map(k => `${k} $${(ex[k]||0).toFixed(2)}`).join('  ·  ');
-      if (exl) h += `<div class="exotics">${exl}</div>`;
-      h += '</div></div>';
+      h += '</div>';
+      const ex = r.exotics || {};
+      const keys = Object.keys(ex);
+      if (keys.length){
+        h += '<div class="exo">';
+        keys.forEach(k => {
+          h += `<div class="exo-ticket"><span class="exo-k">${k}</span>` +
+               `$${(ex[k]||0).toFixed(2)}</div>`;
+        });
+        h += '</div>';
+      }
+      h += '</article>';
     });
-    h += '</div>';
   });
   body.innerHTML = h || '<p class="sub">No races for that day.</p>';
 }
