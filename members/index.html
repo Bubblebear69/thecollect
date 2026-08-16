@@ -118,8 +118,14 @@ const DIGESTS = [
   "321e0ba4a0d68e5e5ceb3e01af8b76d61cb9481cfddeecb6b736420b305a568d",
   "712bd1b83cd1e0527d0a9e292fcd9ad78e43584c8c40cd68b7a9ee91496d87f0",
 ];
-let DATA = null, ARCHIVE = null, TAB = 'today';
+let DATA = null, ARCHIVE = null, TAB = 'today', MEET = 0;
 const page = () => document.getElementById('page');
+
+function wireMeetPick(){
+  const sel = document.getElementById('meetPick');
+  if (sel) sel.onchange = () => { MEET = parseInt(sel.value, 10) || 0;
+                                  renderToday(); };
+}
 
 function hasAccess(){ return localStorage.getItem('tc_access') === 'yes'; }
 
@@ -162,49 +168,75 @@ function tabs(){
     '</div>';
 }
 
+const CONF_TEXT = {
+  "A+": "Top confidence — the evidence and the market both point here.",
+  "A":  "High confidence — strong, converging evidence.",
+  "B+": "Solid confidence — clearly our horse on the read.",
+  "B":  "Moderate confidence — our pick, in a more open race.",
+  "C":  "An open race — our pick by a narrow margin.",
+};
+
 function renderToday(){
   const d = DATA || {};
+  const meets = d.meetings || [];
+  if (MEET >= meets.length) MEET = 0;
   let h = tabs();
   h += `<h2>Today — ${d.date||''}</h2>
         <div class="sub">${d.meeting_count||0} meetings · updated
         ${(d.generated_at||'').slice(11,16)} · re-checked to a minute before
         every jump</div>`;
-  (d.meetings||[]).forEach(m => {
-    h += `<div class="meeting"><h3>${m.track}
-          <span class="cond">${m.country||''} · ${m.condition||''}</span></h3>`;
-    (m.races||[]).forEach(r => {
-      const p = r.pick || {};
-      h += `<div class="race">
-        <div class="race-line"><b>R${r.race_no}${r.race_name ? ' · '+r.race_name : ''}</b>
-          <span class="t">${r.distance||''} · jumps ${(r.start_time||'').slice(0,5)}</span></div>
-        <div class="pick">#${p.number} ${p.horse}
-          ${p.best_bet ? '<span class="star">BEST BET</span>' : ''}
-          ${p.firming ? '<span class="star">MONEY COMING</span>' : ''}</div>`;
-      if (r.verdict) h += `<div class="why"><b>${r.verdict}</b></div>`;
-      if (r.why) h += `<div class="why">${Array.isArray(r.why) ? r.why.join(' ') : r.why}</div>`;
-      if (r.runners && r.runners.length){
-        h += '<div class="runners">';
-        r.runners.forEach(u => {
-          h += `<div class="runner ${u.tier||''}">
-                <span class="no">${u.number}</span>
-                <span class="lab">${u.label||''}</span>
-                <span class="c">${u.horse}${u.comment ? ' — ' + u.comment : ''}</span>
-                </div>`;
-        });
-        h += '</div>';
-      }
-      if (r.exotics){
-        const e = r.exotics;
-        h += '<div class="exotics">' +
-             (e.trifecta ? `<div><b>Trifecta:</b> ${e.trifecta}</div>` : '') +
-             (e.first_four ? `<div><b>First four:</b> ${e.first_four}</div>` : '') +
-             '</div>';
-      }
+
+  // Meeting picker
+  h += '<select class="meet-pick" id="meetPick">';
+  meets.forEach((m, i) => {
+    h += `<option value="${i}" ${i===MEET?'selected':''}>${m.track}` +
+         ` — ${m.country||''} (${(m.races||[]).length} races)</option>`;
+  });
+  h += '</select>';
+
+  const m = meets[MEET];
+  if (!m){ page().innerHTML = h + '<p class="sub">No meetings loaded yet.</p>';
+           wireMeetPick(); return; }
+
+  h += `<div class="meeting"><h3>${m.track}
+        <span class="cond">${m.country||''} · ${m.condition||''}</span></h3>`;
+  (m.races||[]).forEach(r => {
+    const p = r.pick || {};
+    const conf = (p.confidence || "").trim();
+    h += `<div class="race">
+      <div class="race-line"><b>${r.race_no}${r.race_name ? ' · '+r.race_name : ''}</b>
+        <span class="t">${r.distance||''} · jumps ${(r.start_time||'').slice(0,5)}</span></div>
+      <div class="pick">#${p.number} ${p.horse}
+        ${conf ? `<span class="grade">${conf}</span>` : ''}
+        ${p.best_bet ? '<span class="star">BEST BET</span>' : ''}
+        ${p.firming ? '<span class="star">MONEY COMING</span>' : ''}</div>`;
+    if (conf && CONF_TEXT[conf])
+      h += `<div class="conf-line">${CONF_TEXT[conf]}</div>`;
+    if (r.verdict) h += `<div class="why"><b>${r.verdict}</b></div>`;
+    if (r.why) h += `<div class="why">${Array.isArray(r.why) ? r.why.join(' ') : r.why}</div>`;
+    if (r.runners && r.runners.length){
+      h += '<div class="runners"><div class="runners-head">The read on every runner</div>';
+      r.runners.forEach(u => {
+        h += `<div class="runner ${u.tier||''}">
+              <span class="no">${u.number}</span>
+              <span class="lab">${u.label||''}</span>
+              <span class="c">${u.horse}${u.comment ? ' — ' + u.comment : ''}</span>
+              </div>`;
+      });
       h += '</div>';
-    });
+    }
+    if (r.exotics){
+      const e = r.exotics;
+      h += '<div class="exotics">' +
+           (e.trifecta ? `<div><b>Trifecta:</b> ${e.trifecta}</div>` : '') +
+           (e.first_four ? `<div><b>First four:</b> ${e.first_four}</div>` : '') +
+           '</div>';
+    }
     h += '</div>';
   });
+  h += '</div>';
   page().innerHTML = h;
+  wireMeetPick();
 }
 
 function renderWeek(){
