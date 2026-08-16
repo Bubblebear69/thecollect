@@ -183,6 +183,11 @@
   .hs-sect{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; padding:8px 18px 0; }
   .hs-sect-k{ font-size:10.5px; letter-spacing:.8px; text-transform:uppercase;
         color:var(--gold); font-weight:800; margin-right:2px; }
+  .hs-read{ margin:10px 18px 2px; padding:10px 13px; border-radius:0 8px 8px 0;
+        background:rgba(212,175,55,.07); border-left:3px solid var(--gold);
+        font-size:13.5px; color:var(--paper); }
+  .hs-runs-head{ font-size:10.5px; letter-spacing:1.2px; text-transform:uppercase;
+        color:var(--faint); padding:12px 18px 0; }
   /* ---- King-Zone-beaters ---- */
   .steer{ display:flex; gap:9px; align-items:flex-start; margin:8px 18px;
         padding:8px 12px; border-radius:0 8px 8px 0; font-size:13px; color:var(--dim);
@@ -906,34 +911,80 @@ function runHorseSearch(q){
   if (!hits.length){ body.innerHTML = '<p class="sub">No horse by that name in our data.</p>'; return; }
   body.innerHTML = hits.map(horseCard).join('');
 }
+const GOING = {G:'Good', S:'Soft', H:'Heavy', F:'Firm', A:'Synthetic', D:'Dirt'};
+function goingWord(code){
+  if (!code) return '';
+  const m = code.match(/^([A-Za-z])\s*(\d+)?/);
+  if (!m) return code;
+  const w = GOING[m[1].toUpperCase()] || code;
+  return w + (m[2] ? ' ' + m[2] : '');
+}
+function ordn(n){ n=parseInt(n,10); if(!n) return '';
+  const s=['th','st','nd','rd'], v=n%100; return n+(s[(v-20)%10]||s[v]||s[0]); }
+function runLine(raw){
+  // 'finish,10;settling_down,4;m800,4;m400,7;' -> readable running story
+  if (!raw) return '';
+  const p = {}; raw.split(';').forEach(seg => {
+    const [k,v] = seg.split(','); if(k&&v) p[k.trim()] = parseInt(v,10);
+  });
+  const bits = [];
+  if (p.settling_down) bits.push('settled ' + ordn(p.settling_down));
+  if (p.m800) bits.push(ordn(p.m800) + ' at the 800m');
+  if (p.m400) bits.push(ordn(p.m400) + ' at the 400m');
+  return bits.join(', ');
+}
+function horseRead(h){
+  const st=h.starts||0, w=h.wins||0, pl=(h.secs||0)+(h.thirds||0);
+  let form = '';
+  if (st){
+    form = `${st} recent start${st>1?'s':''} for ${w} win${w!==1?'s':''}`;
+    if (pl) form += ` and ${pl} placing${pl>1?'s':''}`;
+  }
+  let ours = '';
+  const s = h.seen;
+  if (s && s.n){
+    if (s.pick) ours = `We've made it our top pick ${s.pick} time${s.pick>1?'s':''} in the races we've covered.`;
+    else if (s.top3) ours = `We've had it in our top three ${s.top3} time${s.top3>1?'s':''} in our window, without putting it up as the pick.`;
+    else ours = `It's come under our eye ${s.n} time${s.n>1?'s':''} in our window; we've yet to fancy it.`;
+  } else {
+    ours = "It hasn't run in a meeting we've rated yet.";
+  }
+  return (form ? form + '. ' : '') + ours;
+}
 function horseCard(h){
   let s = `<article class="rc">
     <header class="rc-head"><span class="rc-name">${h.name}</span></header>
     <div class="hs-rec">
-      <div class="hs-tile"><div class="hs-n">${h.starts}</div><div class="hs-l">starts</div></div>
-      <div class="hs-tile"><div class="hs-n">${h.wins}</div><div class="hs-l">wins</div></div>
+      <div class="hs-tile"><div class="hs-n">${h.starts||0}</div><div class="hs-l">recent runs</div></div>
+      <div class="hs-tile"><div class="hs-n">${h.wins||0}</div><div class="hs-l">wins</div></div>
       <div class="hs-tile"><div class="hs-n">${h.secs||0}</div><div class="hs-l">2nds</div></div>
       <div class="hs-tile"><div class="hs-n">${h.thirds||0}</div><div class="hs-l">3rds</div></div>
-    </div>`;
+    </div>
+    <div class="hs-read">${horseRead(h)}</div>`;
   if (h.sect)
-    s += `<div class="hs-sect"><span class="hs-sect-k">Best sectionals we hold</span>
-      <span class="pill">600m ${h.sect.l600}s</span>
-      <span class="pill">400m ${h.sect.l400}s</span>
-      <span class="pill">200m ${h.sect.l200}s</span></div>`;
+    s += `<div class="hs-sect"><span class="hs-sect-k">Fastest closing splits we hold</span>
+      <span class="pill">last 600m ${h.sect.l600}s</span>
+      <span class="pill">last 400m ${h.sect.l400}s</span>
+      <span class="pill">last 200m ${h.sect.l200}s</span></div>`;
   if (h.runs && h.runs.length){
-    s += '<div class="placings">';
+    s += '<div class="hs-runs-head">Recent form</div><div class="placings">';
     h.runs.forEach(r => {
       const d = (r.date||'').slice(0,10);
-      const run = r.run ? r.run.replace(/finish,\d+;?/,'').replace(/;/g,' ').trim() : '';
       const fin = parseInt(r.fin,10);
       const badge = fin>=1 && fin<=4 ? 'pl-'+fin : 'pl-4';
+      const story = runLine(r.run);
+      const detail = [
+        (r.dist?r.dist+'m':'') + (r.going?(' '+goingWord(r.going)):''),
+        r.cls || '',
+        r.field ? `finished ${ordn(r.fin)} of ${r.field}` : (r.fin?('finished '+ordn(r.fin)):''),
+        (r.margin!=null && fin>1) ? ('beaten '+r.margin+'L') : (fin===1?'won':''),
+        story,
+      ].filter(Boolean).join(' · ');
       s += `<div class="pl-row">
         <span class="saddle ${badge}">${r.fin||'·'}</span>
-        <div class="pl-txt"><span class="pl-pos">${d}</span> <b>${r.track||''}</b>
-          <span class="frow-c">${r.dist||''}m ${r.going||''}` +
-          `${r.field?(' · field of '+r.field):''}` +
-          `${r.margin!=null?(' · '+r.margin+'L'):''}${run?(' · '+run):''}</span></div>` +
-        (r.sp ? `<span class="pl-div"><span class="dv">$${r.sp}</span></span>` : '') +
+        <div class="pl-txt"><span class="pl-pos">${d} · ${r.track||''}</span>
+          <span class="frow-c">${detail}</span></div>` +
+        (r.sp ? `<span class="pl-div">SP <span class="dv">$${r.sp}</span></span>` : '') +
       `</div>`;
     });
     s += '</div>';
