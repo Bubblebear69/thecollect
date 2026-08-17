@@ -801,6 +801,19 @@ async function renderStats(){
     <div class="tile"><div class="tn">${best?('$'+best.div.toFixed(2)):'—'}</div><div class="tl">longest-priced winner</div></div>
   </div>`;
 
+  // Rolling strike — the honest measure (smooths the daily bounce)
+  if (s.rolling && s.rolling.length){
+    h += `<div class="panel"><h3>Rolling win strike</h3>
+      <div class="sub" style="margin-bottom:12px">The number that matters — one
+      day swings wildly on a small field of picks; the rolling average is the
+      true read.</div><div class="tile-row">`;
+    s.rolling.forEach(w => {
+      h += `<div class="tile"><div class="tn">${w.pct.toFixed(1)}%</div>
+        <div class="tl">last ${w.days} days · ${w.wins}/${w.settled}</div></div>`;
+    });
+    h += '</div></div>';
+  }
+
   // Best tracks
   if (s.tracks && s.tracks.length){
     h += `<article class="rc"><header class="rc-head"><span class="rc-name">Tracks we shine at</span>
