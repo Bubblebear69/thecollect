@@ -162,6 +162,37 @@
   .our-order{ padding:8px 18px 16px; font-size:13px; color:var(--faint);
         font-variant-numeric:tabular-nums; }
   .our-order b{ color:var(--paper); font-weight:700; }
+  /* ---- wow-factor features ---- */
+  .dial{ margin-left:auto; align-self:center; flex-shrink:0; }
+  .pick-hero{ align-items:center; }
+  @keyframes pulse{ 0%,100%{opacity:1} 50%{opacity:.45} }
+  @media(prefers-reduced-motion:no-preference){ .live-pulse{ animation:pulse 1.3s ease-in-out infinite; } }
+  .ntj-head{ display:flex; align-items:center; gap:5px; }
+  .ntj-when.imminent{ color:#E9906B; }
+  .ntj-fire{ margin-left:2px; }
+  .beat{ display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+        padding:8px 18px 14px; }
+  .beat-lab{ font-size:12px; color:var(--faint); font-weight:700; }
+  .beat-nums{ display:flex; gap:5px; flex-wrap:wrap; }
+  .beat-n{ min-width:28px; height:28px; border-radius:7px; border:1px solid var(--line);
+        background:var(--card); color:var(--dim); font-weight:800; font-size:13px; cursor:pointer;
+        font-variant-numeric:tabular-nums; }
+  .beat-n.on{ background:linear-gradient(135deg,#5FCf8f,var(--turf)); color:#08130c; border-color:transparent; }
+  .beat-n:hover{ border-color:var(--gold); }
+  .vs .vs-row{ display:flex; align-items:stretch; gap:0; padding:14px 18px; }
+  .vs-side{ flex:1; text-align:center; }
+  .vs-n{ font-size:30px; font-weight:800; color:var(--paper); font-variant-numeric:tabular-nums; }
+  .vs-n span{ font-size:16px; color:var(--faint); }
+  .vs-side.gold .vs-n{ color:var(--gold-hi); }
+  .vs-l{ font-size:11px; color:var(--faint); letter-spacing:.5px; }
+  .vs-p{ font-size:15px; font-weight:700; color:var(--dim); margin-top:2px; }
+  .vs-v{ align-self:center; color:var(--faint); font-weight:800; padding:0 14px; }
+  @keyframes reveal{ from{opacity:0; transform:translateY(6px) scale(.98)} to{opacity:1; transform:none} }
+  @media(prefers-reduced-motion:no-preference){
+    .pl-winner{ animation:reveal .5s cubic-bezier(.2,.8,.2,1) both; }
+    .pl-winner .saddle{ animation:reveal .6s .1s cubic-bezier(.2,.8,.2,1) both; }
+    .exo-hit{ animation:reveal .5s .2s both; }
+  }
   /* ---- Our picks (day boards) ---- */
   .day-sum{ display:flex; align-items:center; gap:12px; padding:14px 18px;
         cursor:pointer; list-style:none; flex-wrap:wrap; }
@@ -389,6 +420,111 @@ function bbStar(horse){
          ` title="Blackbook this runner">${bbHas(horse)?'★':'☆'}</button>`;
 }
 
+/* ---- Beat the Collect (on-device: your tip vs ours) ---- */
+function btcTips(){ try { return JSON.parse(localStorage.getItem('tc_mytips')||'{}'); } catch(e){ return {}; } }
+function btcTip(rkey){ return btcTips()[rkey]; }
+function btcSet(rkey, no){
+  const t = btcTips();
+  if (t[rkey] === no) delete t[rkey]; else t[rkey] = no;
+  localStorage.setItem('tc_mytips', JSON.stringify(t));
+}
+function btcTally(){ try { return JSON.parse(localStorage.getItem('tc_mytally')||
+  '{"myW":0,"myN":0,"ourW":0,"ourN":0,"done":[]}'); } catch(e){
+  return {myW:0,myN:0,ourW:0,ourN:0,done:[]}; } }
+function btcScoreDay(day){
+  // score any of the member's tips for this results day, once each
+  const t = btcTips(), tally = btcTally();
+  const done = new Set(tally.done);
+  (day.meetings||[]).forEach(m => (m.races||[]).forEach(r => {
+    const rkey = `${day.date}|${m.track}|${r.race_no}`;
+    if (!(rkey in t) || done.has(rkey)) return;
+    const winNo = (r.placings||[]).find(p => p.pos===1)?.no;
+    if (winNo == null) return;
+    tally.myN++; if (String(t[rkey]) === String(winNo)) tally.myW++;
+    if (r.pick){ tally.ourN++; if (r.pick.won) tally.ourW++; }
+    done.add(rkey);
+  }));
+  tally.done = [...done];
+  localStorage.setItem('tc_mytally', JSON.stringify(tally));
+}
+
+/* ---- shareable Collect Card (canvas image) ---- */
+async function collectCard(){
+  const d = DATA || {};
+  // pick the day's best bet to feature
+  let feat = null;
+  (d.meetings||[]).forEach(m => (m.races||[]).forEach(r => {
+    if (r.pick && r.pick.best_bet && !feat) feat = {m, r};
+  }));
+  if (!feat) (d.meetings||[]).forEach(m => (m.races||[]).forEach(r => {
+    if (r.pick && !feat) feat = {m, r}; }));
+  const W = 1080, H = 1080, c = document.createElement('canvas');
+  c.width = W; c.height = H; const g = c.getContext('2d');
+  const grad = g.createRadialGradient(W/2, 380, 80, W/2, 380, 900);
+  grad.addColorStop(0, '#14261D'); grad.addColorStop(1, '#0E1217');
+  g.fillStyle = grad; g.fillRect(0, 0, W, H);
+  g.fillStyle = '#F0D078'; g.font = '800 46px Georgia, serif';
+  g.textAlign = 'center'; g.fillText('THE COLLECT', W/2, 120);
+  g.fillStyle = 'rgba(242,234,211,.6)'; g.font = '600 24px sans-serif';
+  g.fillText('Every result published — win or lose', W/2, 162);
+  if (feat){
+    const p = feat.r.pick;
+    g.fillStyle = 'rgba(212,175,55,.14)'; g.strokeStyle = '#D4AF37'; g.lineWidth = 2;
+    g.beginPath(); g.roundRect(90, 250, W-180, 520, 28); g.fill(); g.stroke();
+    g.fillStyle = '#8FD9AE'; g.font = '800 22px sans-serif';
+    g.fillText((p.best_bet?'BEST BET':'TOP PICK') + ' · ' + feat.m.track + ' ' + feat.r.race_no, W/2, 320);
+    g.fillStyle = '#F0D078'; g.font = '800 74px Georgia, serif';
+    g.fillText('#' + p.number + ' ' + p.horse, W/2, 430);
+    if (feat.r.verdict){
+      g.fillStyle = '#F2EAD3'; g.font = '600 30px sans-serif';
+      wrapText(g, feat.r.verdict, W/2, 500, W-260, 40);
+    }
+    if (p.confidence){
+      g.fillStyle = '#D4AF37'; g.font = '800 30px sans-serif';
+      g.fillText('Confidence: ' + p.confidence, W/2, 700);
+    }
+  }
+  const wk = d.week || {};
+  g.fillStyle = 'rgba(242,234,211,.85)'; g.font = '700 30px sans-serif';
+  g.fillText(`This week: ${wk.wins||0} winners from ${wk.races||0} (${(wk.win_pct||0).toFixed(0)}%)`, W/2, 880);
+  g.fillStyle = '#8A6A1F'; g.font = '600 26px sans-serif';
+  g.fillText('thecollect.nz  ·  R18  ·  gamble responsibly', W/2, 1010);
+  const blob = await new Promise(res => c.toBlob(res, 'image/png'));
+  const file = new File([blob], 'the-collect.png', {type:'image/png'});
+  if (navigator.canShare && navigator.canShare({files:[file]})){
+    try { await navigator.share({files:[file], title:'The Collect',
+      text:"Today's card from The Collect — thecollect.nz"}); return; } catch(e){}
+  }
+  const url = URL.createObjectURL(blob), a = document.createElement('a');
+  a.href = url; a.download = 'the-collect.png'; a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
+}
+function wrapText(g, text, x, y, maxW, lh){
+  const words = String(text).split(' '); let line = '', yy = y;
+  for (const w of words){
+    if (g.measureText(line + w).width > maxW && line){ g.fillText(line.trim(), x, yy); line = ''; yy += lh; }
+    line += w + ' ';
+  }
+  g.fillText(line.trim(), x, yy);
+}
+
+/* ---- live jump ticker (updates every second) ---- */
+let TICKER = null;
+function startTicker(){
+  if (TICKER) clearInterval(TICKER);
+  TICKER = setInterval(() => {
+    document.querySelectorAll('[data-jump]').forEach(el => {
+      const t = parseInt(el.getAttribute('data-jump'), 10);
+      const secs = Math.round((t - Date.now())/1000);
+      if (secs <= -120){ el.textContent = 'off'; return; }
+      if (secs <= 0){ el.textContent = 'JUMPING'; el.classList.add('imminent'); return; }
+      const m = Math.floor(secs/60), s = secs%60;
+      el.textContent = m>0 ? `${m}m ${String(s).padStart(2,'0')}s` : `${s}s`;
+      if (secs <= 120) el.classList.add('imminent');
+    });
+  }, 1000);
+}
+
 function hasAccess(){ return localStorage.getItem('tc_access') === 'yes'; }
 
 async function checkCode(code){
@@ -469,6 +605,30 @@ async function renderHome(){
     h += '</article>';
   }
 
+  // You vs The Collect (Beat the Collect scoreboard)
+  const ty = btcTally();
+  if (ty.myN || ty.ourN){
+    const myPct = ty.myN ? (100*ty.myW/ty.myN).toFixed(0) : 0;
+    const ourPct = ty.ourN ? (100*ty.ourW/ty.ourN).toFixed(0) : 0;
+    const lead = ty.myW > ty.ourW ? "You're ahead — nice!" :
+                 ty.myW < ty.ourW ? "The Collect's ahead." : "Neck and neck.";
+    h += `<article class="rc vs"><header class="rc-head">
+      <span class="rc-name">You vs The Collect</span>
+      <span class="rc-meta"><span class="pill">${lead}</span></span></header>
+      <div class="vs-row">
+        <div class="vs-side"><div class="vs-n">${ty.myW}<span>/${ty.myN}</span></div>
+          <div class="vs-l">your tips</div><div class="vs-p">${myPct}%</div></div>
+        <div class="vs-v">vs</div>
+        <div class="vs-side gold"><div class="vs-n">${ty.ourW}<span>/${ty.ourN}</span></div>
+          <div class="vs-l">The Collect</div><div class="vs-p">${ourPct}%</div></div>
+      </div>
+      <div class="bb-note">Tap 🎯 on any race in Today's card to log your tip. Scores update as results come in.</div>
+    </article>`;
+  }
+
+  // Share a Collect Card
+  h += `<div class="cta-in"><button class="go-today" id="shareCard">📸 Share today's card</button></div>`;
+
   // Live form tiles
   h += '<div class="tile-row">';
   h += tile(w.wins, 'winners this week');
@@ -545,13 +705,12 @@ function nextToJump(d){
   rows.sort((a,b) => a.t - b.t);
   const up = rows.slice(0, 5);
   if (!up.length) return '';
-  let h = '<div class="ntj"><div class="ntj-head">Next to jump</div><div class="ntj-row">';
+  let h = '<div class="ntj"><div class="ntj-head">⏱ Next to jump — live</div><div class="ntj-row">';
   up.forEach(x => {
-    const mins = Math.round((x.t - now)/60000);
-    const when = mins <= 0 ? 'now' : (mins < 60 ? mins+'m' : x.t.toTimeString().slice(0,5));
-    h += `<div class="ntj-card"><div class="ntj-when">${when}</div>
+    const firming = x.pick.firming ? '<span class="ntj-fire live-pulse">💰</span>' : '';
+    h += `<div class="ntj-card"><div class="ntj-when" data-jump="${x.t.getTime()}">…</div>
       <div class="ntj-race">${x.track} ${x.race}</div>
-      <div class="ntj-pick">#${x.pick.number||''} ${x.pick.horse||''}</div></div>`;
+      <div class="ntj-pick">#${x.pick.number||''} ${x.pick.horse||''} ${firming}</div></div>`;
   });
   return h + '</div></div>';
 }
@@ -563,6 +722,22 @@ const CONF_TEXT = {
   "B":  "Moderate confidence — our pick, in a more open race.",
   "C":  "An open race — our pick by a narrow margin.",
 };
+const CONF_FRAC = {"A+":1.0,"A":0.82,"B+":0.66,"B":0.5,"C":0.32,"D":0.2};
+// A speedo-style confidence dial — shows the engine's certainty at a glance.
+function confDial(grade){
+  const f = CONF_FRAC[(grade||"").trim()] ?? 0.4;
+  const a = Math.PI * (1 - f);                 // 180deg sweep, left=low
+  const r = 26, cx = 30, cy = 30;
+  const x = cx + r * Math.cos(a), y = cy - r * Math.sin(a);
+  const col = f >= 0.8 ? '#5FCF8f' : f >= 0.55 ? '#D4AF37' : '#E9906B';
+  return `<svg class="dial" viewBox="0 0 60 34" width="62" height="35" aria-hidden="true">
+    <path d="M4 30 A26 26 0 0 1 56 30" fill="none" stroke="rgba(242,234,211,.14)" stroke-width="5" stroke-linecap="round"/>
+    <path d="M4 30 A26 26 0 0 1 ${x.toFixed(1)} ${y.toFixed(1)}" fill="none" stroke="${col}" stroke-width="5" stroke-linecap="round"/>
+    <line x1="30" y1="30" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="${col}" stroke-width="2"/>
+    <circle cx="30" cy="30" r="3" fill="${col}"/>
+    <text x="30" y="20" text-anchor="middle" font-size="10" font-weight="800" fill="${col}">${(grade||'').trim()}</text>
+  </svg>`;
+}
 
 function renderToday(){
   const d = DATA || {};
@@ -608,11 +783,19 @@ function renderToday(){
         <div class="pick-body">
           <div class="pick-name">${p.horse}
             ${p.best_bet ? '<span class="ribbon">BEST BET</span>' : ''}
-            ${p.firming ? '<span class="chip-money">MONEY COMING</span>' : ''}</div>
-          ${conf ? `<div class="pick-conf"><span class="medallion">${conf}</span>` +
-                   `<span class="conf-line">${CONF_TEXT[conf]||''}</span></div>` : ''}
+            ${p.firming ? '<span class="chip-money live-pulse">MONEY COMING</span>' : ''}</div>
+          ${conf ? `<div class="pick-conf"><span class="conf-line">${CONF_TEXT[conf]||''}</span></div>` : ''}
         </div>
+        ${conf ? confDial(conf) : ''}
       </div>`;
+    // Beat the Collect — the member's own tip for this race
+    const rkey = `${d.date}|${m.track}|${r.race_no}`;
+    const myTip = btcTip(rkey);
+    h += `<div class="beat"><span class="beat-lab">🎯 Your tip — beat us:</span>
+      <span class="beat-nums">` +
+      (r.runners||[]).map(u =>
+        `<button class="beat-n${myTip===u.number?' on':''}" data-btc="${rkey}" data-no="${u.number}">${u.number}</button>`
+      ).join('') + `</span></div>`;
     if (p.market_read)
       h += `<div class="market-read">${p.market_read}</div>`;
     if (r.steer_clear)
@@ -780,13 +963,14 @@ function renderBlackbook(){
 }
 
 function renderTab(){
-  if (TAB==='home') return renderHome();
-  if (TAB==='results') return renderResults();
-  if (TAB==='picks') return renderArchive();
-  if (TAB==='stats') return renderStats();
-  if (TAB==='horses') return renderHorses();
-  if (TAB==='blackbook') return renderBlackbook();
-  renderToday();
+  if (TAB==='home') renderHome();
+  else if (TAB==='results') renderResults();
+  else if (TAB==='picks') renderArchive();
+  else if (TAB==='stats') renderStats();
+  else if (TAB==='horses') renderHorses();
+  else if (TAB==='blackbook') renderBlackbook();
+  else renderToday();
+  startTicker();
 }
 
 /* ---------------------------------------------- our stats / insights */
@@ -903,6 +1087,7 @@ async function paintResults(){
     const r = await fetch('results/' + RES_SEL + '.json', {cache:'no-store'});
     day = await r.json();
   } catch(e){ body.innerHTML = '<p class="sub">Couldn’t load that day.</p>'; return; }
+  try { btcScoreDay(day); } catch(e){}   // score any Beat-the-Collect tips
   let h = '';
   (day.meetings||[]).forEach(m => {
     h += `<div class="track-band"><span class="track-name">${m.track}</span>
@@ -1084,6 +1269,14 @@ function horseCard(h){
 }
 
 document.addEventListener('click', e => {
+  const btc = e.target.closest('[data-btc]');
+  if (btc){ e.preventDefault();
+    btcSet(btc.getAttribute('data-btc'), btc.getAttribute('data-no'));
+    const on = btc.classList.contains('on');
+    btc.parentElement.querySelectorAll('.beat-n.on').forEach(x => x.classList.remove('on'));
+    if (!on) btc.classList.add('on');
+    return; }
+  if (e.target.closest('#shareCard')){ e.preventDefault(); collectCard(); return; }
   const bb = e.target.closest('[data-bb]');
   if (bb){ e.preventDefault(); bbToggle(bb.getAttribute('data-bb'));
            // update just the star, no full re-render (keeps scroll)
