@@ -149,11 +149,19 @@
   .in-top3{ font-size:9.5px; font-weight:800; letter-spacing:.6px; text-transform:uppercase;
         color:var(--gold); background:rgba(212,175,55,.14); border-radius:4px;
         padding:1px 7px; margin-left:8px; vertical-align:1px; }
-  .exo-hit{ border-style:solid; border-color:rgba(212,175,55,.5);
-        background:rgba(212,175,55,.08); }
-  .hit-tag{ font-size:9px; font-weight:800; letter-spacing:.5px; color:#171204;
-        background:linear-gradient(135deg,var(--gold-hi),var(--gold)); border-radius:3px;
+  .exo-hit{ border-style:solid; border-color:rgba(28,138,80,.6);
+        background:rgba(28,138,80,.14); }
+  .exo-hit .exo-k{ color:#8FD9AE; }
+  .hit-tag{ font-size:9px; font-weight:800; letter-spacing:.5px; color:#08130c;
+        background:linear-gradient(135deg,#5FCf8f,var(--turf)); border-radius:3px;
         padding:1px 6px; margin-left:6px; }
+  .pl-winner{ background:rgba(212,175,55,.12); border-radius:8px;
+        margin:2px -6px; padding-left:6px; padding-right:6px; }
+  .pl-winner .pl-txt b{ font-size:16px; color:var(--gold-hi); }
+  .pl-winner .saddle{ width:38px; height:42px; font-size:20px; }
+  .our-order{ padding:8px 18px 16px; font-size:13px; color:var(--faint);
+        font-variant-numeric:tabular-nums; }
+  .our-order b{ color:var(--paper); font-weight:700; }
   /* ---- Our picks (day boards) ---- */
   .day-sum{ display:flex; align-items:center; gap:12px; padding:14px 18px;
         cursor:pointer; list-style:none; flex-wrap:wrap; }
@@ -617,11 +625,11 @@ function renderToday(){
     if (r.runners && r.runners.length){
       h += '<div class="field"><div class="field-head">The field, read top to bottom</div>';
       r.runners.forEach(u => {
-        h += `<div class="frow">
+        h += `<div class="frow${u.label?'':' frow-plain'}">
               <span class="saddle ${tierClass(u.tier)}">${u.number}</span>
               <div class="frow-txt">
                 <span class="frow-top"><b>${u.horse}</b>
-                  <span class="frow-lab ${tierClass(u.tier)}">${u.label||''}</span></span>
+                  ${u.label ? `<span class="frow-lab ${tierClass(u.tier)}">${u.label}</span>` : ''}</span>
                 ${u.comment ? `<span class="frow-c">${u.comment}</span>` : ''}
               </div>${bbStar(u.horse)}</div>`;
       });
@@ -921,31 +929,43 @@ async function paintResults(){
       }
       h += `<div class="placings">`;
       (r.placings||[]).forEach(p => {
-        h += `<div class="pl-row${p.ours?' pl-ours':''}">
+        const winner = p.pos === 1;
+        // Show the "in our top 3" tag on the placegetters, but not on the
+        // winner — if it's our pick the WON strip already says so.
+        const tag = (p.ours && !winner) ? '<span class="in-top3">in our top 3</span>' : '';
+        h += `<div class="pl-row${winner?' pl-winner':''}${p.ours?' pl-ours':''}">
           <span class="saddle pl-${p.pos}">${p.no}</span>
-          <div class="pl-txt"><span class="pl-pos">${ord(p.pos)}</span> <b>${p.horse}</b>` +
-          (p.ours ? '<span class="in-top3">in our top 3</span>' : '') +
-          `</div>
+          <div class="pl-txt"><span class="pl-pos">${ord(p.pos)}</span> <b>${p.horse}</b>${tag}</div>
           <span class="pl-div">` +
           (p.win ? `<span class="dv">$${p.win.toFixed(2)}</span> win` : '') +
           (p.place ? `${p.win?' · ':''}<span class="dv">$${p.place.toFixed(2)}</span> plc` : '') +
           `</span></div>`;
       });
       h += '</div>';
+      // Exotics, ordered Quinella -> Trifecta -> First Four, ours in green.
       const ex = r.exotics || {};
-      const keys = Object.keys(ex);
-      if (keys.length){
+      const find = names => {
+        for (const k of Object.keys(ex))
+          if (names.some(nm => k.toLowerCase().indexOf(nm) >= 0)) return [k, ex[k]];
+        return null;
+      };
+      const exoDefs = [
+        {label:'Quinella',   got:r.qu_hit,  e:find(['quinella'])},
+        {label:'Trifecta',   got:r.tri_hit, e:find(['trifecta'])},
+        {label:'First Four', got:r.ff_hit,  e:find(['first four','first 4'])},
+      ].filter(x => x.e);
+      if (exoDefs.length){
         h += '<div class="exo">';
-        keys.forEach(k => {
-          const kl = k.toLowerCase();
-          const hit = (kl.indexOf('trifecta')>=0 && r.tri_hit) ||
-                      ((kl.indexOf('first four')>=0 || kl.indexOf('first 4')>=0) && r.ff_hit);
-          h += `<div class="exo-ticket${hit?' exo-hit':''}"><span class="exo-k">${k}` +
-               (hit ? ' <span class="hit-tag">WE BOXED IT</span>' : '') +
-               `</span>$${(ex[k]||0).toFixed(2)}</div>`;
+        exoDefs.forEach(x => {
+          h += `<div class="exo-ticket${x.got?' exo-hit':''}"><span class="exo-k">${x.label}` +
+               (x.got ? ' <span class="hit-tag">WE GOT IT</span>' : '') +
+               `</span>$${(x.e[1]||0).toFixed(2)}</div>`;
         });
         h += '</div>';
       }
+      if (r.order && r.order.length)
+        h += `<div class="our-order">Our selection order: ` +
+             r.order.map(n => `<b>${n}</b>`).join(' · ') + `</div>`;
       h += '</article>';
     });
   });
