@@ -78,6 +78,10 @@
   .chip-money{ font-size:10.5px; font-weight:800; letter-spacing:1px; color:var(--turf);
         background:rgba(28,138,80,.16); border:1px solid rgba(28,138,80,.5);
         border-radius:5px; padding:2px 8px; }
+  .band{ font-size:10.5px; font-weight:800; letter-spacing:.6px; border-radius:5px; padding:3px 9px; }
+  .band-higher{ color:var(--turf); background:rgba(28,138,80,.16); border:1px solid rgba(28,138,80,.5); }
+  .band-lower{ color:#B8860B; background:rgba(184,134,11,.15); border:1px solid rgba(184,134,11,.5); }
+  .band-note{ font-size:12px; color:var(--muted,#8a94a0); margin-top:6px; line-height:1.45; }
   .pick-conf{ display:flex; align-items:center; gap:10px; margin-top:7px; }
   .medallion{ display:inline-flex; align-items:center; justify-content:center;
         width:34px; height:34px; border-radius:50%; font-weight:800; font-size:14px;
@@ -783,8 +787,10 @@ function renderToday(){
         <div class="pick-body">
           <div class="pick-name">${p.horse}
             ${p.best_bet ? '<span class="ribbon">BEST BET</span>' : ''}
-            ${p.firming ? '<span class="chip-money live-pulse">MONEY COMING</span>' : ''}</div>
+            ${p.firming ? '<span class="chip-money live-pulse">MONEY COMING</span>' : ''}
+            ${p.confidence_band ? `<span class="band band-${p.confidence_band.level}">${p.confidence_band.label}</span>` : ''}</div>
           ${conf ? `<div class="pick-conf"><span class="conf-line">${CONF_TEXT[conf]||''}</span></div>` : ''}
+          ${p.confidence_band && p.confidence_band.note ? `<div class="band-note">${p.confidence_band.note}</div>` : ''}
         </div>
         ${conf ? confDial(conf) : ''}
       </div>`;

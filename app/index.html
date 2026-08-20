@@ -251,6 +251,9 @@
   }
   .tag.best { color: var(--brass); background: var(--brass-soft); border: 1px solid color-mix(in srgb, var(--brass) 34%, transparent); }
   .tag.value { color: var(--value); background: var(--value-soft); border: 1px solid color-mix(in srgb, var(--value) 34%, transparent); }
+  .tag.band-higher { color: var(--turf,#31C47C); background: rgba(49,196,124,.12); border: 1px solid rgba(49,196,124,.38); }
+  .tag.band-lower { color: #C9A227; background: rgba(201,162,39,.12); border: 1px solid rgba(201,162,39,.4); }
+  .band-note { font-size: 11px; color: var(--faint,#8b95a1); margin-top: 5px; line-height: 1.4; }
 
   .grade {
     flex: 0 0 auto; text-align: center; min-width: 46px;
@@ -508,7 +511,7 @@ function hasAccess(){ return localStorage.getItem(LS.access) === 'yes'; }
 // Stamped by the publisher at deploy time. When data.json carries a NEWER
 // shell version than the code that's running, the app reloads itself once —
 // so an always-open home-screen app picks up new features without sign-outs.
-const SHELL_VERSION = "e467c7ffaaef";
+const SHELL_VERSION = "127c13a628d9";
 
 function localToday(){
   const d = new Date();
@@ -868,6 +871,7 @@ function raceCard(r, m){
           ${best ? '<span class="tag best">★ Best bet</span>' : ''}
           ${val ? '<span class="tag value">Value</span>' : ''}
           ${p.firming ? '<span class="money-chip">💰 Money coming</span>' : ''}
+          ${p.confidence_band ? `<span class="tag band-${esc(p.confidence_band.level)}">${esc(p.confidence_band.label)}</span>` : ''}
           <span class="r-time tnum" style="align-self:center">${esc(r.distance||'')}</span>
         </div>
       </div>
@@ -876,6 +880,7 @@ function raceCard(r, m){
     </div>
     <div class="meter"><span style="width:${gradePct(p.confidence)}%"></span></div>
     <div class="verdict">${esc(r.verdict||'')}</div>
+    ${p.confidence_band && p.confidence_band.note ? `<div class="band-note">${esc(p.confidence_band.note)}</div>` : ''}
     ${whys.length ? '<ul class="why">' + whys.map(w=>`<li>${esc(w)}</li>`).join('') + '</ul>' : ''}
     ${r.exotics && (r.exotics.trifecta || r.exotics.first_four) ? `<div class="exo-line">${
       r.exotics.trifecta ? `<b>Trifecta</b> — ${esc(r.exotics.trifecta)}` : ''}${
