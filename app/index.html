@@ -453,6 +453,51 @@ details.guide[open] summary::before{ transform:rotate(90deg); }
 .c-price{ font-size:11.5px; color:var(--muted); font-weight:700; }
 .c-why{ font-size:12px; color:var(--faint,#9aa4b0); line-height:1.45; margin-top:3px; }
 
+/* ---- next-race countdown (home) ---- */
+.cd-band{ display:flex; align-items:center; gap:12px; margin:12px 0 4px; padding:12px 15px;
+  border-radius:var(--radius); background:linear-gradient(135deg, rgba(49,196,124,.12), var(--surface) 60%);
+  border:1px solid color-mix(in srgb, var(--turf) 34%, var(--line)); box-shadow:var(--shadow); cursor:pointer; }
+.cd-live{ display:flex; flex-direction:column; align-items:center; gap:5px; font-size:9.5px;
+  font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--turf); flex:none; }
+.cd-dot{ width:9px; height:9px; border-radius:50%; background:var(--turf);
+  box-shadow:0 0 0 0 color-mix(in srgb,var(--turf) 70%,transparent); animation:cdpulse 1.6s infinite; }
+@keyframes cdpulse{ 0%{box-shadow:0 0 0 0 rgba(61,190,122,.5)} 70%{box-shadow:0 0 0 8px rgba(61,190,122,0)} 100%{box-shadow:0 0 0 0 rgba(61,190,122,0)} }
+.cd-mid{ flex:1; min-width:0; }
+.cd-where{ font-weight:800; font-size:14px; letter-spacing:-.2px; }
+.cd-pick{ font-size:12px; color:var(--muted); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.cd-clock{ text-align:right; flex:none; }
+.cd-t{ font-size:21px; font-weight:800; letter-spacing:-.5px; line-height:1; color:var(--turf); }
+.cd-jump{ font-size:11px; color:var(--faint); margin-top:3px; }
+.cd-done{ font-size:12.5px; color:var(--muted); text-align:center; width:100%; }
+
+/* ---- Today's Best Bets button + list ---- */
+.bb-btn-big{ width:100%; display:flex; align-items:center; gap:13px; margin:4px 0 2px;
+  padding:15px 16px; border-radius:var(--radius); text-align:left; color:inherit;
+  background:linear-gradient(135deg, rgba(212,175,55,.16), var(--surface) 62%);
+  border:1px solid color-mix(in srgb, var(--brass) 45%, var(--line)); box-shadow:var(--shadow); }
+.bb-btn-big:active{ transform:scale(.99); }
+.bb-btn-big .star{ font-size:22px; }
+.bbb-t{ font-weight:800; font-size:16.5px; letter-spacing:-.2px; }
+.bbb-s{ font-size:12px; color:var(--muted); margin-top:2px; }
+.bbb-l{ display:flex; align-items:center; gap:12px; flex:1; min-width:0; }
+.bblist{ display:flex; flex-direction:column; gap:9px; margin-top:4px; }
+.bb-row{ width:100%; display:flex; align-items:center; gap:12px; text-align:left; color:inherit;
+  background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+  box-shadow:var(--shadow); padding:12px 14px; }
+.bb-row:active{ transform:scale(.99); }
+.bb-row.top1{ border-color:color-mix(in srgb, var(--brass) 50%, var(--line));
+  background:linear-gradient(135deg, rgba(212,175,55,.09), var(--surface) 60%); }
+.br-rate{ flex:none; width:52px; text-align:center; }
+.br-num{ font-size:20px; font-weight:800; letter-spacing:-.5px; line-height:1; color:var(--turf); }
+.br-lab{ font-size:8.5px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--faint); margin-top:3px; }
+.br-main{ flex:1; min-width:0; }
+.br-name{ font-weight:700; font-size:15.5px; letter-spacing:-.2px; display:flex; align-items:center; gap:7px; }
+.br-rank{ font-size:11px; font-weight:800; color:var(--faint); }
+.br-meta{ font-size:12px; color:var(--muted); margin-top:2px; }
+.br-right{ flex:none; text-align:right; display:flex; flex-direction:column; align-items:flex-end; gap:4px; }
+.br-grade{ font-size:15px; font-weight:800; color:var(--brass); }
+.br-price{ font-size:12px; color:var(--muted); font-weight:700; }
+
 /* ---- blackbook + money chips ---- */
 .bb-btn{ background:none; border:1.5px solid rgba(128,128,128,.35); color:var(--faint,#8a94a0);
   border-radius:9px; width:30px; height:30px; font-size:15px; cursor:pointer; flex:none;
@@ -559,7 +604,7 @@ function hasAccess(){ return localStorage.getItem(LS.access) === 'yes'; }
 // Stamped by the publisher at deploy time. When data.json carries a NEWER
 // shell version than the code that's running, the app reloads itself once —
 // so an always-open home-screen app picks up new features without sign-outs.
-const SHELL_VERSION = "ba94ba54d1c8";
+const SHELL_VERSION = "87569e6595aa";
 
 function localToday(){
   const d = new Date();
@@ -774,6 +819,79 @@ function bestBets(data){
 }
 function meetingBB(m){ return (m.races||[]).filter(r => r.pick && r.pick.best_bet).length; }
 
+/* -------------------------------------------------- next-race countdown */
+function nzNow(){
+  try { return new Date(new Date().toLocaleString('en-US',{timeZone:'Pacific/Auckland'})); }
+  catch(e){ return new Date(); }
+}
+function nextRace(d){
+  const now = nzNow(); let best = null;
+  (d && d.meetings || []).forEach(m => (m.races||[]).forEach(r => {
+    const st = (r.start_time||'').slice(0,5);
+    if (st.indexOf(':') < 0) return;
+    const parts = st.split(':'); const t = new Date(now);
+    t.setHours(+parts[0], +parts[1], 0, 0);
+    if (t >= now && (!best || t < best.t)) best = { t, m, r, st };
+  }));
+  return best;
+}
+function cdText(ms){
+  if (ms <= 0) return 'now';
+  const s = Math.floor(ms/1000), h = Math.floor(s/3600), m = Math.floor((s%3600)/60), ss = s%60;
+  if (h > 0) return h + 'h ' + m + 'm';
+  if (m > 0) return m + 'm ' + String(ss).padStart(2,'0') + 's';
+  return ss + 's';
+}
+function tickCountdown(){
+  const el = document.getElementById('cdBand');
+  if (!el || !state.data) return;
+  const nr = nextRace(state.data);
+  if (!nr){
+    el.removeAttribute('data-goto');
+    el.innerHTML = `<div class="cd-done">That's the card done for today — full results on the Results tab.</div>`;
+    return;
+  }
+  const ms = nr.t - nzNow(), p = nr.r.pick || {};
+  el.setAttribute('data-goto', nr.m.track);
+  el.innerHTML = `<div class="cd-live"><span class="cd-dot"></span>Next race</div>
+    <div class="cd-mid"><div class="cd-where">${esc(nr.m.track)} · ${esc(nr.r.race_no)}</div>
+      ${p.horse ? `<div class="cd-pick">Our pick: <b>#${esc(p.number||'')} ${esc(p.horse)}</b></div>` : ''}</div>
+    <div class="cd-clock"><div class="cd-t tnum">${cdText(ms)}</div><div class="cd-jump tnum">jumps ${esc(nr.st)}</div></div>`;
+}
+
+/* -------------------------------------------------- render: best bets */
+function renderBestBets(){
+  const d = state.data;
+  const bb = bestBets(d).sort((a,b) => (b.r.pick.bet_rating||0) - (a.r.pick.bet_rating||0));
+  let h = topBar();
+  h += '<div class="fade">';
+  h += `<div class="backbar"><button class="back" data-back>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></svg>Today</button></div>`;
+  h += `<div class="detail-head"><div class="t">Today's Best Bets</div>
+      <div class="m">${bb.length} play${bb.length===1?'':'s'} · ranked by our rating</div></div>`;
+  if (!bb.length){
+    h += `<div class="banner"><span>☕</span><div>No best bets flagged today — the engine only stars a pick when the evidence and the market line up. The full card is on the Today tab.</div></div>`;
+  } else {
+    h += '<div class="bblist">';
+    bb.forEach(({m,r}, i) => {
+      const p = r.pick || {};
+      const rating = (p.bet_rating!=null) ? (+p.bet_rating).toFixed(1) : '—';
+      h += `<button class="bb-row ${i===0?'top1':''}" data-goto="${esc(m.track)}">
+        <div class="br-rate"><div class="br-num tnum">${esc(rating)}</div><div class="br-lab">Rating</div></div>
+        <div class="br-main">
+          <div class="br-name"><span class="br-rank tnum">${i+1}.</span> #${esc(p.number||'')} ${esc(p.horse||'')}</div>
+          <div class="br-meta">${esc(m.track)} · ${esc(r.race_no)} · ${esc(hhmm(r.start_time))} · ${esc(r.distance||'')}</div>
+        </div>
+        <div class="br-right"><div class="br-grade">${esc(p.confidence||'')}</div>${p.price?`<div class="br-price tnum">$${(+p.price).toFixed(2)}</div>`:''}</div>
+      </button>`;
+    });
+    h += '</div>';
+  }
+  h += legal() + '</div>' + navBar();
+  app().innerHTML = h;
+  window.scrollTo(0,0);
+}
+
 const LOGO = '<svg viewBox="0 0 48 48" fill="none"><path d="M 33 12 A 15 15 0 1 0 33 36" stroke="#D4AF37" stroke-width="5" stroke-linecap="round"/><circle cx="24" cy="9.2" r="1.1" fill="#0E1217"/><circle cx="15.4" cy="13" r="1.1" fill="#0E1217"/><circle cx="10.6" cy="21.5" r="1.1" fill="#0E1217"/><circle cx="12" cy="31" r="1.1" fill="#0E1217"/><path d="M 37 21 l 1.3 3.2 3.2 1.3 -3.2 1.3 -1.3 3.2 -1.3 -3.2 -3.2 -1.3 3.2 -1.3 z" fill="#D4AF37"/></svg>';
 
 /* -------------------------------------------------- data */
@@ -834,24 +952,19 @@ function renderHome(){
     <div class="checker"></div>
   </div>`;
 
+  h += `<div class="cd-band" id="cdBand"></div>`;
+
   if (state.demo){
     h += `<div class="banner"><span>🔒</span><div><b>Sample day.</b> Add your access code in settings to load live picks.</div></div>`;
   }
 
   if (bb.length){
-    h += `<div class="eyebrow">★ Best bets today · ${bb.length}</div>`;
-    h += '<div class="bb-wrap"><div class="bb-scroll">';
-    bb.forEach(({m,r}, i) => {
-      h += `<button class="bb-card" data-goto="${esc(m.track)}">
-        <div class="bb-top"><span class="star">★</span><span class="bb-tag">Best bet</span><span class="bb-where">${esc(m.track)} · ${esc(r.race_no)}</span></div>
-        <div class="bb-runner">
-          <div class="saddle tnum">${esc(r.pick.number)}</div>
-          <div><div class="bb-name">${esc(r.pick.horse)}</div><div class="bb-race tnum">${esc(r.distance)} · ${esc(hhmm(r.start_time))}</div></div>
-        </div>
-        <div class="bb-why">${esc((r.why&&r.why[0])||r.verdict||'')}</div>
-      </button>`;
-    });
-    h += '</div></div>';
+    h += `<button class="bb-btn-big" data-bestbets>
+      <div class="bbb-l"><span class="star">★</span>
+        <div><div class="bbb-t">Today's Best Bets</div>
+          <div class="bbb-s">${bb.length} play${bb.length===1?'':'s'} · ranked by our rating</div></div></div>
+      <svg class="chev" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+    </button>`;
   }
 
   h += `<div class="eyebrow">All meetings</div><div class="m-list" data-mlist>`;
@@ -874,6 +987,8 @@ function renderHome(){
   h += '</div>';
   h += navBar();
   app().innerHTML = h;
+  tickCountdown();
+  if (!window.__cdTimer) window.__cdTimer = setInterval(tickCountdown, 1000);
 }
 
 /* -------------------------------------------------- render: meeting */
@@ -1405,7 +1520,7 @@ async function boot(){
 }
 
 document.addEventListener('click', async (e) => {
-  const t = e.target.closest('[data-tab],[data-meeting],[data-back],[data-settings],[data-theme-toggle],[data-refresh],[data-signin],[data-retry],[data-save-settings],[data-signout],[data-goto],[data-access],[data-bb],[data-bbdel],[data-bbnote],[data-bbnote-save]');
+  const t = e.target.closest('[data-tab],[data-meeting],[data-back],[data-bestbets],[data-settings],[data-theme-toggle],[data-refresh],[data-signin],[data-retry],[data-save-settings],[data-signout],[data-goto],[data-access],[data-bb],[data-bbdel],[data-bbnote],[data-bbnote-save]');
   if (!t) {
     if (e.target.id === 'scrim') closeSheet();
     return;
@@ -1452,6 +1567,10 @@ document.addEventListener('click', async (e) => {
     const i = +t.getAttribute('data-meeting');
     state.view = { name:'meeting', idx:i };
     renderMeeting(i);
+  }
+  else if (t.hasAttribute('data-bestbets')) {
+    state.view = { name:'bestbets' };
+    renderBestBets();
   }
   else if (t.hasAttribute('data-goto')) {
     const track = t.getAttribute('data-goto');
