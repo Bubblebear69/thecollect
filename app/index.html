@@ -376,6 +376,28 @@
 .badge.pending{ background:rgba(128,128,128,.10); color:var(--faint,#8a94a0); font-weight:600; }
 .res-pick{ font-size:13.5px; margin-top:5px; }
 .res-div{ font-size:12px; color:var(--faint,#8a94a0); margin-top:4px; line-height:1.5; }
+.sub-n{ font-size:13px; color:var(--faint,#8a94a0); font-weight:700; }
+.exo-got{ margin:6px 0 2px; padding:9px 12px; border-radius:12px; font-size:12.5px;
+  background:rgba(212,175,55,.08); border:1px solid rgba(212,175,55,.24); color:var(--text); }
+.exo-got b{ color:#d4af37; }
+.msel{ margin:14px 0 10px; }
+.msel label{ display:block; font-size:11px; font-weight:800; letter-spacing:.06em;
+  text-transform:uppercase; color:var(--muted); margin-bottom:6px; }
+.msel select{ width:100%; padding:12px 13px; border-radius:12px; background:var(--surface);
+  border:1px solid var(--line); color:var(--text); font:inherit; font-size:15px; font-weight:600;
+  appearance:none; -webkit-appearance:none;
+  background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="%2393A1AE" stroke-width="3"><path d="M6 9l6 6 6-6"/></svg>');
+  background-repeat:no-repeat; background-position:right 13px center; }
+.msel select:focus{ outline:none; border-color:var(--turf); box-shadow:0 0 0 3px var(--turf-soft); }
+.t4chip{ font-size:10px; font-weight:800; letter-spacing:.03em; border-radius:999px;
+  padding:3px 8px; margin-left:auto; white-space:nowrap; }
+.t4chip.win{ background:rgba(49,196,124,.16); color:var(--turf,#31c47c); }
+.t4chip.place{ background:rgba(212,175,55,.14); color:#d4af37; }
+.t4chip.miss{ background:rgba(128,128,128,.12); color:var(--faint,#8a94a0); }
+.res-exo{ margin-top:7px; display:flex; gap:6px; flex-wrap:wrap; }
+.gotchip{ font-size:10.5px; font-weight:800; letter-spacing:.03em; border-radius:999px;
+  padding:3px 9px; background:rgba(49,196,124,.16); color:var(--turf,#31c47c);
+  border:1px solid rgba(49,196,124,.35); }
 .win-hero{ background:var(--card,#141a22); border:1px solid rgba(49,196,124,.35);
   border-radius:16px; padding:14px; margin:10px 0; }
 .win-hero .big{ font-size:26px; font-weight:800; color:var(--turf,#31c47c); }
@@ -537,7 +559,7 @@ function hasAccess(){ return localStorage.getItem(LS.access) === 'yes'; }
 // Stamped by the publisher at deploy time. When data.json carries a NEWER
 // shell version than the code that's running, the app reloads itself once —
 // so an always-open home-screen app picks up new features without sign-outs.
-const SHELL_VERSION = "4b77eb491ce8";
+const SHELL_VERSION = "ba94ba54d1c8";
 
 function localToday(){
   const d = new Date();
@@ -1135,44 +1157,79 @@ function noteSheet(i){
 }
 
 /* ------------------------------------------- render: results */
+function pickMeeting(v){ state.resMeeting = v; renderResults(); }
+
+function resRow(r){
+  const won = r.outcome === 'won';
+  const p1 = (r.placings||[])[0];
+  let badge;
+  if (won && p1 && p1.win_div) badge = `<span class="badge won">WON $${(+p1.win_div).toFixed(2)}</span>`;
+  else if (won) badge = '<span class="badge won">WON</span>';
+  else if (r.outcome === 'placed') badge = '<span class="badge placed">▲ placed</span>';
+  else if (r.settled) badge = '<span class="badge missed">missed</span>';
+  else badge = `<span class="badge pending">${esc(r.time)||'to come'}</span>`;
+  let t4 = '';
+  if (r.settled){
+    if (r.t4_win) t4 = '<span class="t4chip win">Top 4 ✓ won</span>';
+    else if (r.t4_place) t4 = '<span class="t4chip place">Top 4 ✓ placed</span>';
+    else t4 = '<span class="t4chip miss">Top 4 —</span>';
+  }
+  let exo = '';
+  if (r.tri_got) exo += '<span class="gotchip">✓ Trifecta</span>';
+  if (r.ff_got) exo += '<span class="gotchip">✓ First 4</span>';
+  return `<div class="res-row ${won?'iswon':''}">
+    <div class="res-head"><span class="res-where">${esc(r.race_no)}</span><span class="res-time tnum">${esc(r.time)}</span>${badge}${t4}</div>
+    ${r.pick ? `<div class="res-pick">Our pick: <b>${esc(r.pick)}</b>${r.top5?' <span class="star">★</span>':''}</div>` : ''}
+    ${r.settled && (r.placings||[]).length ? `<div class="res-div">${
+      r.placings.map(p => `${p.pos}. #${esc(p.number)} ${esc(p.horse)}${p.win_div?` $${(+p.win_div).toFixed(2)}`:(p.place_div?` ($${(+p.place_div).toFixed(2)})`:'')}`).join(' &nbsp;·&nbsp; ')
+    }${r.exotics && r.exotics.Trifecta ? ` &nbsp;·&nbsp; Trifecta $${(+r.exotics.Trifecta).toFixed(2)}` : ''}${r.exotics && r.exotics['First Four'] ? ` &nbsp;·&nbsp; First 4 $${(+r.exotics['First Four']).toFixed(2)}` : ''}</div>` : ''}
+    ${exo ? `<div class="res-exo">${exo}</div>` : ''}
+  </div>`;
+}
+
 function renderResults(){
   const d = state.data, res = d.results || [];
   const sb = d.scoreboard || null;
   let h = topBar();
   h += '<div class="fade">';
   h += `<div class="datehead"><div class="d">Results</div><div class="c tnum">${esc(prettyDate(d.date))}</div></div>`;
-  const settled = res.filter(r => r.settled);
   if (sb && sb.races){
-    const profit = Math.round(sb.returned - sb.outlay);
-    h += `<div class="tally">
-      <div class="cell"><div class="n tnum">${sb.wins}<span style="font-size:13px;color:var(--faint,#8a94a0)">/${sb.races}</span></div><div class="l">Winners</div></div>
-      <div class="cell"><div class="n tnum">${Math.round(sb.win_pct)}%</div><div class="l">Strike rate</div></div>
-      <div class="cell"><div class="n tnum ${profit>=0?'good':''}">${profit>=0?'+':'−'}$${Math.abs(profit)}</div><div class="l">$20 on each pick</div></div>
-    </div>`;
+    const t4 = sb.top4 || {}, eg = sb.exotics_got || {};
+    h += `<div class="eyebrow">Our top pick</div>
+      <div class="tally">
+        <div class="cell"><div class="n tnum good">${sb.wins}<span class="sub-n">/${sb.races}</span></div><div class="l">Winners</div></div>
+        <div class="cell"><div class="n tnum">${Math.round(sb.win_pct)}%</div><div class="l">Win strike</div></div>
+        <div class="cell"><div class="n tnum">${Math.round(sb.place_pct)}%</div><div class="l">Top-3 strike</div></div>
+      </div>
+      <div class="eyebrow">Our top 4</div>
+      <div class="tally">
+        <div class="cell"><div class="n tnum good">${t4.wins||0}</div><div class="l">Winners</div></div>
+        <div class="cell"><div class="n tnum">${Math.round(t4.win_pct||0)}%</div><div class="l">Win strike</div></div>
+        <div class="cell"><div class="n tnum">${Math.round(t4.place_pct||0)}%</div><div class="l">Top-3 strike</div></div>
+      </div>`;
+    if ((eg.trifecta||0) + (eg.first_four||0) > 0){
+      h += `<div class="exo-got">🎟️ Collected today: <b>${eg.trifecta||0}</b> Trifecta${eg.trifecta===1?'':'s'} · <b>${eg.first_four||0}</b> First 4${eg.first_four===1?'':'s'}</div>`;
+    }
   }
   if (!res.length){
     h += `<div class="banner"><span>⏳</span><div>Results appear here as each race settles through the day.</div></div>`;
-  } else {
-    let lastTrack = '';
-    res.forEach(r => {
-      if (r.track !== lastTrack){ h += `<div class="eyebrow">${esc(r.track)}</div>`; lastTrack = r.track; }
-      const won = r.outcome === 'won';
-      const p1 = (r.placings||[])[0];
-      let badge;
-      if (won && p1 && p1.win_div) badge = `<span class="badge won">WON $${(+p1.win_div).toFixed(2)}</span>`;
-      else if (won) badge = '<span class="badge won">WON</span>';
-      else if (r.outcome === 'placed') badge = '<span class="badge placed">▲ placed</span>';
-      else if (r.settled) badge = '<span class="badge missed">missed</span>';
-      else badge = `<span class="badge pending">${esc(r.time)||'to come'}</span>`;
-      h += `<div class="res-row ${won?'iswon':''}">
-        <div class="res-head"><span class="res-where">${esc(r.race_no)}</span><span class="res-time tnum">${esc(r.time)}</span>${badge}</div>
-        ${r.pick ? `<div class="res-pick">Our pick: <b>${esc(r.pick)}</b>${r.top5?' <span class="star">★</span>':''}</div>` : ''}
-        ${r.settled && (r.placings||[]).length ? `<div class="res-div">${
-          r.placings.map(p => `${p.pos}. #${esc(p.number)} ${esc(p.horse)}${p.win_div?` $${(+p.win_div).toFixed(2)}`:(p.place_div?` ($${(+p.place_div).toFixed(2)})`:'')}`).join(' &nbsp;·&nbsp; ')
-        }${r.exotics && r.exotics.Trifecta ? ` &nbsp;·&nbsp; Trifecta $${(+r.exotics.Trifecta).toFixed(2)}` : ''}</div>` : ''}
-      </div>`;
-    });
+    h += legal() + '</div>' + navBar();
+    app().innerHTML = h; window.scrollTo(0,0); return;
   }
+  const tracks = [...new Set(res.map(r => r.track))];
+  let sel = state.resMeeting;
+  if (sel !== 'all' && !tracks.includes(sel)) sel = tracks[0];
+  h += `<div class="msel"><label>Meeting</label>
+    <select onchange="pickMeeting(this.value)">
+      ${tracks.map(t => `<option value="${esc(t)}" ${t===sel?'selected':''}>${esc(t)}</option>`).join('')}
+      <option value="all" ${sel==='all'?'selected':''}>All meetings</option>
+    </select></div>`;
+  const show = res.filter(r => sel==='all' || r.track===sel);
+  let lastTrack = '';
+  show.forEach(r => {
+    if (sel==='all' && r.track !== lastTrack){ h += `<div class="eyebrow">${esc(r.track)}</div>`; lastTrack = r.track; }
+    h += resRow(r);
+  });
   h += legal() + '</div>' + navBar();
   app().innerHTML = h;
   window.scrollTo(0,0);
