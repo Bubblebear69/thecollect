@@ -452,6 +452,8 @@ details.guide[open] summary::before{ transform:rotate(90deg); }
 .c-saddle{ font-weight:800; color:var(--muted); }
 .c-price{ font-size:11.5px; color:var(--muted); font-weight:700; }
 .c-why{ font-size:12px; color:var(--faint,#9aa4b0); line-height:1.45; margin-top:3px; }
+.c-bands{ display:flex; gap:12px; margin-top:4px; font-size:11px; color:var(--muted); }
+.c-bands b{ color:var(--turf); font-weight:800; font-variant-numeric:tabular-nums; }
 
 /* ---- next-race countdown (home) ---- */
 .cd-band{ display:flex; align-items:center; gap:12px; margin:12px 0 4px; padding:12px 15px;
@@ -604,7 +606,7 @@ function hasAccess(){ return localStorage.getItem(LS.access) === 'yes'; }
 // Stamped by the publisher at deploy time. When data.json carries a NEWER
 // shell version than the code that's running, the app reloads itself once —
 // so an always-open home-screen app picks up new features without sign-outs.
-const SHELL_VERSION = "87569e6595aa";
+const SHELL_VERSION = "1be342fd3e56";
 
 function localToday(){
   const d = new Date();
@@ -1056,6 +1058,7 @@ function raceCard(r, m){
           <div class="c-name"><span class="c-saddle tnum">${esc(c.number)}.</span> ${esc(c.horse)}
             <span class="g-chip ${esc(c.tier)}">${esc(c.label)}</span>
             ${c.price?`<span class="c-price tnum">$${(+c.price).toFixed(2)}</span>`:''}</div>
+          ${(c.top3!=null||c.top4!=null)?`<div class="c-bands">${c.top3!=null?`<span>Top 3 <b>${c.top3}%</b></span>`:''}${c.top4!=null?`<span>Top 4 <b>${c.top4}%</b></span>`:''}</div>`:''}
           ${(c.why||[]).length?`<div class="c-why">${c.why.map(esc).join(' · ')}</div>`:''}
         </div>
         ${bbStar(c.horse)}
