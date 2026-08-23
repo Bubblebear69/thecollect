@@ -455,6 +455,14 @@ details.guide[open] summary::before{ transform:rotate(90deg); }
 .c-bands{ display:flex; gap:12px; margin-top:4px; font-size:11px; color:var(--muted); }
 .c-bands b{ color:var(--turf); font-weight:800; font-variant-numeric:tabular-nums; }
 
+/* ---- data-honesty flag: 'Watching brief' on form-light races ---- */
+.dflag{ display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; margin:2px 0 11px;
+  padding:8px 11px; border-radius:11px; background:rgba(212,175,55,.09);
+  border:1px solid rgba(212,175,55,.28); }
+.dflag-b{ font-size:10.5px; font-weight:800; letter-spacing:.03em; text-transform:uppercase;
+  color:#d4af37; white-space:nowrap; }
+.dflag-n{ font-size:12px; color:var(--muted); line-height:1.4; flex:1; min-width:0; }
+
 /* ---- next-race countdown (home) ---- */
 .cd-band{ display:flex; align-items:center; gap:12px; margin:12px 0 4px; padding:12px 15px;
   border-radius:var(--radius); background:linear-gradient(135deg, rgba(49,196,124,.12), var(--surface) 60%);
@@ -606,7 +614,7 @@ function hasAccess(){ return localStorage.getItem(LS.access) === 'yes'; }
 // Stamped by the publisher at deploy time. When data.json carries a NEWER
 // shell version than the code that's running, the app reloads itself once —
 // so an always-open home-screen app picks up new features without sign-outs.
-const SHELL_VERSION = "1be342fd3e56";
+const SHELL_VERSION = "551ccf57b8c7";
 
 function localToday(){
   const d = new Date();
@@ -1028,6 +1036,7 @@ function raceCard(r, m){
       <span class="r-name">${esc(r.race_name||'')}</span>
       <span class="r-time tnum">${esc(hhmm(r.start_time))}</span>
     </div>
+    ${r.data_flag ? `<div class="dflag"><span class="dflag-b">👁 ${esc(r.data_flag.label)}</span><span class="dflag-n">${esc(r.data_flag.note)}</span></div>` : ''}
     <div class="r-runner">
       <div class="saddle tnum">${esc(p.number)}</div>
       <div class="r-id">
