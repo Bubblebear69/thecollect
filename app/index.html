@@ -598,6 +598,8 @@ const ACCESS_DIGESTS = [
   "712bd1b83cd1e0527d0a9e292fcd9ad78e43584c8c40cd68b7a9ee91496d87f0",
   "7f16c64c88ea3d1e6fcf854569251ef782ee26fdd4f2eac92c7c3be153b00b2b",
   "e6c0861ba72118ac5965fb04180992bef087f39f1c2e6f35227407c90e9e59e2",
+  "c75a8a10f30e22e789e551550292ac5e5c8e504879e5783bff9b88764eed2343",
+  "20e041fd63c26fa22067e0670db51f70b2fd855e1ac9c54809690d432bbdc416",
 ];
 async function checkAccess(code){
   const clean = (code||'').trim().toUpperCase();
@@ -614,7 +616,7 @@ function hasAccess(){ return localStorage.getItem(LS.access) === 'yes'; }
 // Stamped by the publisher at deploy time. When data.json carries a NEWER
 // shell version than the code that's running, the app reloads itself once —
 // so an always-open home-screen app picks up new features without sign-outs.
-const SHELL_VERSION = "551ccf57b8c7";
+const SHELL_VERSION = "a4b13b94f703";
 
 function localToday(){
   const d = new Date();
