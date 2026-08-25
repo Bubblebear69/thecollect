@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>The Collect — every result, win or lose</title>
+<meta name="description" content="The Collect's public scoreboard: every published pick and every result, winners and losers shown at the same size. Nothing edited after the jump." />
+<meta property="og:title" content="The Collect — every result, win or lose" />
+<meta property="og:description" content="Every pick published before the jump. Every result shown after it. Winners and losers, same size." />
+<meta property="og:image" content="https://thecollect.nz/logo.png" />
+<meta property="og:url" content="https://thecollect.nz/results.html" />
+<link rel="icon" href="app/icon.svg" type="image/svg+xml" />
+<style>
+  :root{
+    --ink:#0E1217; --ink2:#131A21; --card:#161E27; --line:rgba(212,175,55,.16);
+    --gold:#D4AF37; --gold-hi:#F0D078; --gold-lo:#A07E1E;
+    --turf:#1C8A50; --turf-deep:#0B3D2E;
+    --paper:#F2EAD3; --dim:rgba(242,234,211,.68); --faint:rgba(242,234,211,.42);
+    --miss:rgba(242,234,211,.34);
+  }
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  html{ scroll-behavior:smooth; }
+  body{ background:var(--ink); color:var(--paper);
+        font:16px/1.6 -apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }
+  a{ color:var(--gold); text-decoration:none; }
+  img{ max-width:100%; }
+  .wrap{ max-width:1060px; margin:0 auto; padding:0 22px; }
+  h1{ font-family:Georgia,"Times New Roman",serif; font-size:clamp(28px,5vw,42px);
+      line-height:1.14; font-weight:700; }
+  h1 em{ font-style:normal; color:var(--gold); }
+  h2{ font-family:Georgia,serif; font-size:clamp(22px,3.4vw,28px); font-weight:700; }
+  .kicker{ font-size:12px; font-weight:700; letter-spacing:2.5px; color:var(--gold);
+           text-transform:uppercase; margin-bottom:10px; }
+  section{ padding:40px 0; }
+
+  .top{ position:sticky; top:0; z-index:50; background:rgba(14,18,23,.92);
+        backdrop-filter:blur(8px); border-bottom:1px solid var(--line); }
+  .top .wrap{ display:flex; align-items:center; gap:12px; height:62px; }
+  .top img{ width:34px; height:34px; border-radius:8px; }
+  .top .name{ font-family:Georgia,serif; font-weight:700; font-size:18px; letter-spacing:.5px; }
+  .top .spacer{ flex:1; }
+  .btn{ display:inline-block; padding:9px 16px; border-radius:10px; font-weight:700;
+        font-size:13.5px; border:0; cursor:pointer; transition:transform .12s ease; }
+  .btn:active{ transform:scale(.97); }
+  .btn.gold{ background:linear-gradient(135deg,var(--gold-hi),var(--gold) 55%,var(--gold-lo)); color:#171204; }
+  .btn.ghost{ background:transparent; color:var(--paper); border:1px solid rgba(242,234,211,.28); }
+
+  .head{ padding:52px 0 26px;
+         background:radial-gradient(900px 420px at 50% -60px, #14261D 0%, var(--ink) 70%); }
+  .head .wrap{ max-width:820px; }
+  .head .sub{ margin:16px 0 0; max-width:640px; color:var(--dim); font-size:17px; }
+
+  /* summary tiles */
+  .tiles{ display:grid; gap:14px; grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+          margin-top:30px; }
+  .tile{ background:var(--card); border:1px solid var(--line); border-radius:16px; padding:18px 20px; }
+  .tile .n{ font-size:30px; font-weight:800; color:var(--gold-hi); font-variant-numeric:tabular-nums; }
+  .tile .l{ font-size:12.5px; color:var(--faint); letter-spacing:.4px; margin-top:3px; }
+  .tile .s{ font-size:11.5px; color:var(--dim); margin-top:8px; }
+  .tile.turf{ background:linear-gradient(135deg,var(--turf-deep),#123526 60%,var(--ink2));
+              border-color:rgba(28,138,80,.4); }
+
+  .updated{ font-size:12.5px; color:var(--faint); margin-top:16px; }
+
+  /* filter */
+  .filters{ display:flex; gap:8px; flex-wrap:wrap; margin:8px 0 20px; }
+  .fbtn{ background:var(--card); border:1px solid var(--line); color:var(--dim);
+         border-radius:999px; padding:7px 15px; font-size:13px; font-weight:700;
+         cursor:pointer; }
+  .fbtn.on{ background:rgba(212,175,55,.16); color:var(--gold-hi); border-color:rgba(212,175,55,.4); }
+
+  /* meeting + rows */
+  .meet{ margin-bottom:26px; }
+  .meet-h{ display:flex; align-items:baseline; gap:10px; margin-bottom:8px; }
+  .meet-h b{ font-family:Georgia,serif; font-size:19px; }
+  .meet-h .co{ font-size:11px; font-weight:800; letter-spacing:1.5px; color:var(--faint); }
+
+  .rr{ display:flex; align-items:center; gap:14px; padding:13px 16px;
+       background:var(--card); border:1px solid var(--line); border-radius:13px; margin-bottom:8px; }
+  .rr-l{ flex:1; min-width:0; }
+  .rr-h{ font-size:12px; color:var(--faint); letter-spacing:.4px; }
+  .rr-pick{ font-size:16px; font-weight:800; margin:1px 0 3px; }
+  .rr-res{ font-size:13px; color:var(--dim); }
+  .rr-res .win{ color:var(--gold-hi); font-weight:700; }
+  .rr-exo{ font-size:12px; color:var(--faint); margin-top:4px; }
+  .rr-exo b{ color:var(--turf); }
+  .badge{ flex:none; font-size:11.5px; font-weight:800; letter-spacing:1px;
+          border-radius:999px; padding:6px 13px; text-align:center; min-width:78px; }
+  .badge.won{ background:linear-gradient(135deg,var(--gold-hi),var(--gold-lo)); color:#171204; }
+  .badge.placed{ background:rgba(212,175,55,.15); color:var(--gold-hi); border:1px solid rgba(212,175,55,.4); }
+  .badge.missed{ background:transparent; color:var(--miss); border:1px solid rgba(242,234,211,.16); }
+  .rr.missed{ opacity:.9; }
+
+  .note{ background:linear-gradient(135deg,var(--turf-deep),#123526 60%,var(--ink2));
+         border:1px solid rgba(28,138,80,.35); border-radius:16px; padding:22px 24px;
+         color:var(--dim); font-size:14.5px; margin-top:8px; }
+  .note b{ color:var(--paper); }
+
+  footer{ border-top:1px solid var(--line); padding:32px 0 46px; font-size:13px; color:var(--faint); }
+  footer .links a{ margin-right:18px; color:var(--dim); }
+  .r18{ display:inline-block; border:1.5px solid var(--faint); border-radius:6px;
+        padding:1px 7px; font-weight:800; margin-right:8px; }
+  .muted{ color:var(--faint); }
+</style>
+</head>
+<body>
+
+<div class="top"><div class="wrap">
+  <a href="index.html" style="display:flex;align-items:center;gap:12px;color:var(--paper)">
+    <img src="logo.png" alt="" /><span class="name">THE COLLECT</span></a>
+  <span class="spacer"></span>
+  <a class="btn ghost" href="index.html">Home</a>
+  <a class="btn gold" href="index.html#join">Join</a>
+</div></div>
+
+<div class="head"><div class="wrap">
+  <div class="kicker">The scoreboard</div>
+  <h1>Every pick. Every result. <em>Win or lose.</em></h1>
+  <p class="sub">This is the whole pitch. Every selection is published before the race jumps,
+    and every result goes up after it — the ones that lost shown exactly the same size as the
+    ones that won. Nothing here is edited after the fact.</p>
+  <div class="tiles" id="tiles"><div class="tile"><div class="n">—</div><div class="l">loading…</div></div></div>
+  <div class="updated" id="updated"></div>
+</div></div>
+
+<section style="padding-top:6px"><div class="wrap">
+  <h2 id="cardTitle">The latest published card</h2>
+  <div class="filters" id="filters" style="display:none">
+    <button class="fbtn on" data-f="all">All</button>
+    <button class="fbtn" data-f="won">Winners</button>
+    <button class="fbtn" data-f="placed">Placed</button>
+    <button class="fbtn" data-f="missed">Didn't place</button>
+  </div>
+  <div id="board"><p class="muted">Loading the latest results…</p></div>
+
+  <div class="note" id="honest" style="display:none">
+    <b>Why we show the losers.</b> Every tipster in the country claims winners. Almost none
+    publish the days they got it wrong. We publish all of it, because a strike rate only means
+    something when you can see what it was measured against. The pick that counts is the one
+    that was public before the jump — and that's the one the scoreboard settles.
+  </div>
+</div></section>
+
+<footer><div class="wrap">
+  <div class="links" style="margin-bottom:12px">
+    <a href="terms.html">Terms</a><a href="privacy.html">Privacy</a>
+    <a href="responsible.html">Responsible gambling</a>
+    <a href="mailto:hello@thecollect.nz">hello@thecollect.nz</a>
+  </div>
+  <div><span class="r18">R18</span> Please gamble responsibly. Our selections are opinions
+    based on evidence — not guarantees. In NZ: Gambling Helpline 0800 654 655.
+    In Australia: Gambling Help 1800 858 858.</div>
+  <div style="margin-top:10px">© The Collect Ltd — thecollect.nz</div>
+</div></footer>
+
+<script>
+(function(){
+  var ALL = [];
+  function esc(s){ return String(s==null?'':s).replace(/[&<>]/g,function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c]; }); }
+  function money(v){ return (v==null)?'':'$'+Number(v).toFixed(2); }
+
+  function tile(n,l,s,turf){
+    return '<div class="tile'+(turf?' turf':'')+'"><div class="n">'+n+'</div>'+
+           '<div class="l">'+l+'</div>'+(s?'<div class="s">'+s+'</div>':'')+'</div>';
+  }
+
+  function renderTiles(sb){
+    if(!sb){ document.getElementById('tiles').innerHTML=''; return; }
+    var t30 = sb.t30||{}, t7 = sb.t7||{}, streak = sb.streaks||{}, big = sb.biggest||{};
+    var h = '';
+    h += tile((t30.win_pct!=null?t30.win_pct.toFixed(1):'—')+'%','win strike rate',
+              'last 30 days · '+(t30.picks||0)+' picks', true);
+    h += tile((t30.place_pct!=null?t30.place_pct.toFixed(1):'—')+'%','placed or better',
+              'last 30 days');
+    h += tile((t7.win_pct!=null?t7.win_pct.toFixed(1):'—')+'%','win strike rate',
+              'last 7 days · '+(t7.picks||0)+' picks');
+    if(streak.winner_days) h += tile(streak.winner_days,'days on end','with at least one winner');
+    if(big && big.horse) h += tile('$'+Math.round(big.collect||0),'biggest collect',
+              esc(big.horse)+' · '+money(big.price));
+    document.getElementById('tiles').innerHTML = h;
+  }
+
+  function outcomeClass(o){
+    o=(o||'').toLowerCase();
+    if(o==='won'||o==='win') return 'won';
+    if(o==='placed'||o==='place') return 'placed';
+    return 'missed';
+  }
+  function outcomeLabel(c){
+    return c==='won'?'WON':c==='placed'?'PLACED':"DIDN'T PLACE";
+  }
+
+  function renderBoard(filter){
+    var groups = {}, order = [];
+    ALL.forEach(function(r){
+      var c = outcomeClass(r.outcome);
+      if(filter && filter!=='all' && c!==filter) return;
+      var key = r.track||'';
+      if(!groups[key]){ groups[key]=[]; order.push(key); }
+      groups[key].push(r);
+    });
+    if(!order.length){
+      document.getElementById('board').innerHTML='<p class="muted">No races in this view.</p>';
+      return;
+    }
+    var html='';
+    order.forEach(function(track){
+      html += '<div class="meet"><div class="meet-h"><b>'+esc(track)+'</b></div>';
+      groups[track].forEach(function(r){
+        var c = outcomeClass(r.outcome);
+        var p = r.placings||[];
+        var res='';
+        if(p.length){
+          res = p.slice(0,3).map(function(pl,i){
+            var pos=(i+1);
+            var win = (i===0 && pl.win_div!=null);
+            var s = pos+'. '+esc(pl.horse)+(win?' <span class="win">'+money(pl.win_div)+'</span>':'');
+            return s;
+          }).join('  ·  ');
+        }
+        var exo='';
+        if(r.exotics){
+          var parts=[];
+          ['Quinella','Trifecta','First Four'].forEach(function(k){
+            if(r.exotics[k]!=null) parts.push(k+' <b>'+money(r.exotics[k])+'</b>');
+          });
+          if(parts.length) exo='<div class="rr-exo">'+parts.join('  ·  ')+'</div>';
+        }
+        html += '<div class="rr '+c+'">'+
+                '<div class="rr-l">'+
+                  '<div class="rr-h">'+esc(r.race_no)+(r.time?' · '+esc(r.time):'')+'</div>'+
+                  '<div class="rr-pick">Our pick: '+esc(r.pick)+'</div>'+
+                  (res?'<div class="rr-res">'+res+'</div>':'')+ exo +
+                '</div>'+
+                '<div class="badge '+c+'">'+outcomeLabel(c)+'</div>'+
+                '</div>';
+      });
+      html += '</div>';
+    });
+    document.getElementById('board').innerHTML = html;
+  }
+
+  fetch('app/data.json',{cache:'no-store'}).then(function(r){return r.json();}).then(function(d){
+    renderTiles(d.scoreboard);
+    var upd='';
+    try{ upd = new Date(d.generated_at).toLocaleString([], {dateStyle:'medium', timeStyle:'short'}); }catch(e){}
+    document.getElementById('updated').textContent =
+      'Live from the engine' + (upd?' — updated '+upd:'') +
+      '. Trailing figures roll every day; the card below is the most recent settled meeting.';
+
+    ALL = (d.results||[]).filter(function(r){ return r.settled; });
+    if(d.date){
+      var dt=d.date; try{ dt=new Date(d.date).toLocaleDateString([], {weekday:'long', day:'numeric', month:'long'}); }catch(e){}
+      document.getElementById('cardTitle').textContent = 'Every pick — '+dt;
+    }
+    if(ALL.length){
+      document.getElementById('filters').style.display='flex';
+      document.getElementById('honest').style.display='block';
+      renderBoard('all');
+    } else {
+      document.getElementById('board').innerHTML =
+        '<p class="muted">The latest card goes up as races settle through the day — check back this evening.</p>';
+      document.getElementById('honest').style.display='block';
+    }
+  }).catch(function(){
+    document.getElementById('board').innerHTML =
+      '<p class="muted">Results are loading from the engine — try a refresh in a moment.</p>';
+  });
+
+  document.getElementById('filters').addEventListener('click', function(e){
+    var b = e.target.closest('.fbtn'); if(!b) return;
+    [].forEach.call(this.querySelectorAll('.fbtn'), function(x){ x.classList.remove('on'); });
+    b.classList.add('on');
+    renderBoard(b.getAttribute('data-f'));
+  });
+})();
+</script>
+</body>
+</html>
