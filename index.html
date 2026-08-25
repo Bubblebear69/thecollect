@@ -107,6 +107,18 @@
   .price-box li::before{ content:"✓"; position:absolute; left:2px; color:var(--gold);
                          font-weight:800; }
   .founding{ margin-top:14px; font-size:13px; color:var(--gold-hi); }
+  .price-box form{ display:flex; flex-direction:column; gap:10px; text-align:left; margin-top:4px; }
+  .price-box input[type=text], .price-box input[type=email], .price-box select{
+    width:100%; padding:12px 14px; border-radius:10px; font-size:15px;
+    border:1px solid rgba(242,234,211,.22); background:rgba(14,18,23,.55); color:var(--paper); }
+  .price-box input::placeholder{ color:var(--faint); }
+  .price-box .ck{ display:flex; gap:9px; align-items:flex-start; font-size:12.5px; color:var(--dim); }
+  .price-box .ck input{ margin-top:3px; flex:none; }
+  .price-box .hp{ position:absolute; left:-9999px; width:1px; height:1px; opacity:0; }
+  .price-box .fmini{ font-size:12px; text-align:center; color:var(--faint); margin-top:2px; }
+  .price-box button[type=submit]{ margin-top:4px; }
+  #joinDone h4{ font-size:19px; color:var(--gold-hi); margin-bottom:6px; }
+  #joinDone p{ font-size:14px; color:var(--dim); }
 
   /* faq */
   details{ border-bottom:1px solid rgba(242,234,211,.1); padding:16px 4px; }
@@ -226,11 +238,34 @@
       <li>The Engine's Blackbook</li>
       <li>Cancel any time</li>
     </ul>
-    <a class="btn gold" style="width:100%" id="joinBtn"
-       href="mailto:hello@thecollect.nz?subject=Founding%20member&body=Put%20me%20on%20the%20founding%20members%20list.%0A%0AName%3A%20">
-       Join the founding members list</a>
-    <div class="founding">Doors open 1 October. Founding members get their
-      <b>first month free</b> — just flick us your name and email.</div>
+    <p class="founding" style="margin-bottom:14px">Doors open 1 October — founding members get their
+      <b>first month free</b>.</p>
+    <form id="joinForm" novalidate>
+      <input type="text" name="first_name" placeholder="First name" required maxlength="60" autocomplete="given-name" />
+      <input type="email" name="email" placeholder="Email" required autocomplete="email" />
+      <select name="region" aria-label="Region">
+        <option value="">Region (optional)</option>
+        <option>Northland</option><option>Auckland</option><option>Waikato</option>
+        <option>Bay of Plenty</option><option>Gisborne</option><option>Hawke's Bay</option>
+        <option>Taranaki</option><option>Manawatū-Whanganui</option><option>Wellington</option>
+        <option>Tasman</option><option>Nelson</option><option>Marlborough</option>
+        <option>West Coast</option><option>Canterbury</option><option>Otago</option>
+        <option>Southland</option><option>Australia</option><option>Other</option>
+      </select>
+      <label class="ck"><input type="checkbox" name="over18" required /><span>I confirm I am 18 or over.</span></label>
+      <label class="ck"><input type="checkbox" name="email_ok" required /><span>Email me racing results and launch news. Unsubscribe any time.</span></label>
+      <input type="text" name="company" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true" />
+      <input type="hidden" name="source" /><input type="hidden" name="campaign" /><input type="hidden" name="refcode" />
+      <button class="btn gold" type="submit" style="width:100%">Claim my free first month</button>
+      <div class="fmini">Free until 1 November. No card required. 18+.</div>
+      <div id="joinErr" class="fmini" style="display:none;color:var(--gold-hi)">Something went wrong — email
+        <a href="mailto:hello@thecollect.nz">hello@thecollect.nz</a> and we'll add you by hand.</div>
+    </form>
+    <div id="joinDone" style="display:none;text-align:left">
+      <h4>You're on the founding list.</h4>
+      <p>Your first month is free from 1 October. Watch your inbox — we publish every result,
+        win or lose.</p>
+    </div>
     <div class="muted" style="margin-top:16px">Already have an invite code?
       <a href="app/">Open the app</a></div>
   </div>
@@ -337,6 +372,46 @@
       document.getElementById('weekWins').innerHTML = h;
     }
   } catch(e){ /* static fallbacks stay */ }
+})();
+</script>
+
+<script>
+(function(){
+  var form = document.getElementById('joinForm');
+  if(!form) return;
+  var ENDPOINT = 'https://script.google.com/macros/s/AKfycbyzvDpTsIuuaXfv3ELxYiPBIrSmg8IDB0fmHBJ8_yGdCwF7bTvrBNKVK9YnIsujA3MB/exec';
+  try{
+    var q = new URLSearchParams(location.search);
+    if(q.get('utm_source')) form.source.value = q.get('utm_source');
+    if(q.get('utm_campaign')) form.campaign.value = q.get('utm_campaign');
+    var ref = q.get('r') || q.get('ref'); if(ref) form.refcode.value = ref;
+  }catch(e){}
+  form.addEventListener('submit', function(ev){
+    ev.preventDefault();
+    if(form.company && form.company.value){ show(); return; }      // honeypot: silent success
+    if(!form.checkValidity()){ form.reportValidity(); return; }
+    var btn = form.querySelector('button[type=submit]');
+    btn.disabled = true; btn.textContent = 'Adding you…';
+    var data = {
+      first_name: form.first_name.value.trim(),
+      email: form.email.value.trim(),
+      region: form.region.value,
+      over18: form.over18.checked,
+      email_ok: form.email_ok.checked,
+      source: form.source.value, campaign: form.campaign.value, refcode: form.refcode.value
+    };
+    fetch(ENDPOINT, { method:'POST', mode:'no-cors',
+      headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify(data) })
+      .then(function(){ show(); })
+      .catch(function(){
+        btn.disabled=false; btn.textContent='Claim my free first month';
+        document.getElementById('joinErr').style.display='block';
+      });
+  });
+  function show(){
+    form.style.display='none';
+    document.getElementById('joinDone').style.display='block';
+  }
 })();
 </script>
 </body>
