@@ -62,6 +62,16 @@
 
   .updated{ font-size:12.5px; color:var(--faint); margin-top:16px; }
 
+  /* collects showcase */
+  .collects{ display:grid; gap:12px; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); margin-top:8px; }
+  .ccard{ background:linear-gradient(135deg,var(--turf-deep),#123526 60%,var(--ink2));
+          border:1px solid rgba(28,138,80,.35); border-radius:14px; padding:16px 18px; }
+  .ccard .col{ font-size:23px; font-weight:800; color:var(--gold-hi); font-variant-numeric:tabular-nums; }
+  .ccard .hz{ font-size:14.5px; font-weight:700; margin:3px 0 1px; }
+  .ccard .mt{ font-size:12px; color:var(--faint); }
+  .cnote{ margin-top:14px; font-size:13.5px; color:var(--dim); }
+  .cnote b{ color:var(--gold-hi); }
+
   /* filter */
   .filters{ display:flex; gap:8px; flex-wrap:wrap; margin:8px 0 20px; }
   .fbtn{ background:var(--card); border:1px solid var(--line); color:var(--dim);
@@ -123,6 +133,13 @@
   <div class="updated" id="updated"></div>
 </div></div>
 
+<section style="padding-top:10px"><div class="wrap">
+  <div class="kicker">Recent collects</div>
+  <h2>What the last week paid.</h2>
+  <div class="collects" id="collects"><p class="muted">Loading…</p></div>
+  <p class="cnote" id="cnote"></p>
+</div></section>
+
 <section style="padding-top:6px"><div class="wrap">
   <h2 id="cardTitle">The latest published card</h2>
   <div class="filters" id="filters" style="display:none">
@@ -179,6 +196,30 @@
     if(big && big.horse) h += tile('$'+Math.round(big.collect||0),'biggest collect',
               esc(big.horse)+' · '+money(big.price));
     document.getElementById('tiles').innerHTML = h;
+  }
+
+  function renderCollects(week, sb){
+    week = week||{}; sb = sb||{};
+    var best = (week.best||[]).slice(0,6);
+    var el = document.getElementById('collects');
+    if(!best.length){
+      el.innerHTML = '<p class="muted">This week\'s collects will show here as races settle.</p>';
+    } else {
+      el.innerHTML = best.map(function(b){
+        var when=''; try{ when = new Date(b.date).toLocaleDateString([], {weekday:'short', day:'numeric', month:'short'}); }catch(e){}
+        return '<div class="ccard"><div class="col">$'+Number(b.collect||0).toFixed(2)+'</div>'+
+               '<div class="hz">'+esc(b.horse)+'</div>'+
+               '<div class="mt">'+esc(b.race)+' · won at '+money(b.price)+(when?' · '+when:'')+'</div></div>';
+      }).join('');
+    }
+    var exo = sb.exotics_got||{}, parts=[];
+    if(exo.trifecta) parts.push(exo.trifecta+' trifecta'+(exo.trifecta>1?'s':''));
+    if(exo.first_four) parts.push(exo.first_four+' first-four'+(exo.first_four>1?'s':''));
+    var note='';
+    if(week.exotic_collect) note += 'The week\'s exotics returned <b>$'+Math.round(week.exotic_collect)+'</b>. ';
+    if(parts.length) note += 'Today alone we boxed <b>'+parts.join('</b> and <b>')+'</b>. ';
+    note += 'Every collect above came from a pick published before the jump, off our staking plan.';
+    document.getElementById('cnote').innerHTML = note;
   }
 
   function outcomeClass(o){
@@ -243,6 +284,7 @@
 
   fetch('app/data.json',{cache:'no-store'}).then(function(r){return r.json();}).then(function(d){
     renderTiles(d.scoreboard);
+    renderCollects(d.week, d.scoreboard);
     var upd='';
     try{ upd = new Date(d.generated_at).toLocaleString([], {dateStyle:'medium', timeStyle:'short'}); }catch(e){}
     document.getElementById('updated').textContent =
