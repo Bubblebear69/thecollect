@@ -265,6 +265,20 @@
       <h4>You're on the founding list.</h4>
       <p>Your first month is free from 1 October. Watch your inbox — we publish every result,
         win or lose.</p>
+      <div style="margin-top:16px;border-top:1px solid rgba(242,234,211,.12);padding-top:14px">
+        <p style="font-size:14px;color:var(--gold-hi);font-weight:700;margin:0 0 6px">Want a second month free?</p>
+        <p class="muted" style="font-size:13px;margin:0 0 10px">Send this link to two mates who follow the racing —
+          if they both join the founding list, your second month is on us too.</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <input id="refLink" readonly aria-label="Your referral link"
+            style="flex:1;min-width:180px;padding:10px 12px;border-radius:9px;border:1px solid rgba(242,234,211,.22);background:rgba(14,18,23,.55);color:var(--paper);font-size:13px" />
+          <button type="button" id="refCopy" class="btn ghost small">Copy link</button>
+        </div>
+        <div style="margin-top:10px;font-size:13px">
+          Share: <a id="refWa" target="_blank" rel="noopener">WhatsApp</a> ·
+          <a id="refFb" target="_blank" rel="noopener">Facebook</a>
+        </div>
+      </div>
     </div>
     <div class="muted" style="margin-top:16px">Already have an invite code?
       <a href="app/">Open the app</a></div>
@@ -411,6 +425,31 @@
   function show(){
     form.style.display='none';
     document.getElementById('joinDone').style.display='block';
+    buildRef((form.email && form.email.value || '').trim().toLowerCase());
+  }
+  function buildRef(email){
+    (async function(){
+      var code;
+      try{
+        if(email && window.crypto && crypto.subtle){
+          var buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(email));
+          code = [].map.call(new Uint8Array(buf), function(b){ return ('0'+b.toString(16)).slice(-2); })
+                   .join('').slice(0,6).toUpperCase();
+        }
+      }catch(e){}
+      if(!code) code = Math.random().toString(36).slice(2,8).toUpperCase();
+      var link = 'https://thecollect.nz/?r=' + code;
+      var li = document.getElementById('refLink'); if(li) li.value = link;
+      var msg = 'Getting on The Collect before it opens — free first month. Join with my link: ' + link;
+      var wa = document.getElementById('refWa'); if(wa) wa.href = 'https://wa.me/?text=' + encodeURIComponent(msg);
+      var fb = document.getElementById('refFb'); if(fb) fb.href = 'https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(link);
+      var cp = document.getElementById('refCopy');
+      if(cp) cp.addEventListener('click', function(){
+        function done(){ cp.textContent='Copied'; setTimeout(function(){ cp.textContent='Copy link'; }, 1500); }
+        try{ navigator.clipboard.writeText(link).then(done, function(){ li.select(); document.execCommand('copy'); done(); }); }
+        catch(e){ try{ li.select(); document.execCommand('copy'); done(); }catch(_){} }
+      });
+    })();
   }
 })();
 </script>
