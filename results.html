@@ -52,6 +52,10 @@
   .btn:active{ transform:scale(.97); }
   .btn.gold{ background:linear-gradient(135deg,var(--gold-hi),var(--gold) 55%,var(--gold-lo)); color:#171204; }
   .btn.ghost{ background:transparent; color:var(--paper); border:1px solid rgba(242,234,211,.28); }
+  @media (max-width:460px){
+    .top .name{ display:none; }
+    .top .btn{ padding:8px 12px; font-size:13px; }
+  }
 
   .head{ padding:52px 0 26px;
          background:radial-gradient(900px 420px at 50% -60px, #14261D 0%, var(--ink) 70%); }

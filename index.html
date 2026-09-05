@@ -54,6 +54,11 @@
   .btn.ghost{ background:transparent; color:var(--paper);
               border:1px solid rgba(242,234,211,.28); }
   .btn.small{ padding:9px 16px; font-size:13.5px; }
+  @media (max-width:460px){
+    .top .name{ display:none; }          /* logo alone keeps the nav uncrowded on small phones */
+    .top .wrap{ gap:8px; }
+    .top .btn.small{ padding:8px 11px; font-size:12px; }
+  }
 
   /* hero */
   .hero{ padding:76px 0 60px;
