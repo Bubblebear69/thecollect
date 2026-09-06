@@ -619,7 +619,7 @@ function hasAccess(){ return localStorage.getItem(LS.access) === 'yes'; }
 // Stamped by the publisher at deploy time. When data.json carries a NEWER
 // shell version than the code that's running, the app reloads itself once —
 // so an always-open home-screen app picks up new features without sign-outs.
-const SHELL_VERSION = "933372f9384e";
+const SHELL_VERSION = "69388a67ee6b";
 
 function localToday(){
   const d = new Date();
@@ -736,6 +736,9 @@ const state = {
   demo:  false,
   view:  { name: 'home' },
   tab:   'today',
+  resDay: null,        // Results tab: which day is shown (null = today)
+  resCache: {},        // fetched past-day results, keyed by date
+  resLoading: false,
 };
 
 /* A compact built-in sample so the app renders instantly with no
@@ -1291,6 +1294,25 @@ function noteSheet(i){
 /* ------------------------------------------- render: results */
 function pickMeeting(v){ state.resMeeting = v; renderResults(); }
 
+/* Which day's results are showing: today (from data.json) or a fetched past day. */
+function curResultsView(){
+  if (state.resDay && state.data && state.resDay !== state.data.date
+      && state.resCache[state.resDay]) return state.resCache[state.resDay];
+  return state.data;
+}
+async function pickDay(v){
+  if (!state.data) return;
+  state.resMeeting = undefined;                 // reset meeting filter for the new day
+  if (v === state.data.date){ state.resDay = null; renderResults(); return; }
+  if (state.resCache[v]){ state.resDay = v; renderResults(); return; }
+  state.resDay = v; state.resLoading = true; renderResults();   // show loading
+  try {
+    const res = await fetch('./results/' + v + '.json', { cache: 'no-store' });
+    if (res.ok) state.resCache[v] = await res.json();
+  } catch(e){}
+  state.resLoading = false; renderResults();
+}
+
 function resRow(r){
   const won = r.outcome === 'won';
   const p1 = (r.placings||[])[0];
@@ -1320,11 +1342,27 @@ function resRow(r){
 }
 
 function renderResults(){
-  const d = state.data, res = d.results || [];
-  const sb = d.scoreboard || null;
+  const d = state.data;
+  const rd = curResultsView(), res = rd.results || [];
+  const sb = rd.scoreboard || null;
+  const today = d ? d.date : '';
+  const days = (d && d.result_days) || (today ? [today] : []);
+  const curDay = state.resDay || today;
   let h = topBar();
   h += '<div class="fade">';
-  h += `<div class="datehead"><div class="d">Results</div><div class="c tnum">${esc(prettyDate(d.date))}</div></div>`;
+  h += `<div class="datehead"><div class="d">Results</div><div class="c tnum">${esc(prettyDate(rd.date))}</div></div>`;
+  if (days.length > 1){
+    h += `<div class="msel"><label>Day</label><select onchange="pickDay(this.value)">${
+      days.map(dd => `<option value="${esc(dd)}" ${dd===curDay?'selected':''}>${dd===today?'Today':esc(prettyDate(dd))}</option>`).join('')
+    }</select></div>`;
+  }
+  if (state.resDay && state.resDay !== today && !state.resCache[state.resDay]){
+    h += state.resLoading
+      ? `<div class="banner"><span>⏳</span><div>Loading ${esc(prettyDate(state.resDay))}…</div></div>`
+      : `<div class="banner"><span>⚠️</span><div>Couldn't load that day — pick another.</div></div>`;
+    h += legal() + '</div>' + navBar();
+    app().innerHTML = h; window.scrollTo(0,0); return;
+  }
   if (sb && sb.races){
     const t4 = sb.top4 || {}, eg = sb.exotics_got || {};
     h += `<div class="eyebrow">Our top pick</div>
