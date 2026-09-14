@@ -9,7 +9,7 @@
 <style>
   :root{
     --ink:#0E1217; --card:#161E27; --line:rgba(212,175,55,.16);
-    --gold:#D4AF37; --gold-hi:#F0D078; --turf:#1C8A50; --turf-deep:#0B3D2E;
+    --gold:#D4AF37; --gold-hi:#F0D078; --turf:#31C47C; --turf-deep:#0B3D2E;
     --paper:#F2EAD3; --dim:rgba(242,234,211,.68); --faint:rgba(242,234,211,.42);
   }
   *{ margin:0; padding:0; box-sizing:border-box; }
@@ -76,10 +76,10 @@
         background:linear-gradient(135deg,var(--gold-hi),var(--gold)); border-radius:5px;
         padding:3px 9px; }
   .chip-money{ font-size:10.5px; font-weight:800; letter-spacing:1px; color:var(--turf);
-        background:rgba(28,138,80,.16); border:1px solid rgba(28,138,80,.5);
+        background:rgba(49,196,124,.16); border:1px solid rgba(49,196,124,.5);
         border-radius:5px; padding:2px 8px; }
   .band{ font-size:10.5px; font-weight:800; letter-spacing:.6px; border-radius:5px; padding:3px 9px; }
-  .band-higher{ color:var(--turf); background:rgba(28,138,80,.16); border:1px solid rgba(28,138,80,.5); }
+  .band-higher{ color:var(--turf); background:rgba(49,196,124,.16); border:1px solid rgba(49,196,124,.5); }
   .band-lower{ color:#B8860B; background:rgba(184,134,11,.15); border:1px solid rgba(184,134,11,.5); }
   .band-note{ font-size:12px; color:var(--muted,#8a94a0); margin-top:6px; line-height:1.45; }
   .pick-conf{ display:flex; align-items:center; gap:10px; margin-top:7px; }
@@ -138,7 +138,7 @@
   .ourpick{ display:flex; align-items:center; gap:10px; margin:0 18px;
         padding:9px 12px; border-radius:0 8px 8px 0; border-left:3px solid; font-size:13.5px; }
   .ourpick-won{ background:rgba(212,175,55,.14); border-color:var(--gold); }
-  .ourpick-plc{ background:rgba(28,138,80,.12); border-color:var(--turf); }
+  .ourpick-plc{ background:rgba(49,196,124,.12); border-color:var(--turf); }
   .ourpick-out{ background:rgba(242,234,211,.04); border-color:rgba(242,234,211,.2); }
   .op-lab{ font-size:10px; font-weight:800; letter-spacing:1px; text-transform:uppercase;
         color:var(--faint); }
@@ -147,14 +147,14 @@
         border-radius:5px; white-space:nowrap; }
   .ourpick-won .op-badge{ background:linear-gradient(135deg,var(--gold-hi),var(--gold));
         color:#171204; }
-  .ourpick-plc .op-badge{ background:rgba(28,138,80,.2); color:#8FD9AE; }
+  .ourpick-plc .op-badge{ background:rgba(49,196,124,.2); color:#8FD9AE; }
   .ourpick-out .op-badge{ background:rgba(242,234,211,.08); color:var(--faint); }
   .pl-ours{ background:rgba(212,175,55,.05); }
   .in-top3{ font-size:9.5px; font-weight:800; letter-spacing:.6px; text-transform:uppercase;
         color:var(--gold); background:rgba(212,175,55,.14); border-radius:4px;
         padding:1px 7px; margin-left:8px; vertical-align:1px; }
-  .exo-hit{ border-style:solid; border-color:rgba(28,138,80,.6);
-        background:rgba(28,138,80,.14); }
+  .exo-hit{ border-style:solid; border-color:rgba(49,196,124,.6);
+        background:rgba(49,196,124,.14); }
   .exo-hit .exo-k{ color:#8FD9AE; }
   .hit-tag{ font-size:9px; font-weight:800; letter-spacing:.5px; color:#08130c;
         background:linear-gradient(135deg,#5FCf8f,var(--turf)); border-radius:3px;
@@ -210,7 +210,7 @@
   .day-best{ font-size:12.5px; color:var(--faint); }
   .day-best b{ color:var(--gold-hi); }
   .ob-won{ background:linear-gradient(135deg,var(--gold-hi),var(--gold)); color:#171204; }
-  .ob-plc{ background:rgba(28,138,80,.2); color:#8FD9AE; }
+  .ob-plc{ background:rgba(49,196,124,.2); color:#8FD9AE; }
   .ob-out{ background:rgba(242,234,211,.08); color:var(--faint); }
   /* ---- Blackbook ---- */
   .bb-head.bb-quiet{ background:rgba(212,175,55,.08); }
@@ -302,7 +302,7 @@
   ul.how li::before{ content:"◆"; position:absolute; left:0; color:var(--gold);
         font-size:11px; top:3px; }
   .panel.learn{ background:linear-gradient(135deg,var(--turf-deep),#123526 55%,var(--card));
-        border-color:rgba(28,138,80,.4); }
+        border-color:rgba(49,196,124,.4); }
   .panel.learn p{ color:var(--paper); font-size:15px; margin-bottom:10px; }
   .panel.learn b{ color:var(--gold-hi); }
   .cta-in{ text-align:center; margin:8px 0 24px; }
@@ -318,7 +318,7 @@
           border-radius:6px; padding:1px 8px; margin-left:8px; vertical-align:2px; }
   .conf-line{ font-size:13px; color:var(--faint); margin:2px 0 4px; font-style:italic; }
   .market-read{ font-size:13.5px; color:var(--paper); margin:6px 0; padding:8px 12px;
-        background:rgba(28,138,80,.12); border-left:3px solid var(--turf);
+        background:rgba(49,196,124,.12); border-left:3px solid var(--turf);
         border-radius:0 8px 8px 0; }
   .runners-head{ font-size:11px; letter-spacing:1px; text-transform:uppercase;
                  color:var(--faint); margin-bottom:4px; }
