@@ -834,8 +834,8 @@ function renderToday(){
     if (r.exotics){
       const e = r.exotics;
       h += '<div class="exo">';
-      if (e.trifecta) h += `<div class="exo-ticket"><span class="exo-k">Trifecta</span>${e.trifecta}</div>`;
-      if (e.first_four) h += `<div class="exo-ticket"><span class="exo-k">First four</span>${e.first_four}</div>`;
+      if (e.trifecta) h += `<div class="exo-ticket"><span class="exo-k">Trifecta · top 5 boxed</span>${e.trifecta}</div>`;
+      if (e.first_four) h += `<div class="exo-ticket"><span class="exo-k">First four · top 6 boxed</span>${e.first_four}</div>`;
       h += '</div>';
     }
     h += '</article>';

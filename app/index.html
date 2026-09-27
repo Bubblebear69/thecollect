@@ -619,7 +619,7 @@ function hasAccess(){ return localStorage.getItem(LS.access) === 'yes'; }
 // Stamped by the publisher at deploy time. When data.json carries a NEWER
 // shell version than the code that's running, the app reloads itself once —
 // so an always-open home-screen app picks up new features without sign-outs.
-const SHELL_VERSION = "5936ad5ef1e4";
+const SHELL_VERSION = "479683760cbd";
 
 function localToday(){
   const d = new Date();
@@ -1378,7 +1378,7 @@ function renderResults(){
         <div class="cell"><div class="n tnum">${Math.round(t4.place_pct||0)}%</div><div class="l">Top-3 strike</div></div>
       </div>`;
     if ((eg.trifecta||0) + (eg.first_four||0) > 0){
-      h += `<div class="exo-got">🎟️ Collected today: <b>${eg.trifecta||0}</b> Trifecta${eg.trifecta===1?'':'s'} · <b>${eg.first_four||0}</b> First 4${eg.first_four===1?'':'s'}</div>`;
+      h += `<div class="exo-got">🎟️ Today: <b>${eg.trifecta||0}</b> Trifecta${eg.trifecta===1?'':'s'} from our top 5 boxed · <b>${eg.first_four||0}</b> First 4${eg.first_four===1?'':'s'} from our top 6 boxed</div>`;
     }
   }
   if (!res.length){

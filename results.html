@@ -225,11 +225,11 @@
       }).join('');
     }
     var exo = sb.exotics_got||{}, parts=[];
-    if(exo.trifecta) parts.push(exo.trifecta+' trifecta'+(exo.trifecta>1?'s':''));
-    if(exo.first_four) parts.push(exo.first_four+' first-four'+(exo.first_four>1?'s':''));
+    if(exo.trifecta) parts.push(exo.trifecta+' trifecta'+(exo.trifecta>1?'s':'')+' from our top 5 boxed');
+    if(exo.first_four) parts.push(exo.first_four+' first-four'+(exo.first_four>1?'s':'')+' from our top 6 boxed');
     var note='';
     if(week.exotic_collect) note += 'The week\'s exotics returned <b>$'+Math.round(week.exotic_collect)+'</b>. ';
-    if(parts.length) note += 'Today alone we boxed <b>'+parts.join('</b> and <b>')+'</b>. ';
+    if(parts.length) note += 'Today alone: <b>'+parts.join('</b> and <b>')+'</b>. ';
     note += 'Every collect above came from a pick published before the jump, off our staking plan.';
     document.getElementById('cnote').innerHTML = note;
   }
