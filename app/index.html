@@ -619,12 +619,27 @@ function hasAccess(){ return localStorage.getItem(LS.access) === 'yes'; }
 // Stamped by the publisher at deploy time. When data.json carries a NEWER
 // shell version than the code that's running, the app reloads itself once —
 // so an always-open home-screen app picks up new features without sign-outs.
-const SHELL_VERSION = "479683760cbd";
+const SHELL_VERSION = "c11b6e10fbc3";
 
+// The "race day" the app shows is referenced to ONE zone, so every viewer —
+// NZ, Perth, Sydney, anywhere — agrees with the engine on what "today" is,
+// instead of each browser rolling the day over at its own local midnight
+// (which showed overseas users the wrong day — Collect Meeting 6, 8 Oct 2026).
+// This MUST match the zone the publisher stamps data.date in. The master
+// currently stamps NZ time (droplet is Pacific/Auckland, naive datetime.now()),
+// so the reference is NZ. If the backend moves the published date to UTC,
+// change this one constant to 'UTC' and nothing else.
+const RACE_DAY_TZ = 'Pacific/Auckland';
 function localToday(){
-  const d = new Date();
-  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0')
-       + '-' + String(d.getDate()).padStart(2,'0');
+  try {
+    // en-CA formats as YYYY-MM-DD, so this is the date in RACE_DAY_TZ
+    // regardless of where the viewer's own clock is set.
+    return new Date().toLocaleDateString('en-CA', { timeZone: RACE_DAY_TZ });
+  } catch(e){
+    const d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0')
+         + '-' + String(d.getDate()).padStart(2,'0');
+  }
 }
 
 let _lastFetch = 0;
@@ -1111,7 +1126,7 @@ function renderLanding(){
   if (sb.races){
     h += `<div class="proof">
       <div class="cell"><div class="n tnum">${sb.wins}</div><div class="l">Winners today</div></div>
-      <div class="cell"><div class="n tnum">${Math.round(sb.win_pct)}%</div><div class="l">Strike rate</div></div>
+      <div class="cell"><div class="n tnum">${Math.round(sb.win_pct)}%</div><div class="l">Strike rate today</div></div>
       <div class="cell"><div class="n tnum">${(sb.streaks||{}).winner_days||0}</div><div class="l">Day win streak</div></div>
     </div>`;
   }

@@ -218,7 +218,9 @@
       el.innerHTML = '<p class="muted">This week\'s collects will show here as races settle.</p>';
     } else {
       el.innerHTML = best.map(function(b){
-        var when=''; try{ when = new Date(b.date).toLocaleDateString([], {weekday:'short', day:'numeric', month:'short'}); }catch(e){}
+        // Anchor to local noon so the calendar day never rolls back a day for
+        // viewers west of the stamp zone (e.g. Perth/Sydney). Collect Mtg 6.
+        var when=''; try{ when = new Date((b.date||'').slice(0,10)+'T12:00:00').toLocaleDateString([], {weekday:'short', day:'numeric', month:'short'}); }catch(e){}
         return '<div class="ccard"><div class="col">$'+Number(b.collect||0).toFixed(2)+'</div>'+
                '<div class="hz">'+esc(b.horse)+'</div>'+
                '<div class="mt">'+esc(b.race)+' · won at '+money(b.price)+(when?' · '+when:'')+'</div></div>';
@@ -305,7 +307,7 @@
 
     ALL = (d.results||[]).filter(function(r){ return r.settled; });
     if(d.date){
-      var dt=d.date; try{ dt=new Date(d.date).toLocaleDateString([], {weekday:'long', day:'numeric', month:'long'}); }catch(e){}
+      var dt=d.date; try{ dt=new Date((d.date||'').slice(0,10)+'T12:00:00').toLocaleDateString([], {weekday:'long', day:'numeric', month:'long'}); }catch(e){}
       document.getElementById('cardTitle').textContent = 'Every pick — '+dt;
     }
     if(ALL.length){
