@@ -619,7 +619,7 @@ function hasAccess(){ return localStorage.getItem(LS.access) === 'yes'; }
 // Stamped by the publisher at deploy time. When data.json carries a NEWER
 // shell version than the code that's running, the app reloads itself once —
 // so an always-open home-screen app picks up new features without sign-outs.
-const SHELL_VERSION = "c11b6e10fbc3";
+const SHELL_VERSION = "c18729108f91";
 
 // The "race day" the app shows is referenced to ONE zone, so every viewer —
 // NZ, Perth, Sydney, anywhere — agrees with the engine on what "today" is,
@@ -689,7 +689,7 @@ async function manualRefresh(btn){
   await refreshIfStale(true);
   const b = document.querySelector('[data-refresh]');
   if (b) b.classList.remove('spin');
-  const g = ((state.data||{}).generated_at || '').slice(11,16);
+  const _g = (state.data||{}).generated_at; const g = _g ? new Date(_g).toLocaleTimeString('en-NZ',{timeZone:'Pacific/Auckland',hour:'numeric',minute:'2-digit'}) : '';
   toast(g ? `Up to date — engine data ${g}` : 'Up to date');
 }
 
