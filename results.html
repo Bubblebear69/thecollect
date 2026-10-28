@@ -11,90 +11,83 @@
 <meta property="og:url" content="https://thecollect.nz/results.html" />
 <link rel="icon" href="app/icon.svg" type="image/svg+xml" />
 <!-- Google Analytics 4 -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-G6TJ65YJPM"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){ dataLayer.push(arguments); }
-  gtag('js', new Date());
-  gtag('config', 'G-G6TJ65YJPM');
-</script>
+<!-- Analytics gated behind cookie consent — GA4 loads only on Accept (see consent.js) -->
+<script defer src="consent.js"></script>
 <style>
   :root{
-    --ink:#0E1217; --ink2:#131A21; --card:#161E27; --line:rgba(212,175,55,.16);
-    --gold:#D4AF37; --gold-hi:#F0D078; --gold-lo:#A07E1E;
-    --turf:#31C47C; --turf-deep:#0B3D2E;
-    --paper:#F2EAD3; --dim:rgba(242,234,211,.68); --faint:rgba(242,234,211,.42);
-    --miss:rgba(242,234,211,.34);
+    --ink:#050806; --ink2:#0a110c; --card:#0d170f;
+    --line:rgba(255,255,255,.08); --line2:rgba(255,255,255,.14);
+    --green:#D4AF37; --gold:#D4AF37; --pos:#31C47C;
+    --text:#eaf2ec; --dim:#cfe0d6; --muted:#9bb0a4; --faint:#7d9488; --miss:#6b7a70;
   }
   *{ margin:0; padding:0; box-sizing:border-box; }
   html{ scroll-behavior:smooth; }
-  body{ background:var(--ink); color:var(--paper);
-        font:16px/1.6 -apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }
-  a{ color:var(--gold); text-decoration:none; }
+  body{ background:var(--ink); color:var(--text);
+        font:16px/1.6 -apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; -webkit-font-smoothing:antialiased; }
+  a{ color:var(--green); text-decoration:none; }
   img{ max-width:100%; }
   .wrap{ max-width:1060px; margin:0 auto; padding:0 22px; }
-  h1{ font-family:Georgia,"Times New Roman",serif; font-size:clamp(28px,5vw,42px);
-      line-height:1.14; font-weight:700; }
-  h1 em{ font-style:normal; color:var(--gold); }
-  h2{ font-family:Georgia,serif; font-size:clamp(22px,3.4vw,28px); font-weight:700; }
-  .kicker{ font-size:12px; font-weight:700; letter-spacing:2.5px; color:var(--gold);
+  h1{ font-size:clamp(34px,6vw,56px); line-height:1.0; font-weight:800; letter-spacing:-.03em; }
+  h1 em{ font-style:normal; color:var(--green); }
+  h2{ font-size:clamp(24px,3.6vw,34px); font-weight:800; letter-spacing:-.01em; }
+  .kicker{ font-size:12px; font-weight:700; letter-spacing:.22em; color:var(--green);
            text-transform:uppercase; margin-bottom:10px; }
   section{ padding:40px 0; }
 
-  .top{ position:sticky; top:0; z-index:50; background:rgba(14,18,23,.92);
-        backdrop-filter:blur(8px); border-bottom:1px solid var(--line); }
-  .top .wrap{ display:flex; align-items:center; gap:12px; height:62px; }
-  .top img{ width:34px; height:34px; border-radius:8px; }
-  .top .name{ font-family:Georgia,serif; font-weight:700; font-size:18px; letter-spacing:.5px; }
+  .top{ position:sticky; top:0; z-index:50; background:rgba(5,8,6,.86);
+        -webkit-backdrop-filter:blur(12px); backdrop-filter:blur(12px); border-bottom:1px solid var(--line); }
+  .top .wrap{ display:flex; align-items:center; gap:12px; height:68px; }
+  .top img{ width:40px; height:40px; border-radius:10px; }
+  .top .name{ font-weight:800; font-size:22px; letter-spacing:.04em; }
   .top .spacer{ flex:1; }
-  .btn{ display:inline-block; padding:9px 16px; border-radius:10px; font-weight:700;
-        font-size:13.5px; border:0; cursor:pointer; transition:transform .12s ease; }
+  .btn{ display:inline-flex; align-items:center; padding:11px 20px; border-radius:999px; font-weight:700;
+        font-size:14px; border:1px solid transparent; cursor:pointer; transition:transform .12s ease,background .16s ease; }
   .btn:active{ transform:scale(.97); }
-  .btn.gold{ background:linear-gradient(135deg,var(--gold-hi),var(--gold) 55%,var(--gold-lo)); color:#171204; }
-  .btn.ghost{ background:transparent; color:var(--paper); border:1px solid rgba(242,234,211,.28); }
+  .btn.gold{ background:var(--pos); color:#042311; box-shadow:0 10px 26px rgba(49,196,124,.4); }
+  .btn.gold:hover{ background:#3bff93; }
+  .btn.ghost{ background:transparent; color:var(--text); border:1px solid var(--line2); }
+  .btn.ghost:hover{ border-color:var(--green); }
   @media (max-width:460px){
     .top .name{ display:none; }
-    .top .btn{ padding:8px 12px; font-size:13px; }
+    .top .btn{ padding:9px 13px; font-size:13px; }
   }
 
-  .head{ padding:52px 0 26px;
-         background:radial-gradient(900px 420px at 50% -60px, #14261D 0%, var(--ink) 70%); }
-  .head .wrap{ max-width:820px; }
-  .head .sub{ margin:16px 0 0; max-width:640px; color:var(--dim); font-size:17px; }
+  .head{ padding:56px 0 26px;
+         background:radial-gradient(900px 440px at 50% -60px, #0c2016 0%, var(--ink) 70%); }
+  .head .wrap{ max-width:860px; }
+  .head .sub{ margin:16px 0 0; max-width:660px; color:var(--dim); font-size:17px; }
 
   /* summary tiles */
-  .tiles{ display:grid; gap:14px; grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
-          margin-top:30px; }
+  .tiles{ display:grid; gap:14px; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); margin-top:30px; }
   .tile{ background:var(--card); border:1px solid var(--line); border-radius:16px; padding:18px 20px; }
-  .tile .n{ font-size:30px; font-weight:800; color:var(--gold-hi); font-variant-numeric:tabular-nums; }
+  .tile .n{ font-size:32px; font-weight:800; color:var(--green); font-variant-numeric:tabular-nums; }
   .tile .l{ font-size:12.5px; color:var(--faint); letter-spacing:.4px; margin-top:3px; }
   .tile .s{ font-size:11.5px; color:var(--dim); margin-top:8px; }
-  .tile.turf{ background:linear-gradient(135deg,var(--turf-deep),#123526 60%,var(--ink2));
-              border-color:rgba(49,196,124,.4); }
+  .tile.turf{ background:linear-gradient(135deg,#07160e,#0c2417 60%,var(--ink2));
+              border-color:rgba(212,175,55,.4); box-shadow:0 16px 44px rgba(212,175,55,.12); }
 
   .updated{ font-size:12.5px; color:var(--faint); margin-top:16px; }
 
   /* collects showcase */
   .collects{ display:grid; gap:12px; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); margin-top:8px; }
-  .ccard{ background:linear-gradient(135deg,var(--turf-deep),#123526 60%,var(--ink2));
-          border:1px solid rgba(49,196,124,.35); border-radius:14px; padding:16px 18px; }
-  .ccard .col{ font-size:23px; font-weight:800; color:var(--gold-hi); font-variant-numeric:tabular-nums; }
+  .ccard{ background:linear-gradient(135deg,#07160e,#0c2417 60%,var(--ink2));
+          border:1px solid rgba(212,175,55,.35); border-radius:14px; padding:16px 18px; }
+  .ccard .col{ font-size:24px; font-weight:800; color:var(--pos); font-variant-numeric:tabular-nums; }
   .ccard .hz{ font-size:14.5px; font-weight:700; margin:3px 0 1px; }
   .ccard .mt{ font-size:12px; color:var(--faint); }
   .cnote{ margin-top:14px; font-size:13.5px; color:var(--dim); }
-  .cnote b{ color:var(--gold-hi); }
+  .cnote b{ color:var(--pos); }
 
   /* filter */
   .filters{ display:flex; gap:8px; flex-wrap:wrap; margin:8px 0 20px; }
-  .fbtn{ background:var(--card); border:1px solid var(--line); color:var(--dim);
-         border-radius:999px; padding:7px 15px; font-size:13px; font-weight:700;
-         cursor:pointer; }
-  .fbtn.on{ background:rgba(212,175,55,.16); color:var(--gold-hi); border-color:rgba(212,175,55,.4); }
+  .fbtn{ background:var(--card); border:1px solid var(--line); color:var(--muted);
+         border-radius:999px; padding:7px 15px; font-size:13px; font-weight:700; cursor:pointer; }
+  .fbtn.on{ background:rgba(212,175,55,.14); color:var(--green); border-color:rgba(212,175,55,.4); }
 
   /* meeting + rows */
   .meet{ margin-bottom:26px; }
   .meet-h{ display:flex; align-items:baseline; gap:10px; margin-bottom:8px; }
-  .meet-h b{ font-family:Georgia,serif; font-size:19px; }
+  .meet-h b{ font-size:19px; font-weight:800; }
   .meet-h .co{ font-size:11px; font-weight:800; letter-spacing:1.5px; color:var(--faint); }
 
   .rr{ display:flex; align-items:center; gap:14px; padding:13px 16px;
@@ -103,32 +96,34 @@
   .rr-h{ font-size:12px; color:var(--faint); letter-spacing:.4px; }
   .rr-pick{ font-size:16px; font-weight:800; margin:1px 0 3px; }
   .rr-res{ font-size:13px; color:var(--dim); }
-  .rr-res .win{ color:var(--gold-hi); font-weight:700; }
+  .rr-res .win{ color:var(--green); font-weight:700; }
   .rr-exo{ font-size:12px; color:var(--faint); margin-top:4px; }
-  .rr-exo b{ color:var(--turf); }
+  .rr-exo b{ color:var(--green); }
   .badge{ flex:none; font-size:11.5px; font-weight:800; letter-spacing:1px;
           border-radius:999px; padding:6px 13px; text-align:center; min-width:78px; }
-  .badge.won{ background:linear-gradient(135deg,var(--gold-hi),var(--gold-lo)); color:#171204; }
-  .badge.placed{ background:rgba(212,175,55,.15); color:var(--gold-hi); border:1px solid rgba(212,175,55,.4); }
-  .badge.missed{ background:transparent; color:var(--miss); border:1px solid rgba(242,234,211,.16); }
-  .rr.missed{ opacity:.9; }
+  .badge.won{ background:var(--green); color:#042311; }
+  .badge.placed{ background:rgba(212,175,55,.15); color:var(--green); border:1px solid rgba(212,175,55,.4); }
+  .badge.missed{ background:transparent; color:var(--miss); border:1px solid rgba(255,255,255,.14); }
+  .badge.void{ background:rgba(128,128,128,.12); color:var(--faint); border:1px solid var(--line); }
+  .rr.void .rr-pick{ text-decoration:line-through; color:var(--faint); }
+  .rr.missed{ opacity:1; }   /* losers kept at identical weight to winners — brand promise */
 
-  .note{ background:linear-gradient(135deg,var(--turf-deep),#123526 60%,var(--ink2));
-         border:1px solid rgba(49,196,124,.35); border-radius:16px; padding:22px 24px;
+  .note{ background:linear-gradient(135deg,#07160e,#0c2417 60%,var(--ink2));
+         border:1px solid rgba(212,175,55,.35); border-radius:16px; padding:22px 24px;
          color:var(--dim); font-size:14.5px; margin-top:8px; }
-  .note b{ color:var(--paper); }
+  .note b{ color:var(--text); }
 
   footer{ border-top:1px solid var(--line); padding:32px 0 46px; font-size:13px; color:var(--faint); }
-  footer .links a{ margin-right:18px; color:var(--dim); }
-  .r18{ display:inline-block; border:1.5px solid var(--faint); border-radius:6px;
-        padding:1px 7px; font-weight:800; margin-right:8px; }
+  footer .links a{ margin-right:18px; color:var(--muted); }
+  .r18{ display:inline-block; border:1px solid var(--line2); border-radius:6px;
+        padding:1px 7px; font-weight:800; margin-right:8px; color:var(--muted); }
   .muted{ color:var(--faint); }
 </style>
 </head>
 <body>
 
 <div class="top"><div class="wrap">
-  <a href="index.html" style="display:flex;align-items:center;gap:12px;color:var(--paper)">
+  <a href="index.html" style="display:flex;align-items:center;gap:12px;color:var(--text)">
     <img src="logo.png" alt="" /><span class="name">THE COLLECT</span></a>
   <span class="spacer"></span>
   <a class="btn ghost" href="index.html">Home</a>
@@ -161,6 +156,7 @@
     <button class="fbtn" data-f="missed">Didn't place</button>
   </div>
   <div id="board"><p class="muted">Loading the latest results…</p></div>
+  <p class="muted" style="font-size:13px;margin:12px 0 0">If our top pick is scratched, the whole race is voided — shown struck through with the field, but not counted toward any of our win, place or exotic strike rates.</p>
 
   <div class="note" id="honest" style="display:none">
     <b>Why we show the losers.</b> Every tipster in the country claims winners. Almost none
@@ -174,9 +170,10 @@
   <div class="links" style="margin-bottom:12px">
     <a href="terms.html">Terms</a><a href="privacy.html">Privacy</a>
     <a href="responsible.html">Responsible gambling</a>
+    <a href="refunds.html">Refunds</a>
     <a href="mailto:hello@thecollect.nz">hello@thecollect.nz</a>
   </div>
-  <div><span class="r18">R18</span> Please gamble responsibly. Our selections are opinions
+  <div><span class="r18">R18</span> The Collect is not a bookmaker and takes no bets. Please gamble responsibly. Our selections are opinions
     based on evidence — not guarantees. In NZ: Gambling Helpline 0800 654 655.
     In Australia: Gambling Help 1800 858 858.</div>
   <div style="margin-top:10px">© The Collect Ltd — thecollect.nz</div>
@@ -199,14 +196,14 @@
     var t30 = sb.t30||{}, t7 = sb.t7||{}, streak = sb.streaks||{}, big = sb.biggest||{};
     var h = '';
     h += tile((t30.win_pct!=null?t30.win_pct.toFixed(1):'—')+'%','win strike rate',
-              'last 30 days · '+(t30.picks||0)+' picks', true);
+              'last 30 days · '+(t30.scored!=null?t30.scored:(t30.picks||0))+' picks', true);
     h += tile((t30.place_pct!=null?t30.place_pct.toFixed(1):'—')+'%','placed or better',
               'last 30 days');
     h += tile((t7.win_pct!=null?t7.win_pct.toFixed(1):'—')+'%','win strike rate',
-              'last 7 days · '+(t7.picks||0)+' picks');
+              'last 7 days · '+(t7.scored!=null?t7.scored:(t7.picks||0))+' picks');
     if(streak.winner_days) h += tile(streak.winner_days,'days on end','with at least one winner');
-    if(big && big.horse) h += tile('$'+Math.round(big.collect||0),'biggest collect',
-              esc(big.horse)+' · '+money(big.price));
+    if(big && big.horse && big.div!=null) h += tile(money(big.div),'biggest dividend',
+              esc(big.horse)+' · '+money(big.div));
     document.getElementById('tiles').innerHTML = h;
   }
 
@@ -218,21 +215,18 @@
       el.innerHTML = '<p class="muted">This week\'s collects will show here as races settle.</p>';
     } else {
       el.innerHTML = best.map(function(b){
-        // Anchor to local noon so the calendar day never rolls back a day for
-        // viewers west of the stamp zone (e.g. Perth/Sydney). Collect Mtg 6.
         var when=''; try{ when = new Date((b.date||'').slice(0,10)+'T12:00:00').toLocaleDateString([], {weekday:'short', day:'numeric', month:'short'}); }catch(e){}
-        return '<div class="ccard"><div class="col">$'+Number(b.collect||0).toFixed(2)+'</div>'+
+        return '<div class="ccard"><div class="col">'+(b.div!=null?money(b.div):'—')+'</div>'+
                '<div class="hz">'+esc(b.horse)+'</div>'+
-               '<div class="mt">'+esc(b.race)+' · won at '+money(b.price)+(when?' · '+when:'')+'</div></div>';
+               '<div class="mt">'+esc(b.race)+(when?' · '+when:'')+'</div></div>';
       }).join('');
     }
     var exo = sb.exotics_got||{}, parts=[];
     if(exo.trifecta) parts.push(exo.trifecta+' trifecta'+(exo.trifecta>1?'s':'')+' from our top 5 boxed');
     if(exo.first_four) parts.push(exo.first_four+' first-four'+(exo.first_four>1?'s':'')+' from our top 6 boxed');
     var note='';
-    if(week.exotic_collect) note += 'The week\'s exotics returned <b>$'+Math.round(week.exotic_collect)+'</b>. ';
     if(parts.length) note += 'Today alone: <b>'+parts.join('</b> and <b>')+'</b>. ';
-    note += 'Every collect above came from a pick published before the jump, off our staking plan.';
+    note += 'Figures shown are the TAB dividend. Every pick above was published before the jump — and every loser is on the scoreboard too.';
     document.getElementById('cnote').innerHTML = note;
   }
 
@@ -249,7 +243,7 @@
   function renderBoard(filter){
     var groups = {}, order = [];
     ALL.forEach(function(r){
-      var c = outcomeClass(r.outcome);
+      var c = r.void ? 'void' : outcomeClass(r.outcome);
       if(filter && filter!=='all' && c!==filter) return;
       var key = r.track||'';
       if(!groups[key]){ groups[key]=[]; order.push(key); }
@@ -263,7 +257,7 @@
     order.forEach(function(track){
       html += '<div class="meet"><div class="meet-h"><b>'+esc(track)+'</b></div>';
       groups[track].forEach(function(r){
-        var c = outcomeClass(r.outcome);
+        var c = r.void ? 'void' : outcomeClass(r.outcome);
         var p = r.placings||[];
         var res='';
         if(p.length){
@@ -286,9 +280,9 @@
                 '<div class="rr-l">'+
                   '<div class="rr-h">'+esc(r.race_no)+(r.time?' · '+esc(r.time):'')+'</div>'+
                   '<div class="rr-pick">Our pick: '+esc(r.pick)+'</div>'+
-                  (res?'<div class="rr-res">'+res+'</div>':'')+ exo +
+                  (r.void?'<div class="rr-res">'+(r.void_reason==='abandoned'?'This race was abandoned — it doesn\'t count toward our win, place or exotic rates.':'Our top pick was scratched — this race doesn\'t count toward our win, place or exotic rates.')+'</div>':((res?'<div class="rr-res">'+res+'</div>':'')+ exo))+
                 '</div>'+
-                '<div class="badge '+c+'">'+outcomeLabel(c)+'</div>'+
+                '<div class="badge '+c+'">'+(r.void?(r.void_reason==='abandoned'?'Abandoned':'Scratched'):outcomeLabel(c))+'</div>'+
                 '</div>';
       });
       html += '</div>';

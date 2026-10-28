@@ -4,18 +4,36 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Terms of Service — The Collect</title>
-<link rel="icon" type="image/svg+xml" href="icon.svg" />
+<link rel="icon" type="image/png" href="logo.png" />
 <style>
-  body{ margin:0; background:#0E1217; color:#dbe2ea; font:15px/1.65 -apple-system,Segoe UI,Roboto,sans-serif; }
-  main{ max-width:640px; margin:0 auto; padding:28px 20px 60px; }
-  h1{ font-size:24px; } h2{ font-size:16px; margin-top:26px; color:#F0D078; }
-  a{ color:#31C47C; } .top{ font-size:13px; }
-  .muted{ color:#8a94a0; font-size:13px; }
+  :root{--ink:#050806;--panel:#0d170f;--line:rgba(255,255,255,.08);--line2:rgba(255,255,255,.14);
+        --green:#D4AF37;--text:#eaf2ec;--muted:#9bb0a4}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ink);color:var(--text);font:15.5px/1.7 -apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  a{color:var(--green);text-decoration:none}
+  header{position:sticky;top:0;z-index:50;background:rgba(5,8,6,.86);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+  header .bar{max-width:760px;margin:0 auto;padding:0 20px;height:62px;display:flex;align-items:center;gap:12px}
+  header img{width:36px;height:36px;border-radius:9px}
+  header .nm{font-size:19px;font-weight:800;letter-spacing:.04em}
+  header .home{margin-left:auto;font-size:14px;font-weight:600;color:var(--muted)}
+  header .home:hover{color:#fff}
+  main{max-width:760px;margin:0 auto;padding:40px 20px 70px}
+  h1{font-size:clamp(28px,5vw,38px);font-weight:800;letter-spacing:-.02em;margin:0 0 6px}
+  h2{font-size:18px;font-weight:700;color:var(--green);margin:30px 0 8px}
+  p{margin:0 0 14px}
+  b{color:#fff}
+  .muted{color:var(--muted);font-size:13.5px}
+  footer{border-top:1px solid var(--line);max-width:760px;margin:0 auto;padding:26px 20px 48px;color:var(--muted);font-size:12.5px}
+  footer a{color:var(--muted);margin-right:16px}
+  .r18{display:inline-block;border:1px solid var(--line2);border-radius:6px;padding:1px 7px;font-weight:800;margin-right:8px;color:var(--muted)}
 </style>
 </head>
 <body>
+<header><div class="bar">
+  <img src="logo.png" alt="The Collect" /><span class="nm">THE COLLECT</span>
+  <a class="home" href="./">&larr; Home</a>
+</div></header>
 <main>
-<p class="top"><a href="./">&larr; The Collect</a></p>
 <h1>Terms of Service</h1>
 <p class="muted">Last updated 14 September 2026 · The Collect, New Zealand</p>
 
@@ -38,17 +56,21 @@ you are 18+. Never bet more than you can afford to lose. See our
 
 <h2>Subscriptions and payment</h2>
 <p>Membership is <b>$25 per week</b>, billed weekly in advance to the card you
-provide. New members start with a <b>7-day free trial</b>: you add a card when
-you join, you are not charged during the trial, and your first weekly payment is
-taken at the end of the 7 days unless you cancel before then. Founding members
-who joined before launch receive their first month free, after which the
-standard $25 per week applies.</p>
+provide. You start with a free trial: you add a card when you join, you are not
+charged during the trial, and your first weekly payment is taken when it ends
+unless you cancel before then.</p>
+<p>The standard free trial is <b>7 days</b>. As a launch offer, founding members
+and anyone who signs up during <b>December 2026</b> get their <b>first month
+free</b> instead — standard $25-per-week billing then begins when that free month
+ends. From <b>1 January 2027</b>, the 7-day free trial applies to every new
+sign-up.</p>
 <p>You can <b>cancel any time</b> from your account — no contracts, no minimum
 term. When you cancel you keep access until the end of the week you have already
 paid for, and we do not charge again after that. If we ever fail to publish
 picks on a normal race day, contact us and we will extend your access to cover
-it. Refunds beyond this are at our discretion and never based on race results —
-losing days are part of racing, not a fault in the service.</p>
+it. See our <a href="refunds.html">refund policy</a> for the full detail; in
+short, refunds are never based on race results — losing days are part of racing,
+not a fault in the service.</p>
 
 <h2>Fair use</h2>
 <p>Your access is personal. Sharing, republishing or on-selling our picks,
@@ -69,5 +91,10 @@ Guarantees Act 1993 that cannot lawfully be excluded.</p>
 <h2>Contact</h2>
 <p>Questions about these terms: <a href="mailto:hello@thecollect.nz">hello@thecollect.nz</a></p>
 </main>
+<footer>
+  <div style="margin-bottom:8px"><a href="terms.html">Terms</a><a href="privacy.html">Privacy</a><a href="responsible.html">Responsible gambling</a><a href="refunds.html">Refunds</a></div>
+  <div><span class="r18">R18</span> Please gamble responsibly · NZ Gambling Helpline 0800 654 655 · AU Gambling Help 1800 858 858</div>
+  <div style="margin-top:8px">© 2026 The Collect Ltd — thecollect.nz</div>
+</footer>
 </body>
 </html>

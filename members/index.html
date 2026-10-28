@@ -8,9 +8,9 @@
 <link rel="icon" href="../app/icon.svg" type="image/svg+xml" />
 <style>
   :root{
-    --ink:#0E1217; --card:#161E27; --line:rgba(212,175,55,.16);
-    --gold:#D4AF37; --gold-hi:#F0D078; --turf:#31C47C; --turf-deep:#0B3D2E;
-    --paper:#F2EAD3; --dim:rgba(242,234,211,.68); --faint:rgba(242,234,211,.42);
+    --ink:#050806; --card:#0f1b13; --line:rgba(255,255,255,.09);
+    --gold:#D4AF37; --gold-hi:#F0D078; --gold-lo:#A9842B; --win:#31C47C; --win-hi:#5FCf8f; --win-lo:#2a9d63; --turf:#31C47C; --turf-deep:#0B3D2E;
+    --paper:#eaf2ec; --dim:rgba(234,242,236,.70); --faint:rgba(234,242,236,.45); --muted:#9bb0a4;
   }
   *{ margin:0; padding:0; box-sizing:border-box; }
   body{ background:var(--ink); color:var(--paper);
@@ -19,10 +19,10 @@
   .wrap{ max-width:1120px; margin:0 auto; padding:0 20px; }
 
   .top{ position:sticky; top:0; z-index:50; background:rgba(14,18,23,.94);
-        backdrop-filter:blur(8px); border-bottom:1px solid var(--line); }
+        -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px); border-bottom:1px solid var(--line); }
   .top .wrap{ display:flex; align-items:center; gap:12px; height:60px; }
   .top img{ width:32px; height:32px; border-radius:8px; }
-  .top .name{ font-family:Georgia,serif; font-weight:700; font-size:17px; }
+  .top .name{ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; font-weight:700; font-size:17px; }
   .top .spacer{ flex:1; }
   .top a.plain{ color:var(--dim); font-size:13.5px; margin-left:14px; }
 
@@ -33,23 +33,23 @@
   .tabs button.on{ background:linear-gradient(135deg,var(--gold-hi),var(--gold));
         color:#171204; border-color:transparent; }
 
-  h2{ font-family:Georgia,serif; font-size:24px; margin:22px 0 4px; }
+  h2{ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; font-size:24px; margin:22px 0 4px; }
   .sub{ color:var(--faint); font-size:13px; margin-bottom:14px; }
 
   /* ---- Today's card: racing-native treatment ---- */
   .track-band{ display:flex; align-items:baseline; gap:12px; margin:16px 0 12px;
         padding-bottom:8px; border-bottom:1px solid var(--line); }
-  .track-name{ font-family:Georgia,serif; font-size:22px; font-weight:700; }
+  .track-name{ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; font-size:22px; font-weight:700; }
   .track-cond{ font-size:12.5px; color:var(--faint); text-transform:uppercase;
         letter-spacing:1px; }
   .rc{ background:var(--card); border:1px solid var(--line); border-radius:16px;
         padding:0; margin-bottom:16px; overflow:hidden; }
   .rc-head{ display:flex; align-items:center; gap:12px; padding:14px 18px;
         background:rgba(212,175,55,.06); border-bottom:1px solid var(--line); }
-  .rc-no{ font-family:Georgia,serif; font-weight:800; font-size:15px; color:#171204;
+  .rc-no{ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; font-weight:800; font-size:15px; color:#171204;
         background:linear-gradient(135deg,var(--gold-hi),var(--gold)); border-radius:7px;
         padding:3px 11px; letter-spacing:.5px; }
-  .rc-name{ font-family:Georgia,serif; font-size:16px; font-weight:600; flex:1;
+  .rc-name{ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; font-size:16px; font-weight:600; flex:1;
         min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .rc-meta{ display:flex; gap:6px; flex-shrink:0; }
   .pill{ font-size:11.5px; font-weight:700; color:var(--dim); background:rgba(242,234,211,.07);
@@ -69,7 +69,7 @@
 
   .pick-hero{ display:flex; gap:15px; align-items:center; padding:16px 18px 12px; }
   .pick-body{ min-width:0; }
-  .pick-name{ font-family:Georgia,serif; font-size:22px; font-weight:700;
+  .pick-name{ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; font-size:22px; font-weight:700;
         color:var(--gold-hi); line-height:1.15; display:flex; align-items:center;
         gap:9px; flex-wrap:wrap; }
   .ribbon{ font-size:10.5px; font-weight:800; letter-spacing:1px; color:#171204;
@@ -119,7 +119,7 @@
     .rc:hover .saddle-lg{ transform:translateY(-1px); }
   }
   /* ---- Results: podium treatment ---- */
-  .pill-win{ background:linear-gradient(135deg,var(--gold-hi),var(--gold));
+  .pill-win{ background:linear-gradient(135deg,var(--win-hi),var(--win));
         color:#171204; border:0; }
   .placings{ padding:8px 18px 12px; }
   .pl-row{ display:flex; align-items:center; gap:12px; padding:8px 0;
@@ -137,7 +137,7 @@
   .pl-div .dv{ color:var(--gold-hi); font-weight:800; }
   .ourpick{ display:flex; align-items:center; gap:10px; margin:0 18px;
         padding:9px 12px; border-radius:0 8px 8px 0; border-left:3px solid; font-size:13.5px; }
-  .ourpick-won{ background:rgba(212,175,55,.14); border-color:var(--gold); }
+  .ourpick-won{ background:rgba(212,175,55,.14); border-color:var(--win); }
   .ourpick-plc{ background:rgba(49,196,124,.12); border-color:var(--turf); }
   .ourpick-out{ background:rgba(242,234,211,.04); border-color:rgba(242,234,211,.2); }
   .op-lab{ font-size:10px; font-weight:800; letter-spacing:1px; text-transform:uppercase;
@@ -145,13 +145,13 @@
   .op-horse{ flex:1; min-width:0; font-weight:700; }
   .op-badge{ font-size:11.5px; font-weight:800; letter-spacing:.5px; padding:2px 10px;
         border-radius:5px; white-space:nowrap; }
-  .ourpick-won .op-badge{ background:linear-gradient(135deg,var(--gold-hi),var(--gold));
+  .ourpick-won .op-badge{ background:linear-gradient(135deg,var(--win-hi),var(--win));
         color:#171204; }
   .ourpick-plc .op-badge{ background:rgba(49,196,124,.2); color:#8FD9AE; }
   .ourpick-out .op-badge{ background:rgba(242,234,211,.08); color:var(--faint); }
   .pl-ours{ background:rgba(212,175,55,.05); }
   .in-top3{ font-size:9.5px; font-weight:800; letter-spacing:.6px; text-transform:uppercase;
-        color:var(--gold); background:rgba(212,175,55,.14); border-radius:4px;
+        color:var(--turf); background:rgba(49,196,124,.14); border-radius:4px;
         padding:1px 7px; margin-left:8px; vertical-align:1px; }
   .exo-hit{ border-style:solid; border-color:rgba(49,196,124,.6);
         background:rgba(49,196,124,.14); }
@@ -161,7 +161,7 @@
         padding:1px 6px; margin-left:6px; }
   .pl-winner{ background:rgba(212,175,55,.12); border-radius:8px;
         margin:2px -6px; padding-left:6px; padding-right:6px; }
-  .pl-winner .pl-txt b{ font-size:16px; color:var(--gold-hi); }
+  .pl-winner .pl-txt b{ font-size:16px; color:var(--win-hi); }
   .pl-winner .saddle{ width:38px; height:42px; font-size:20px; }
   .our-order{ padding:8px 18px 16px; font-size:13px; color:var(--faint);
         font-variant-numeric:tabular-nums; }
@@ -203,15 +203,17 @@
   .day-sum::-webkit-details-marker{ display:none; }
   .day-sum::after{ content:"+"; color:var(--gold); font-size:18px; margin-left:auto; }
   details[open] .day-sum::after{ content:"–"; }
-  .day-date{ font-family:Georgia,serif; font-weight:700; font-size:16px; }
+  .day-date{ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; font-weight:700; font-size:16px; }
   .day-stat{ font-size:13.5px; color:var(--dim); }
   .day-w{ color:var(--gold-hi); font-size:16px; }
   .day-pct{ color:var(--faint); }
   .day-best{ font-size:12.5px; color:var(--faint); }
   .day-best b{ color:var(--gold-hi); }
-  .ob-won{ background:linear-gradient(135deg,var(--gold-hi),var(--gold)); color:#171204; }
+  .ob-won{ background:linear-gradient(135deg,var(--win-hi),var(--win)); color:#171204; }
   .ob-plc{ background:rgba(49,196,124,.2); color:#8FD9AE; }
   .ob-out{ background:rgba(242,234,211,.08); color:var(--faint); }
+  .ob-void{ background:rgba(242,234,211,.06); color:var(--faint); }
+  .pl-void b{ text-decoration:line-through; color:var(--faint); }
   /* ---- Blackbook ---- */
   .bb-head.bb-quiet{ background:rgba(212,175,55,.08); }
   .bb-head.bb-bias{ background:rgba(92,124,144,.1); }
@@ -283,7 +285,7 @@
   .race-line b{ font-size:15.5px; }
   .race-line .t{ color:var(--faint); font-size:12.5px; }
   .hero-in{ padding:26px 4px 8px; }
-  .hero-in h1{ font-family:Georgia,serif; font-size:clamp(28px,5vw,40px);
+  .hero-in h1{ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; font-size:clamp(28px,5vw,40px);
         line-height:1.12; font-weight:700; }
   .hero-in h1 span{ color:var(--gold); }
   .hero-in .lead{ color:var(--dim); font-size:16px; max-width:640px; margin-top:10px; }
@@ -295,7 +297,7 @@
   .tile .tl{ font-size:11.5px; color:var(--faint); margin-top:3px; letter-spacing:.3px; }
   .panel{ background:var(--card); border:1px solid var(--line); border-radius:16px;
         padding:22px 24px; margin:16px 0; }
-  .panel h3{ font-family:Georgia,serif; font-size:20px; margin-bottom:10px; }
+  .panel h3{ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; font-size:20px; margin-bottom:10px; }
   ul.how{ list-style:none; display:grid; gap:11px; }
   ul.how li{ padding-left:22px; position:relative; font-size:14.5px; color:var(--dim); }
   ul.how li b{ color:var(--paper); }
@@ -358,20 +360,20 @@
   .brow .r{ min-width:170px; color:var(--dim); }
   .brow .p{ flex:1; }
   .brow .o{ min-width:90px; text-align:right; font-weight:700; }
-  .brow .o.win{ color:var(--gold-hi); }
+  .brow .o.win{ color:var(--win-hi); }
   .brow .o.plc{ color:var(--turf); }
   .brow .o.no{ color:var(--faint); font-weight:400; }
 
   .gate{ max-width:420px; margin:80px auto; text-align:center; }
   .gate img{ width:72px; height:72px; border-radius:16px; margin-bottom:16px; }
-  .gate h1{ font-family:Georgia,serif; font-size:26px; margin-bottom:8px; }
+  .gate h1{ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; font-size:26px; margin-bottom:8px; }
   .gate p{ color:var(--dim); font-size:14.5px; margin-bottom:18px; }
   .gate input{ width:100%; padding:13px 16px; border-radius:10px; font-size:16px;
         background:var(--card); color:var(--paper); border:1px solid var(--line);
         text-transform:uppercase; text-align:center; letter-spacing:1px; }
   .gate button{ width:100%; margin-top:12px; padding:13px; border-radius:10px;
         border:0; font-weight:800; font-size:15px; cursor:pointer;
-        background:linear-gradient(135deg,var(--gold-hi),var(--gold)); color:#171204; }
+        background:var(--turf); color:#06130C; }
   .gate .err{ color:#E07B54; font-size:13.5px; margin-top:10px; min-height:18px; }
   footer{ padding:34px 0; color:var(--faint); font-size:12.5px; }
 </style>
@@ -452,7 +454,7 @@ function btcScoreDay(day){
     const winNo = (r.placings||[]).find(p => p.pos===1)?.no;
     if (winNo == null) return;
     tally.myN++; if (String(t[rkey]) === String(winNo)) tally.myW++;
-    if (r.pick){ tally.ourN++; if (r.pick.won) tally.ourW++; }
+    if (r.pick && !r.void){ tally.ourN++; if (r.pick.won) tally.ourW++; }
     done.add(rkey);
   }));
   tally.done = [...done];
@@ -474,7 +476,7 @@ async function collectCard(){
   const grad = g.createRadialGradient(W/2, 380, 80, W/2, 380, 900);
   grad.addColorStop(0, '#14261D'); grad.addColorStop(1, '#0E1217');
   g.fillStyle = grad; g.fillRect(0, 0, W, H);
-  g.fillStyle = '#F0D078'; g.font = '800 46px Georgia, serif';
+  g.fillStyle = '#F0D078'; g.font = '800 46px -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif';
   g.textAlign = 'center'; g.fillText('THE COLLECT', W/2, 120);
   g.fillStyle = 'rgba(242,234,211,.6)'; g.font = '600 24px sans-serif';
   g.fillText('Every result published — win or lose', W/2, 162);
@@ -484,7 +486,7 @@ async function collectCard(){
     g.beginPath(); g.roundRect(90, 250, W-180, 520, 28); g.fill(); g.stroke();
     g.fillStyle = '#8FD9AE'; g.font = '800 22px sans-serif';
     g.fillText((p.best_bet?'BEST BET':'TOP PICK') + ' · ' + feat.m.track + ' ' + feat.r.race_no, W/2, 320);
-    g.fillStyle = '#F0D078'; g.font = '800 74px Georgia, serif';
+    g.fillStyle = '#F0D078'; g.font = '800 74px -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif';
     g.fillText('#' + p.number + ' ' + p.horse, W/2, 430);
     if (feat.r.verdict){
       g.fillStyle = '#F2EAD3'; g.font = '600 30px sans-serif';
@@ -497,7 +499,7 @@ async function collectCard(){
   }
   const wk = d.week || {};
   g.fillStyle = 'rgba(242,234,211,.85)'; g.font = '700 30px sans-serif';
-  g.fillText(`This week: ${wk.wins||0} winners from ${wk.races||0} (${(wk.win_pct||0).toFixed(0)}%)`, W/2, 880);
+  g.fillText(`This week: ${wk.wins||0} winners from ${wk.scored!=null?wk.scored:(wk.races||0)} (${(wk.win_pct||0).toFixed(0)}%)`, W/2, 880);
   g.fillStyle = '#8A6A1F'; g.font = '600 26px sans-serif';
   g.fillText('thecollect.nz  ·  R18  ·  gamble responsibly', W/2, 1010);
   const blob = await new Promise(res => c.toBlob(res, 'image/png'));
@@ -644,7 +646,7 @@ async function renderHome(){
   h += '<div class="tile-row">';
   h += tile(w.wins, 'winners this week');
   h += tile((w.win_pct||0).toFixed(1)+'%', 'win strike rate');
-  h += tile(best ? '$'+Math.round(best.collect) : '—', 'biggest collect this week');
+  h += tile((best && best.div!=null) ? '$'+(+best.div).toFixed(2) : '—', 'biggest dividend this week');
   h += '</div>';
 
   // Engine-scale tiles (smoke, but all true)
@@ -756,9 +758,8 @@ function renderToday(){
   if (MEET >= meets.length) MEET = 0;
   let h = tabs();
   h += `<h2>Today — ${d.date||''}</h2>
-        <div class="sub">${d.meeting_count||0} meetings · updated
-        ${(d.generated_at||'').slice(11,16)} · re-checked to a minute before
-        every jump</div>`;
+        <div class="sub">${d.meeting_count||0} meetings · published
+        ${(d.generated_at||'').slice(11,16)} · locked for the day</div>`;
 
   // Meeting picker
   h += '<select class="meet-pick" id="meetPick">';
@@ -850,15 +851,15 @@ function renderWeek(){
   h += `<h2>This week</h2><div class="sub">rolling 7 days, straight from the engine</div>`;
   h += `<div class="chips">
     <div class="chip"><div class="n">${w.wins??'—'}</div><div class="l">winners</div></div>
-    <div class="chip"><div class="n">${w.races??'—'}</div><div class="l">races</div></div>
+    <div class="chip"><div class="n">${(w.scored??w.races)??'—'}</div><div class="l">picks</div></div>
     <div class="chip"><div class="n">${w.win_pct??'—'}%</div><div class="l">strike rate</div></div>
   </div>`;
   if (w.best && w.best.length){
     h += '<div class="meeting"><h3>The board of the week</h3><div class="board" style="margin-top:10px">';
     w.best.forEach(b => {
       h += `<div class="brow"><span class="r">${b.date||''}</span>
-            <span class="p">${b.race} — <b>${b.horse}</b> won at $${(b.price||0).toFixed(2)}</span>
-            <span class="o win">$${(b.collect||0).toFixed(2)}</span></div>`;
+            <span class="p">${b.race} — <b>${b.horse}</b></span>
+            ${b.div!=null ? `<span class="o win">paid $${(+b.div).toFixed(2)}</span>` : ''}</div>`;
     });
     h += '</div></div>';
   }
@@ -888,7 +889,7 @@ function renderArchive(){
   days.forEach((d, i) => {
     const lbl = i===0 ? d.date + ' (latest)' : d.date;
     h += `<option value="${d.date}" ${d.date===PICKS_SEL?'selected':''}>` +
-         `${lbl} — ${d.wins}/${d.races} (${d.win_pct}%)</option>`;
+         `${lbl} — ${d.wins}/${d.scored!=null?d.scored:d.races} (${d.win_pct}%)</option>`;
   });
   h += '</select><div id="picksBody"></div>';
   page().innerHTML = h;
@@ -904,17 +905,18 @@ function paintPicks(){
   if (!day){ body.innerHTML = '<p class="sub">No board for that day.</p>'; return; }
   let h = `<div class="tile-row">
     <div class="tile"><div class="tn">${day.wins}</div><div class="tl">winners</div></div>
-    <div class="tile"><div class="tn">${day.races}</div><div class="tl">picks</div></div>
+    <div class="tile"><div class="tn">${day.scored!=null?day.scored:day.races}</div><div class="tl">picks</div></div>
     <div class="tile"><div class="tn">${day.win_pct}%</div><div class="tl">strike rate</div></div>
   </div><article class="rc"><div class="placings">`;
   (day.board||[]).forEach(r => {
-    const won = r.outcome === 'WON';
-    const out = r.outcome === 'unplaced' ? 'out' : (won ? 'won' : 'plc');
-    h += `<div class="pl-row ${won?'pl-ours':''}">
+    const vd = r.void === true;
+    const won = !vd && r.outcome === 'WON';
+    const out = vd ? 'void' : (r.outcome === 'unplaced' ? 'out' : (won ? 'won' : 'plc'));
+    h += `<div class="pl-row ${won?'pl-ours':''}${vd?' pl-void':''}">
       <span class="saddle ${won?'pl-1':'pl-4'}">${(r.pick.match(/#(\d+)/)||[])[1]||'·'}</span>
       <div class="pl-txt"><span class="pl-pos">${r.race}</span>
-        <b>${r.pick.replace(/#\d+\s*/,'')}</b></div>
-      <span class="op-badge ob-${out}">${r.outcome}${r.div?' · $'+r.div.toFixed(2):''}</span>
+        <b>${r.pick.replace(/#\d+\s*/,'')}</b>${vd?` <span class="frow-c">— voided, not counted toward our rates</span>`:''}</div>
+      <span class="op-badge ob-${out}">${vd ? (r.void_reason==='abandoned'?'Abandoned':'Scratched') : `${r.outcome}${r.div?' · $'+r.div.toFixed(2):''}`}</span>
     </div>`;
   });
   body.innerHTML = h + '</div></article>';
@@ -1003,7 +1005,7 @@ async function renderStats(){
   h += `<div class="tile-row">
     <div class="tile"><div class="tn">${(s.pct||0).toFixed(1)}%</div><div class="tl">win strike, all-time</div></div>
     <div class="tile"><div class="tn">${nf(s.wins)}</div><div class="tl">winners called</div></div>
-    <div class="tile"><div class="tn">${best?('$'+best.div.toFixed(2)):'—'}</div><div class="tl">longest-priced winner</div></div>
+    <div class="tile"><div class="tn">${(best&&best.div!=null)?('$'+(+best.div).toFixed(2)):'—'}</div><div class="tl">longest-priced winner</div></div>
   </div>`;
 
   // Rolling strike — the honest measure (smooths the daily bounce)
@@ -1053,11 +1055,11 @@ async function renderStats(){
   // Best-priced winners we called
   if (s.horses && s.horses.length){
     h += `<article class="rc"><header class="rc-head"><span class="rc-name">Biggest winners we called</span>
-      <span class="rc-meta"><span class="pill">$ collect</span></span></header><div class="placings">`;
+      <span class="rc-meta"><span class="pill">dividend</span></span></header><div class="placings">`;
     s.horses.forEach((x, i) => {
       h += `<div class="pl-row"><span class="saddle ${i<3?'pl-'+(i+1):'pl-4'}">★</span>
         <div class="pl-txt"><b>${x.horse}</b><span class="frow-c">${x.track} · ${x.date}</span></div>
-        <span class="pl-div"><span class="dv">$${x.div.toFixed(2)}</span></span></div>`;
+        <span class="pl-div"><span class="dv">${x.div!=null?'$'+(+x.div).toFixed(2):'—'}</span></span></div>`;
     });
     h += '</div></article>';
   }

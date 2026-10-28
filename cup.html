@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>The Engine's Cup Card — all 24 runners rated | The Collect</title>
+<meta name="description" content="Every runner in the 2026 Melbourne Cup rated 1 to 24 by the Strategic Logic engine. Free, no signup. The result gets published against this card on Tuesday night, win or lose." />
+<meta property="og:title" content="All 24. Rated." />
+<meta property="og:description" content="The engine's Melbourne Cup card — every runner, rated, with the reasoning. Free. We publish the result against it on Tuesday night." />
+<meta property="og:image" content="https://thecollect.nz/logo.png" />
+<meta property="og:url" content="https://thecollect.nz/cup" />
+<meta name="twitter:card" content="summary_large_image" />
+<link rel="icon" type="image/png" href="logo.png" />
+<!-- Google Analytics 4 -->
+<!-- Analytics gated behind cookie consent — GA4 loads only on Accept (see consent.js) -->
+<script defer src="consent.js"></script>
+<style>
+  :root{
+    --ink:#050806; --ink2:#0a110c; --card:#0d170f; --panel2:#101b13;
+    --line:rgba(255,255,255,.08); --line2:rgba(255,255,255,.14);
+    --green:#D4AF37; --green-soft:#C9B380; --gold:#D4AF37; --gold-hi:#F0D078; --pos:#31C47C;
+    --text:#eaf2ec; --dim:#cfe0d6; --muted:#9bb0a4; --faint:#7d9488; --off:#5c6b61;
+    --maxw:960px;
+    --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:var(--ink);color:var(--text);font:16px/1.6 var(--font);-webkit-font-smoothing:antialiased}
+  a{color:var(--green);text-decoration:none}
+  img{max-width:100%}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 20px}
+  .green{color:var(--green)}
+
+  header{position:sticky;top:0;z-index:50;background:rgba(5,8,6,.86);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+  header .bar{max-width:var(--maxw);margin:0 auto;padding:0 20px;height:62px;display:flex;align-items:center;gap:12px}
+  header img{width:38px;height:38px;border-radius:9px}
+  header .nm{font-size:19px;font-weight:800;letter-spacing:.04em}
+  header .links{margin-left:auto;display:flex;gap:18px;align-items:center}
+  header .links a{font-size:14px;font-weight:600;color:var(--muted)}
+  header .links a:hover{color:#fff}
+
+  .btn{display:inline-flex;align-items:center;gap:8px;border-radius:999px;padding:14px 24px;font-weight:700;font-size:15px;cursor:pointer;border:1px solid transparent;transition:.16s transform,.16s background}
+  .btn:hover{transform:translateY(-1px)}
+  .btn-primary{background:var(--pos);color:#042311;box-shadow:0 12px 30px rgba(49,196,124,.4)}
+  .btn-primary:hover{background:#3bff93}
+  .btn-ghost{background:transparent;color:var(--text);border-color:var(--line2)}
+  .btn-ghost:hover{border-color:var(--green)}
+
+  /* hero */
+  .hero{position:relative;padding:60px 0 44px;border-bottom:1px solid var(--line);overflow:hidden;
+    background:
+      radial-gradient(1000px 520px at 85% -10%, rgba(212,175,55,.20), transparent 60%),
+      linear-gradient(165deg, #0b1710 0%, var(--ink) 60%)}
+  .eyebrow{font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--green);font-weight:800}
+  h1{font-size:clamp(46px,9vw,88px);line-height:.95;letter-spacing:-.03em;font-weight:800;margin:14px 0 18px}
+  .standfirst{font-size:19px;color:var(--dim);max-width:600px;margin:0 0 12px}
+  .subline{font-size:15px;color:var(--muted);max-width:560px;margin:0 0 24px}
+  .hero-cta{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:22px}
+  .share{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .share .lbl{font-size:12.5px;color:var(--faint);letter-spacing:.04em}
+  .sbtn{width:38px;height:38px;border-radius:999px;border:1px solid var(--line2);background:var(--card);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text);font-size:13px;font-weight:700}
+  .sbtn:hover{border-color:var(--green);color:var(--green)}
+
+  /* compliance strip — on-page, readable, not footer-buried */
+  .compliance{background:var(--panel2);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .compliance .wrap{padding:14px 20px;font-size:13.5px;color:var(--dim);display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .compliance .r18{flex:none;border:1px solid var(--line2);border-radius:6px;padding:1px 7px;font-weight:800;color:var(--text)}
+
+  section{padding:44px 0}
+  .sec-head h2{font-size:clamp(26px,4vw,38px);font-weight:800;letter-spacing:-.01em;margin:0 0 8px}
+  .sec-head .sub{color:var(--muted);font-size:15.5px;margin:0 0 4px}
+  .prose{max-width:680px}
+  .prose p{color:var(--dim);margin:0 0 14px}
+
+  /* result block (hidden until result in feed) */
+  .result{display:none;background:linear-gradient(135deg,#07160e,#0c2417 60%,var(--ink2));border:1px solid rgba(49,196,124,.4);border-radius:18px;padding:26px 28px;margin-top:8px;box-shadow:0 18px 50px rgba(49,196,124,.12)}
+  .result h2{font-size:clamp(24px,3.6vw,32px);font-weight:800;margin:0 0 10px}
+  .result p{color:var(--dim);margin:0 0 10px;max-width:640px}
+  .result .big{color:var(--text);font-size:18px}
+  .result .big b{color:var(--pos)}
+
+  /* the card */
+  .note-above{font-size:13px;color:var(--faint);margin:6px 0 16px;max-width:620px}
+  .fhead{display:grid;grid-template-columns:40px 1fr auto;gap:12px;padding:0 16px 8px;font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);font-weight:700}
+  .fhead .rth{text-align:right}
+  @media(max-width:560px){ .fhead{display:none} }
+
+  .field{border:1px solid var(--line);border-radius:16px;overflow:hidden;background:var(--card)}
+  .rrow{display:grid;grid-template-columns:40px 1fr auto;gap:12px;align-items:start;padding:15px 16px;border-bottom:1px solid var(--line)}
+  .rrow:last-child{border-bottom:0}
+  .rrow .rk{font-size:17px;font-weight:800;color:var(--muted);font-variant-numeric:tabular-nums;padding-top:1px}
+  .rrow.t-pick{background:rgba(212,175,55,.05)}
+  .rrow .hz{font-size:16px;font-weight:700}
+  .rrow .hz .no{color:var(--faint);font-weight:800;font-size:14px;margin-right:4px}
+  .lbl{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.04em;border-radius:999px;padding:2px 9px;margin-left:6px;vertical-align:middle}
+  .lbl.pick{background:rgba(212,175,55,.18);color:var(--green)}
+  .lbl.danger{background:rgba(224,123,84,.16);color:#E9906B}
+  .lbl.chance{background:rgba(212,175,55,.1);color:var(--green-soft)}
+  .meta{font-size:12.5px;color:var(--faint);margin-top:3px}
+  .verdict{font-size:13.5px;color:var(--green-soft);margin-top:7px;font-weight:600}
+  .why{margin:7px 0 0;padding:0;list-style:none;display:grid;gap:4px}
+  .why li{font-size:13.5px;color:var(--dim);padding-left:15px;position:relative}
+  .why li::before{content:"";position:absolute;left:0;top:9px;width:5px;height:5px;border-radius:50%;background:var(--green)}
+  .rt{text-align:right;min-width:88px}
+  .rtn{font-size:22px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
+  .barw{height:5px;border-radius:999px;background:rgba(255,255,255,.08);margin:6px 0 0;overflow:hidden}
+  .barf{height:100%;border-radius:999px;background:var(--green)}
+  .rt.t-danger .barf{background:#E9906B} .rt.t-danger .rtn{color:#E9906B}
+  .rt.t-chance .barf{background:var(--green-soft)}
+  .rt.t-outsider .barf{background:var(--muted)} .rt.t-outsider .rtn{color:var(--muted)}
+  .chips{margin-top:7px;display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap}
+  .chip{font-size:11px;font-weight:700;color:var(--faint);border:1px solid var(--line2);border-radius:999px;padding:2px 8px}
+  .price{font-size:12.5px;color:var(--muted);margin-top:5px}
+
+  /* scratched */
+  .rrow.scr{opacity:.85}
+  .rrow.scr .hz b{text-decoration:line-through;color:var(--muted)}
+  .rrow.scr .rtn{color:var(--off);text-decoration:line-through}
+  .rrow.scr .barf{background:var(--off)}
+  .scr-tag{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.08em;color:#ff8f8f;border:1px solid rgba(255,143,143,.4);border-radius:999px;padding:2px 8px;margin-left:6px}
+
+  /* sweep + cta */
+  .band{background:linear-gradient(90deg,#08190f,#061a10);border:1px solid rgba(212,175,55,.3);border-radius:16px;padding:28px 30px;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap}
+  .band h3{font-size:22px;font-weight:800;margin:0 0 4px}
+  .band p{color:var(--muted);font-size:14.5px;margin:0;max-width:460px}
+
+  footer{border-top:1px solid var(--line);padding:34px 0 56px;color:var(--muted);font-size:13px;margin-top:20px}
+  footer .links a{margin-right:16px;color:var(--muted)}
+  .r18{display:inline-block;border:1px solid var(--line2);border-radius:6px;padding:1px 7px;font-weight:800;margin-right:8px;color:var(--muted)}
+
+  @media(max-width:560px){
+    .hero{padding:40px 0 30px;background:radial-gradient(700px 420px at 80% -10%, rgba(212,175,55,.16), transparent 60%),linear-gradient(170deg,#0b1710,var(--ink) 60%)}
+    .rrow{grid-template-columns:30px 1fr auto;gap:10px;padding:14px 12px}
+    .rt{min-width:74px}
+    .rtn{font-size:19px}
+    .band{flex-direction:column;align-items:flex-start}
+  }
+</style>
+</head>
+<body>
+
+<header><div class="bar">
+  <a href="index.html" style="display:flex;align-items:center;gap:12px;color:var(--text)"><img src="logo.png" alt="The Collect" /><span class="nm">THE COLLECT</span></a>
+  <span class="links"><a href="results.html">Results</a><a href="index.html">Home</a></span>
+</div></header>
+
+<!-- HERO -->
+<section class="hero"><div class="wrap">
+  <div class="eyebrow">Melbourne Cup · Tuesday 3 November · Flemington</div>
+  <h1 id="heroHead">All 24.<br/>Rated.</h1>
+  <p class="standfirst">Every runner in the Melbourne Cup, put through the same checks the engine runs on any race, at any Australasian meeting, any day of the week. No favourites, no sentiment, no tips off a mate who knows a bloke.</p>
+  <p class="subline">Free, and there's nothing to sign up to. We publish the result against this card on Tuesday night — wherever it lands.</p>
+  <div class="hero-cta">
+    <a class="btn btn-primary" href="#card">See the card</a>
+    <a class="btn btn-ghost" href="cup-sweep.html">Download the sweep sheet</a>
+  </div>
+  <div class="share">
+    <span class="lbl">Share</span>
+    <button class="sbtn" data-share="facebook" title="Share on Facebook" aria-label="Share on Facebook">f</button>
+    <button class="sbtn" data-share="messenger" title="Share on Messenger" aria-label="Share on Messenger">m</button>
+    <button class="sbtn" data-share="whatsapp" title="Share on WhatsApp" aria-label="Share on WhatsApp">W</button>
+    <button class="sbtn" data-share="x" title="Share on X" aria-label="Share on X">X</button>
+    <button class="sbtn" data-share="copy" title="Copy link" aria-label="Copy link" id="copyBtn">link</button>
+  </div>
+</div></section>
+
+<!-- COMPLIANCE STRIP (on-page, readable) -->
+<div class="compliance"><div class="wrap">
+  <span class="r18">18+.</span>
+  <span>The Collect is not a bookmaker and takes no bets. Please gamble responsibly. Gambling Helpline 0800 654 655.</span>
+</div></div>
+
+<!-- RESULT BLOCK (revealed when the feed carries a result) -->
+<section id="resultSec" style="padding-bottom:0"><div class="wrap">
+  <div class="result" id="resultBlock">
+    <h2>How the card read</h2>
+    <p class="big" id="resultLede">—</p>
+    <p id="resultBody">The full card is below, exactly as it was published on Cup morning. Nothing has been edited. The result is on the <a href="results.html">record page</a> with every other selection we've made.</p>
+  </div>
+</div></section>
+
+<!-- THE CARD -->
+<section id="card" style="padding-top:34px"><div class="wrap">
+  <div class="sec-head">
+    <h2>The engine's card</h2>
+    <p class="sub" id="cardSub">Ranked 1 to 24 on the engine's rating. Scroll for the reasoning on each.</p>
+  </div>
+  <p class="note-above" id="dataNote">Loading the card…</p>
+  <p class="note-above">Prices shown are TAB fixed-odds prices where available. Ratings are the engine's own, and they compare runners within this race only.</p>
+  <div class="fhead"><span>#</span><span>Runner</span><span class="rth">Rating</span></div>
+  <div class="field" id="field"><div class="rrow"><span class="rk">—</span><div><div class="hz">Loading the field…</div></div><div class="rt"></div></div></div>
+</div></section>
+
+<!-- WHAT THE NUMBER MEANS -->
+<section style="padding-top:0"><div class="wrap prose">
+  <div class="sec-head"><h2>What the number means</h2></div>
+  <p>The rating is a comparison inside this race, and nothing more. The top-rated runner is set at 100 and everything else is scaled against it, so you can see how far apart they are rather than just the order they came in.</p>
+  <p>It is not a probability. It is not a prediction. It is the engine saying: on the evidence available this morning, this is how these twenty-four horses stack up against each other.</p>
+  <p>The Cup is a 3,200 metre handicap with a capacity field. It is, on any honest reading, one of the hardest races of the year to rate. We have published the card anyway, because publishing only the easy ones would make the scoreboard worthless.</p>
+</div></section>
+
+<!-- WHY FREE -->
+<section style="padding-top:0"><div class="wrap prose">
+  <div class="sec-head"><h2>Why we've put this up for nothing</h2></div>
+  <p>Because on Tuesday night we publish the result against it.</p>
+  <p>Every selection the engine has made since August is already public, winners and losers at the same size, at <a href="results.html">thecollect.nz/results</a>. This card goes on the same pile. If it reads the race well, that's on the record. If it misses, that's on the record too, in the same type.</p>
+  <p>That's the whole business. Everyone in racing claims winners. Almost nobody publishes the rest.</p>
+</div></section>
+
+<!-- SWEEP SHEET -->
+<section style="padding-top:0"><div class="wrap">
+  <div class="band">
+    <div>
+      <h3>The printable sweep sheet</h3>
+      <p>The full field, the barriers and the engine's ratings on one page, with a blank column for names. Print it, stick it on the wall, and let the office argue about it.</p>
+    </div>
+    <a class="btn btn-primary" href="cup-sweep.html">Download the sweep sheet (PDF)</a>
+  </div>
+</div></section>
+
+<!-- FOOTER CTA -->
+<section style="padding-top:0"><div class="wrap">
+  <div class="band" style="background:radial-gradient(700px 300px at 20% -40px,#102a1c,var(--ink2));border-color:var(--line2)">
+    <div>
+      <h3>Every runner. Every day. Rated.</h3>
+      <p>The Collect publishes a rating for every runner at every New Zealand and Australian meeting, every day. Doors open 1 December. Anyone on the founding list before then gets their first month free. After that it's $25 a week, and you can cancel any time.</p>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <a class="btn btn-primary" href="index.html#join">Join the founding list</a>
+      <a href="results.html" style="font-size:13.5px;font-weight:700;text-align:center">See every result we've published →</a>
+    </div>
+  </div>
+</div></section>
+
+<footer><div class="wrap">
+  <div class="links" style="margin-bottom:12px">
+    <a href="index.html">Home</a><a href="results.html">Results</a><a href="glossary.html">Glossary</a>
+    <a href="terms.html">Terms</a><a href="privacy.html">Privacy</a><a href="responsible.html">Responsible gambling</a><a href="refunds.html">Refunds</a>
+  </div>
+  <div><span class="r18">18+</span> The Collect is not a bookmaker and takes no bets. Please gamble responsibly. NZ Gambling Helpline 0800 654 655 · AU Gambling Help 1800 858 858.</div>
+  <div style="margin-top:10px">© 2026 The Collect Ltd — thecollect.nz</div>
+</div></footer>
+
+<script>
+(function(){
+  var SHARE_URL = 'https://thecollect.nz/cup';
+  var SHARE_TXT = "The engine's Melbourne Cup card — all 24 runners rated. Free.";
+
+  function esc(s){ return String(s==null?'':s).replace(/[&<>]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c]; }); }
+  function price(v){ return (v==null)?'':'$'+Number(v).toFixed(2); }
+  function clamp(n){ n=Number(n)||0; return n<0?0:(n>100?100:n); }
+
+  // ---- share buttons ----
+  function share(kind){
+    var u = encodeURIComponent(SHARE_URL), t = encodeURIComponent(SHARE_TXT);
+    var url='';
+    if(kind==='facebook')  url='https://www.facebook.com/sharer/sharer.php?u='+u;
+    else if(kind==='messenger') url='fb-messenger://share?link='+u;
+    else if(kind==='whatsapp')  url='https://wa.me/?text='+encodeURIComponent(SHARE_TXT+' '+SHARE_URL);
+    else if(kind==='x')         url='https://twitter.com/intent/tweet?text='+t+'&url='+u;
+    if(kind==='copy'){
+      var b=document.getElementById('copyBtn');
+      function done(){ var o=b.textContent; b.textContent='✓'; setTimeout(function(){ b.textContent=o; },1400); }
+      try{ navigator.clipboard.writeText(SHARE_URL).then(done,function(){ prompt('Copy this link:', SHARE_URL); }); }
+      catch(e){ prompt('Copy this link:', SHARE_URL); }
+      return;
+    }
+    window.open(url,'_blank','noopener');
+  }
+  [].forEach.call(document.querySelectorAll('[data-share]'), function(b){
+    b.addEventListener('click', function(){ share(b.getAttribute('data-share')); });
+  });
+
+  // ---- render the field ----
+  function renderRunner(r){
+    var scr = !!r.scratched;
+    // A void race scores nothing. On an abandoned race (never run) strip the whole live layer;
+    // on any void, a pick row that was not individually struck must not read as a live pick either.
+    var dropLive = window.__abandoned || (window.__void && (r.tier==='pick') && !scr);
+    var tier = dropLive ? 'outsider' : (r.tier || 'outsider');
+    var cls = 'rrow t-'+tier + (scr?' scr':'');
+    var labelCls = tier==='pick'?'pick':(tier==='danger'?'danger':(tier==='chance'?'chance':''));
+    var h = '<div class="'+cls+'">';
+    h += '<span class="rk">'+(window.__unrated?'·':(r.rank!=null?r.rank:'·'))+'</span>';
+    // middle
+    h += '<div>';
+    h +=   '<div class="hz"><span class="no">#'+esc(r.number)+'</span><b>'+esc(r.horse)+'</b>';
+    if(scr) h += '<span class="scr-tag">SCRATCHED</span>';
+    else if(r.label && !window.__abandoned && !dropLive) h += '<span class="lbl '+labelCls+'">'+esc(r.label)+'</span>';
+    h +=   '</div>';
+    var meta = [];
+    if(r.barrier!=null) meta.push('Barrier '+r.barrier);
+    if(r.jockey) meta.push(esc(r.jockey));
+    if(!scr && r.price!=null && !window.__abandoned) meta.push(price(r.price));
+    if(meta.length) h += '<div class="meta">'+meta.join(' · ')+'</div>';
+    if(!scr && !window.__abandoned && !dropLive){
+      if(tier==='pick' && window.__verdict) h += '<div class="verdict">'+esc(window.__verdict)+'</div>';
+      if(r.why && r.why.length){
+        h += '<ul class="why">';
+        r.why.forEach(function(w){ h += '<li>'+esc(w)+'</li>'; });
+        h += '</ul>';
+      }
+    }
+    h += '</div>';
+    // rating — withheld until the field is rated; unrated shows the field only (no Collect Rating / tier / pick)
+    if(window.__unrated){
+      h += '<div class="rt"></div>';
+    } else {
+      h += '<div class="rt t-'+tier+'">';
+      h += '<div class="rtn">'+(r.rating!=null?Math.round(r.rating):'—')+'</div>';
+      h += '<div class="barw"><div class="barf" style="width:'+clamp(r.rating)+'%"></div></div>';
+      if(!scr && !dropLive){
+        var chips=[];
+        if(r.top3!=null) chips.push('Top 3 '+r.top3+'%');
+        if(r.top4!=null) chips.push('Top 4 '+r.top4+'%');
+        if(chips.length){ h += '<div class="chips">'; chips.forEach(function(c){ h+='<span class="chip">'+c+'</span>'; }); h += '</div>'; }
+      }
+      h += '</div>';
+    }
+    h += '</div>';
+    return h;
+  }
+
+  function fmtAge(iso){
+    try{ return new Date(iso).toLocaleString('en-NZ',{timeZone:'Pacific/Auckland',dateStyle:'medium',timeStyle:'short'})+' NZ time'; }
+    catch(e){ return ''; }
+  }
+
+  function renderResult(d){
+    var r = d.result || {};
+    var pick = d.pick || {};
+    // Whole-race void (our top pick scratched, or race abandoned) — never a win or a loss.
+    // Canonical marker is the top-level `void` flag (contract); also honour result.our_pick_outcome,
+    // the pick marker, and an "abandoned" status (an abandoned race may carry no result).
+    var vo = r.our_pick_outcome;
+    var reason = d.void_reason || pick.void_reason || ((vo === 'abandoned' || vo === 'scratched') ? vo : '') || (d.status === 'abandoned' ? 'abandoned' : '');
+    if(d.void === true || pick.void === true || vo === 'scratched' || vo === 'abandoned' || d.status === 'abandoned'){
+      var abandoned = (reason === 'abandoned');
+      var h2 = document.querySelector('#resultBlock h2');
+      if(h2) h2.textContent = abandoned ? 'The race was abandoned' : 'Our pick was scratched';
+      document.getElementById('resultLede').innerHTML = abandoned
+        ? 'This race was abandoned — it doesn’t count toward our win, place or exotic rates.'
+        : 'Our top pick was scratched — this race doesn’t count toward our win, place or exotic rates.';
+      var body = 'The card is below exactly as it was published' + (abandoned ? '' : ', our scratched pick struck through') +
+        '. A voided race is never scored as a win or a loss for us.';
+      if(!abandoned && r.placings && r.placings.length){
+        var w = r.placings[0];
+        body += ' For the record, <b>'+esc(w.horse)+'</b> won' + (w.win_div!=null ? ' at $'+Number(w.win_div).toFixed(2) : '') + '.';
+      }
+      body += ' Every selection is on the <a href="results.html">record page</a>.';
+      document.getElementById('resultBody').innerHTML = body;
+      document.getElementById('resultBlock').style.display='block';
+      return;
+    }
+    if(!r.placings || !r.placings.length) return;
+    var win = r.placings[0];
+    var runner = (d.runners||[]).filter(function(x){ return String(x.number)===String(win.number); })[0];
+    // only claim a rank if we actually rated the winner (ratings may never land)
+    var rank = (runner && runner.rating != null) ? runner.rank : null;
+    var sp = win.win_div!=null ? ' at $'+Number(win.win_div).toFixed(2) : '';
+    document.getElementById('resultLede').innerHTML =
+      '<b>'+esc(win.horse)+'</b> won the 2026 Melbourne Cup'+sp+'.' +
+      (rank? ' The engine had it ranked <b>'+rank+'</b> of '+((d.event&&d.event.nominations)||24)+'.' : '');
+    document.getElementById('resultBlock').style.display='block';
+  }
+
+  fetch('cup.json',{cache:'no-store'}).then(function(r){ return r.json(); }).then(function(d){
+    window.__verdict = d.verdict || '';
+    // unrated = no runner carries a rating yet (declared field pre-Cup-morning, or a race run before ratings landed) — show the field only, never a rank/rating we didn't make
+    window.__unrated = !((d.runners||[]).some(function(r){ return r.rating != null; }));
+    var __ran = (d.status === 'result' || d.status === 'abandoned');
+    var __hasField = (d.runners||[]).length > 0 && d.status !== 'placeholder';
+    // void = this race scores nothing (our pick scratched, or the race abandoned); abandoned = never run.
+    // Mirrors renderResult's reveal test so the field below and the banner above always agree — on a
+    // void race the engine withholds the pick card, but the pick's row in runners[] can still carry
+    // tier/price/why, so the field must read void itself or it shows a live pick on an abandoned race.
+    var __vr = d.result || {}, __vp = d.pick || {};
+    var __vo = __vr.our_pick_outcome;
+    window.__abandoned = (d.status === 'abandoned') || (__vo === 'abandoned') || ((d.void_reason || __vp.void_reason) === 'abandoned');
+    window.__void = (d.void === true) || (__vp.void === true) || (__vo === 'scratched') || (__vo === 'abandoned') || window.__abandoned;
+    // subtitle: like the hero, only change it once the field is declared; placeholder keeps the signed-off static line
+    try{ if(__hasField){ var _cs=document.getElementById('cardSub'); if(_cs) _cs.textContent = window.__unrated ? (__ran ? 'The declared field, in saddlecloth order.' : 'The declared field, in saddlecloth order — the engine\'s ratings land on Cup morning.') : 'Ranked 1 to 24 on the engine\'s rating. Scroll for the reasoning on each.'; } }catch(e){}
+    try{ var _rh=document.querySelector('.fhead .rth'); if(_rh) _rh.textContent = window.__unrated ? '' : 'Rating'; }catch(e){}
+    // hero: leave the signed-off headline on placeholder; once the field is declared, Declared → Rated keyed on whether ratings have landed
+    try{ if(__hasField){ var _hh=document.getElementById('heroHead'); if(_hh) _hh.innerHTML = 'All 24.<br/>'+(window.__unrated?'Declared.':'Rated.'); } }catch(e){}
+    var runners = (d.runners||[]).slice().sort(function(a,b){ return a.rank-b.rank; });
+    if(!runners.length){
+      var waiting = (d.status==='placeholder' || d.status==='nominations');
+      var msg = waiting
+        ? 'The final field for the Melbourne Cup declares about Saturday 31 October, and the engine rates the field on Cup morning — check back on race week.'
+        : 'The engine\'s full Cup card goes up on Cup morning — check back on race week.';
+      document.getElementById('field').innerHTML = '<div class="rrow"><span class="rk">—</span><div><div class="hz">'+msg+'</div></div><div class="rt"></div></div>';
+    } else {
+      document.getElementById('field').innerHTML = runners.map(renderRunner).join('');
+    }
+    // data note
+    var ev = d.event||{};
+    var age = d.generated_at ? fmtAge(d.generated_at) : '';
+    var live = ev.field_size!=null ? ev.field_size+' running' : '';
+    var scratched = runners.filter(function(x){ return x.scratched; }).length;
+    var bits = [];
+    if(ev.nominations) bits.push(ev.nominations+' nominated');
+    if(scratched) bits.push(scratched+' scratched');
+    var note = (d.status==='placeholder') ? 'Placeholder field — the real field declares about Saturday 31 October. '
+             : (d.status==='declared') ? 'The full field is declared — the engine rates the field on Cup morning. Scratchings struck through. '
+             : '';
+    document.getElementById('dataNote').textContent = note + (bits.length? bits.join(' · ')+' · ' : '') + (age? 'Card generated '+age : '');
+    // result
+    renderResult(d);
+  }).catch(function(){
+    document.getElementById('field').innerHTML = '<div class="rrow"><span class="rk">—</span><div><div class="hz">The engine\'s full Cup card goes up on Cup morning — check back on race week.</div></div><div class="rt"></div></div>';
+    document.getElementById('dataNote').textContent = '';
+  });
+})();
+</script>
+</body>
+</html>

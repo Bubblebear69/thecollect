@@ -4,349 +4,422 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>The Collect — racing picks proven in public</title>
-<meta name="description" content="Daily NZ & Australian racing selections from a rating engine that publishes every result, win or lose. Picks ready at midnight, updated to a minute before the jump. $25/week." />
+<meta name="description" content="Daily NZ & Australian racing selections from a rating engine that publishes every result, win or lose. Picks published overnight and locked — they don't change. $25/week." />
 <meta property="og:title" content="The Collect — racing picks proven in public" />
 <meta property="og:description" content="Every pick published. Every result shown. Win or lose. Powered by the Strategic Logic engine." />
 <meta property="og:image" content="https://thecollect.nz/logo.png" />
 <meta property="og:url" content="https://thecollect.nz/" />
 <link rel="icon" href="app/icon.svg" type="image/svg+xml" />
-<!-- Google Analytics 4 -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-G6TJ65YJPM"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){ dataLayer.push(arguments); }
-  gtag('js', new Date());
-  gtag('config', 'G-G6TJ65YJPM');
-</script>
+<!-- Analytics gated behind cookie consent — GA4 loads only on Accept (see consent.js) -->
+<script defer src="consent.js"></script>
 <style>
   :root{
-    --ink:#0E1217; --ink2:#131A21; --card:#161E27; --line:rgba(212,175,55,.16);
-    --gold:#D4AF37; --gold-hi:#F0D078; --gold-lo:#A07E1E;
-    --turf:#31C47C; --turf-deep:#0B3D2E;
-    --paper:#F2EAD3; --dim:rgba(242,234,211,.68); --faint:rgba(242,234,211,.42);
+    /* Direction C — bold / high-energy (approved 23 Oct) */
+    --green:#D4AF37; --green-600:#C9A227; --green-700:#A9842B; --pos:#31C47C; --pos-700:#2a9d63;
+    --ink:#050806; --ink-2:#07100a; --panel:#0a110c; --panel-2:#0d170f;
+    --line:rgba(255,255,255,.08); --line-2:rgba(255,255,255,.14);
+    --text:#eaf2ec; --muted:#9bb0a4; --muted-2:#7d9488;
+    --gold:#D4AF37;              /* brand gold kept for R18 / premium accents */
+    --radius:16px; --maxw:1120px;
+    --shadow:0 20px 60px rgba(0,0,0,.5);
+    --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   }
-  *{ margin:0; padding:0; box-sizing:border-box; }
-  html{ scroll-behavior:smooth; }
-  body{ background:var(--ink); color:var(--paper);
-        font:16px/1.6 -apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }
-  a{ color:var(--gold); text-decoration:none; }
-  img{ max-width:100%; }
-  .wrap{ max-width:1060px; margin:0 auto; padding:0 22px; }
-  h2{ font-family:Georgia,"Times New Roman",serif; font-size:clamp(26px,4vw,34px);
-      font-weight:700; line-height:1.2; margin-bottom:10px; }
-  .kicker{ font-size:12px; font-weight:700; letter-spacing:2.5px; color:var(--gold);
-           text-transform:uppercase; margin-bottom:10px; }
-  section{ padding:64px 0; }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;font-family:var(--font);color:var(--text);background:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased}
+  a{color:inherit;text-decoration:none}
+  img{max-width:100%}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 20px}
+  .green{color:var(--green)}
+  .eyebrow{font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--green);font-weight:700}
+  .muted{color:var(--muted)}
+  .btn{display:inline-flex;align-items:center;gap:8px;border-radius:999px;padding:13px 22px;font-weight:700;font-size:15px;cursor:pointer;border:1px solid transparent;transition:.18s transform,.18s box-shadow,.18s background}
+  .btn:hover{transform:translateY(-1px)}
+  .btn-primary{background:var(--pos);color:#042311;box-shadow:0 14px 34px rgba(49,196,124,.5)}
+  .btn-primary:hover{background:#3bff93;box-shadow:0 16px 40px rgba(212,175,55,.6)}
+  .btn-ghost{background:transparent;color:var(--text);border-color:var(--line-2)}
+  .btn-ghost:hover{border-color:var(--green);color:#fff}
+  .btn-lg{padding:18px 32px;font-size:17px}
 
-  /* top bar */
-  .top{ position:sticky; top:0; z-index:50; background:rgba(14,18,23,.92);
-        backdrop-filter:blur(8px); border-bottom:1px solid var(--line); }
-  .top .wrap{ display:flex; align-items:center; gap:12px; height:62px; }
-  .top img{ width:34px; height:34px; border-radius:8px; }
-  .top .name{ font-family:Georgia,serif; font-weight:700; font-size:18px;
-              letter-spacing:.5px; }
-  .top .spacer{ flex:1; }
-  .btn{ display:inline-block; padding:12px 22px; border-radius:10px; font-weight:700;
-        font-size:15px; border:0; cursor:pointer; transition:transform .12s ease; }
-  .btn:active{ transform:scale(.97); }
-  .btn.gold{ background:linear-gradient(135deg,var(--gold-hi),var(--gold) 55%,var(--gold-lo));
-             color:#171204; }
-  .btn.ghost{ background:transparent; color:var(--paper);
-              border:1px solid rgba(242,234,211,.28); }
-  .btn.small{ padding:9px 16px; font-size:13.5px; }
-  @media (max-width:460px){
-    .top .name{ display:none; }          /* logo alone keeps the nav uncrowded on small phones */
-    .top .wrap{ gap:8px; }
-    .top .btn.small{ padding:8px 11px; font-size:12px; }
+  /* ---------- Header ---------- */
+  header{position:sticky;top:0;z-index:50;background:rgba(5,8,6,.86);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+  .nav{display:flex;align-items:center;justify-content:space-between;height:74px}
+  .brand{display:flex;align-items:center;gap:12px}
+  .brand img{width:42px;height:42px;border-radius:10px;flex:none}
+  .brand .bt{display:flex;flex-direction:column;line-height:1}
+  .brand b{font-size:24px;letter-spacing:.04em;font-weight:800}
+  .brand span{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-top:5px}
+  .brand .dot{color:var(--green)}
+  nav.links{display:flex;gap:28px;align-items:center}
+  nav.links a{font-size:14px;color:var(--muted);font-weight:600}
+  nav.links a:hover{color:#fff}
+  .nav-cta{display:flex;gap:10px;align-items:center}
+  .login{font-size:14px;font-weight:600;color:var(--muted);padding:9px 6px}
+  .login:hover{color:#fff}
+  .menu-btn{display:none;background:none;border:0;color:#fff;font-size:24px;cursor:pointer}
+
+  /* ---------- Hero ---------- */
+  .hero{position:relative;overflow:hidden;border-bottom:1px solid var(--line)}
+  .hero-bg{position:absolute;inset:0;
+    background:
+      radial-gradient(1100px 540px at 82% -12%, rgba(212,175,55,.20), transparent 60%),
+      radial-gradient(760px 480px at 8% 116%, rgba(212,175,55,.07), transparent 55%),
+      linear-gradient(165deg, #0b1710 0%, var(--ink) 58%);
+    background-size:cover;background-position:center;background-repeat:no-repeat;
   }
+  .hero-inner{position:relative;padding:72px 0 64px;max-width:660px}
+  .hero-logo{display:flex;align-items:center;gap:14px;margin-bottom:22px}
+  .hero-logo img{width:62px;height:62px;border-radius:14px;flex:none;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+  .hero-logo b{font-size:26px;font-weight:800;letter-spacing:.06em}
+  h1.hero-h{font-size:clamp(46px,7.5vw,80px);line-height:.98;letter-spacing:-.03em;margin:6px 0 18px;font-weight:800}
+  .hero-sub{font-size:19px;color:#cfe0d6;max-width:530px;margin:0 0 24px}
+  .hero-cta{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+  .countdown{display:inline-flex;align-items:center;gap:8px;background:rgba(212,175,55,.1);color:var(--green);font-weight:700;font-size:13.5px;padding:8px 14px;border-radius:999px;margin-bottom:22px}
+  .countdown b{font-variant-numeric:tabular-nums}
+  .ticks{display:flex;gap:22px;flex-wrap:wrap}
+  .tick{display:flex;align-items:center;gap:8px;font-size:14px;color:#cfe0d6;font-weight:600}
+  .tick svg{flex:none}
 
-  /* hero */
-  .hero{ padding:76px 0 60px;
-         background:radial-gradient(900px 420px at 50% -60px, #14261D 0%, var(--ink) 70%); }
-  .hero .wrap{ text-align:center; max-width:820px; }
-  .hero img.mark{ width:84px; height:84px; border-radius:20px; margin-bottom:22px; }
-  h1{ font-family:Georgia,serif; font-size:clamp(32px,6vw,52px); line-height:1.12;
-      font-weight:700; }
-  h1 em{ font-style:normal; color:var(--gold); }
-  .hero .sub{ margin:18px auto 26px; max-width:560px; color:var(--dim); font-size:17.5px; }
-  .cta-row{ display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
-  .countdown{ margin:20px auto 0; font-size:15px; color:var(--gold-hi); font-weight:700; }
-  .countdown b{ font-size:20px; font-variant-numeric:tabular-nums; }
+  /* ---------- Proof bar ---------- */
+  .proof{background:linear-gradient(90deg,#071510,#08190f);border:1px solid var(--line);border-radius:var(--radius);
+    display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:space-between;padding:22px 26px;margin:-32px auto 0;position:relative;box-shadow:0 20px 60px rgba(212,175,55,.14),var(--shadow)}
+  .proof .stat{display:flex;align-items:center;gap:14px;flex:1;min-width:200px}
+  .proof .ico{width:48px;height:48px;border-radius:12px;background:rgba(212,175,55,.12);display:flex;align-items:center;justify-content:center;flex:none}
+  .proof .num{font-size:34px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
+  .proof .lbl{font-size:13px;color:var(--muted);margin-top:4px}
+  .proof .see{font-size:14px;font-weight:700;color:var(--green);white-space:nowrap}
+  .proof-note{text-align:center;color:var(--muted-2);font-size:12.5px;margin:12px 0 0}
 
-  /* proof strip */
-  .proof{ margin:44px auto 0; display:flex; justify-content:center; gap:12px;
-          flex-wrap:wrap; }
-  .chip{ background:var(--card); border:1px solid var(--line); border-radius:14px;
-         padding:14px 22px; min-width:150px; }
-  .chip .n{ font-size:26px; font-weight:800; color:var(--gold-hi);
-            font-variant-numeric:tabular-nums; }
-  .chip .l{ font-size:12px; color:var(--faint); letter-spacing:.5px; margin-top:2px; }
-  .proof-note{ margin-top:12px; font-size:12.5px; color:var(--faint); }
+  section{padding:64px 0}
+  .sec-head{max-width:640px}
+  .sec-head h2{font-size:clamp(30px,4vw,44px);letter-spacing:-.01em;margin:10px 0 8px;font-weight:800}
+  .sec-head p{color:var(--muted);font-size:16px;margin:0}
 
-  /* cards */
-  .grid{ display:grid; gap:16px; }
-  .grid.c3{ grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); }
-  .card{ background:var(--card); border:1px solid var(--line); border-radius:16px;
-         padding:24px; }
-  .card .step{ font-size:12px; font-weight:800; color:var(--gold); letter-spacing:2px; }
-  .card h3{ font-size:18px; margin:8px 0 6px; }
-  .card p{ font-size:14.5px; color:var(--dim); }
+  /* ---------- Free race ---------- */
+  .race{display:grid;grid-template-columns:1.1fr 1fr;gap:0;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}
+  .race-media{position:relative;min-height:280px;background:linear-gradient(135deg,#0a1f16,#071510);display:flex;align-items:center;justify-content:center}
+  .race-media .badge{position:absolute;top:16px;left:16px;background:var(--green);color:#042311;font-weight:800;font-size:12px;letter-spacing:.06em;padding:6px 12px;border-radius:999px}
+  .race-media .play{width:62px;height:62px;border-radius:999px;background:rgba(255,255,255,.14);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;border:1px solid var(--line-2)}
+  .race-body{padding:28px}
+  .race-body .track{font-size:22px;font-weight:800;margin:0}
+  .race-body .meta{color:var(--muted);font-size:14px;margin:4px 0 20px}
+  .pick{display:flex;align-items:center;gap:12px;background:var(--panel-2);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:16px}
+  .pick .star{width:34px;height:34px;border-radius:9px;background:rgba(212,175,55,.14);display:flex;align-items:center;justify-content:center;flex:none}
+  .pick .no{font-weight:800}
+  .pick .why{font-size:13px;color:var(--muted);margin-top:2px}
+  .why-list{display:grid;gap:10px;margin:0 0 18px;padding:0;list-style:none}
+  .why-list li{display:flex;align-items:center;gap:10px;font-size:14.5px}
+  .why-list svg{flex:none}
+  .why-text{font-size:14.5px;color:#cfe0d6;margin:0 0 18px}
+  .race-link{font-size:14px;font-weight:700;color:var(--green)}
 
-  /* free race */
-  .free{ background:linear-gradient(135deg,var(--turf-deep),#123526 60%,var(--ink2));
-         border:1px solid rgba(49,196,124,.35); border-radius:20px; padding:30px; }
-  .free .race-head{ display:flex; justify-content:space-between; align-items:baseline;
-                    flex-wrap:wrap; gap:6px; margin-bottom:12px; }
-  .free .race-head b{ font-size:20px; }
-  .free .pick-line{ font-size:24px; font-weight:800; color:var(--gold-hi); margin:8px 0; }
-  .free .why{ color:var(--dim); font-size:15px; max-width:640px; }
-  .free .tag{ display:inline-block; font-size:11.5px; font-weight:800; letter-spacing:1.5px;
-              background:rgba(212,175,55,.16); color:var(--gold); border-radius:999px;
-              padding:4px 12px; margin-bottom:10px; }
+  /* ---------- Why / features ---------- */
+  .why-collect{background:linear-gradient(180deg,#07120d,#050806)}
+  .features{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:36px}
+  .feat{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:24px}
+  .feat .fi{width:44px;height:44px;border-radius:11px;background:rgba(212,175,55,.12);display:flex;align-items:center;justify-content:center;margin-bottom:14px}
+  .feat h3{font-size:16px;margin:0 0 6px;font-weight:700}
+  .feat p{font-size:14px;color:var(--muted);margin:0}
 
-  /* winners list */
-  .win-row{ display:flex; justify-content:space-between; gap:10px; padding:13px 6px;
-            border-bottom:1px solid rgba(242,234,211,.08); font-size:15px; }
-  .win-row .c{ color:var(--gold-hi); font-weight:800; font-variant-numeric:tabular-nums; }
-  .muted{ color:var(--faint); font-size:13px; }
+  /* ---------- Repeat CTA band ---------- */
+  .cta-band{background:linear-gradient(90deg,#08190f,#061a10);border:1px solid rgba(212,175,55,.3);border-radius:var(--radius);
+    display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;padding:28px 32px;box-shadow:var(--shadow)}
+  .cta-band h3{font-size:22px;font-weight:800;margin:0}
+  .cta-band p{color:var(--muted);font-size:14.5px;margin:4px 0 0}
 
-  /* pricing */
-  .price-box{ background:linear-gradient(135deg,var(--turf-deep),#123526 60%,var(--ink2));
-              border:1px solid rgba(49,196,124,.4); border-radius:20px; padding:36px;
-              text-align:center; max-width:460px; margin:0 auto; }
-  .price-box .p{ font-size:40px; font-weight:800; }
-  .price-box .per{ font-size:15px; color:var(--dim); }
-  .price-box ul{ list-style:none; margin:18px 0 22px; text-align:left; }
-  .price-box li{ padding:7px 0 7px 26px; font-size:14.5px; color:var(--paper);
-                 position:relative; }
-  .price-box li::before{ content:"✓"; position:absolute; left:2px; color:var(--gold);
-                         font-weight:800; }
-  .founding{ margin-top:14px; font-size:13px; color:var(--gold-hi); }
-  .price-box form{ display:flex; flex-direction:column; gap:10px; text-align:left; margin-top:4px; }
-  .price-box input[type=text], .price-box input[type=email], .price-box select{
-    width:100%; padding:12px 14px; border-radius:10px; font-size:15px;
-    border:1px solid rgba(242,234,211,.22); background:rgba(14,18,23,.55); color:var(--paper); }
-  .price-box input::placeholder{ color:var(--faint); }
-  .price-box .ck{ display:flex; gap:9px; align-items:flex-start; font-size:12.5px; color:var(--dim); }
-  .price-box .ck input{ margin-top:3px; flex:none; }
-  .price-box .hp{ position:absolute; left:-9999px; width:1px; height:1px; opacity:0; }
-  .price-box .fmini{ font-size:12px; text-align:center; color:var(--faint); margin-top:2px; }
-  .price-box button[type=submit]{ margin-top:4px; }
-  #joinDone h4{ font-size:19px; color:var(--gold-hi); margin-bottom:6px; }
-  #joinDone p{ font-size:14px; color:var(--dim); }
+  /* ---------- How it works ---------- */
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:28px;margin-top:36px}
+  .step .n{font-size:40px;font-weight:800;color:rgba(212,175,55,.3);line-height:1}
+  .step h3{font-size:17px;margin:12px 0 6px}
+  .step p{color:var(--muted);font-size:14.5px;margin:0}
 
-  /* faq */
-  details{ border-bottom:1px solid rgba(242,234,211,.1); padding:16px 4px; }
-  summary{ font-weight:700; font-size:16px; cursor:pointer; list-style:none;
-           display:flex; justify-content:space-between; }
-  summary::after{ content:"+"; color:var(--gold); font-size:20px; }
-  details[open] summary::after{ content:"–"; }
-  details p{ margin-top:10px; color:var(--dim); font-size:15px; max-width:720px; }
+  /* ---------- This week's board ---------- */
+  .board{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:24px 26px;margin-top:28px;box-shadow:var(--shadow)}
+  .win-row{display:flex;justify-content:space-between;gap:10px;padding:13px 4px;border-bottom:1px solid rgba(255,255,255,.06);font-size:15px}
+  .win-row:last-child{border-bottom:0}
+  .win-row .c{color:var(--pos);font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap}
 
-  /* footer */
-  footer{ border-top:1px solid var(--line); padding:36px 0 46px; font-size:13px;
-          color:var(--faint); }
-  footer .links{ margin-bottom:12px; }
-  footer .links a{ margin-right:18px; color:var(--dim); }
-  .r18{ display:inline-block; border:1.5px solid var(--faint); border-radius:6px;
-        padding:1px 7px; font-weight:800; margin-right:8px; }
+  /* ---------- Join / pricing ---------- */
+  .join-wrap{display:grid;grid-template-columns:1fr 1fr;gap:26px;align-items:start}
+  .join-pitch .price{font-size:40px;font-weight:800;line-height:1}
+  .join-pitch .price small{font-size:16px;color:var(--muted);font-weight:600}
+  .join-pitch ul{list-style:none;margin:18px 0 0;padding:0}
+  .join-pitch li{padding:8px 0 8px 28px;font-size:15px;position:relative;color:var(--text)}
+  .join-pitch li::before{content:"✓";position:absolute;left:2px;color:var(--green);font-weight:800}
+  .join-box{background:linear-gradient(135deg,#08190f,#061a10);border:1px solid rgba(212,175,55,.4);border-radius:var(--radius);padding:28px;box-shadow:var(--shadow)}
+  .join-box h3{font-size:20px;margin:0 0 4px}
+  .join-box .founding{font-size:13.5px;color:var(--pos);margin:0 0 16px}
+  .join-box form{display:flex;flex-direction:column;gap:10px}
+  .join-box input[type=text],.join-box input[type=email],.join-box select{
+    width:100%;padding:13px 14px;border-radius:10px;font-size:15px;
+    border:1px solid var(--line-2);background:rgba(5,8,6,.6);color:var(--text)}
+  .join-box input::placeholder{color:var(--muted-2)}
+  .join-box .ck{display:flex;gap:9px;align-items:flex-start;font-size:12.5px;color:var(--muted)}
+  .join-box .ck input{margin-top:3px;flex:none}
+  .join-box .hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
+  .join-box .fmini{font-size:12px;text-align:center;color:var(--muted-2);margin-top:2px}
+  #joinDone h4{font-size:19px;color:var(--pos);margin:0 0 6px}
+  #joinDone p{font-size:14px;color:var(--muted);margin:0}
+
+  /* ---------- FAQ ---------- */
+  .faq details{border-bottom:1px solid var(--line);padding:18px 4px}
+  .faq summary{font-weight:700;font-size:16px;cursor:pointer;list-style:none;display:flex;justify-content:space-between;gap:16px}
+  .faq summary::after{content:"+";color:var(--green);font-size:20px}
+  .faq details[open] summary::after{content:"\2013"}
+  .faq details p{margin:10px 0 0;color:var(--muted);font-size:15px;max-width:760px}
+
+  /* ---------- Footer ---------- */
+  footer{border-top:1px solid var(--line);padding:40px 0 60px;color:var(--muted)}
+  .foot{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;align-items:flex-start}
+  .foot a{color:var(--muted);font-size:14px}
+  .foot a:hover{color:#fff}
+  .foot .cols{display:flex;gap:48px;flex-wrap:wrap}
+  .foot .col b{display:block;color:#fff;font-size:13px;margin-bottom:10px;text-transform:uppercase;letter-spacing:.08em}
+  .foot .col a{display:block;margin-bottom:8px}
+  .r18{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line-2);border-radius:10px;padding:8px 12px;font-size:12.5px;color:var(--muted);margin-top:16px}
+
+  @media(max-width:860px){
+    nav.links,.login{display:none}
+    .menu-btn{display:block}
+    .hero-bg{background:radial-gradient(700px 400px at 80% -10%, rgba(212,175,55,.16), transparent 60%),linear-gradient(170deg,#0b1710,var(--ink) 60%)}
+    .hero-inner{max-width:none;padding:52px 0 44px}
+    .race,.features,.steps,.join-wrap,.cta-band{grid-template-columns:1fr}
+    .cta-band{flex-direction:column;align-items:flex-start}
+    .proof{gap:20px}
+    .proof .stat{min-width:140px}
+    .nav{height:60px}
+    .brand img{width:34px;height:34px}
+    .brand b{font-size:18px}
+    .brand span{display:none}
+    .nav-cta .btn-primary{display:none}   /* hero CTA + menu cover conversion on mobile */
+  }
 </style>
 </head>
 <body>
 
-<div class="top"><div class="wrap">
-  <img src="logo.png" alt="" /><span class="name">THE COLLECT</span>
-  <span class="spacer"></span>
-  <a class="btn ghost small" href="results.html">Results</a>
-  <a class="btn ghost small" href="members/">Member login</a>
-  <a class="btn gold small" href="#join">Join</a>
-</div></div>
-
-<div class="hero"><div class="wrap">
-  <img class="mark" src="logo.png" alt="The Collect" />
-  <h1>Every pick published.<br/>Every result shown. <em>Win or lose.</em></h1>
-  <p class="sub">Daily selections for every NZ &amp; Australian meeting, produced by a
-    rating engine that weighs the evidence on every runner — and proves itself in
-    public, every single day.</p>
-  <div class="countdown" id="countdown"></div>
-  <div class="cta-row">
-    <a class="btn gold" href="#join">Become a founding member</a>
-    <a class="btn ghost" href="#free">See today's free race</a>
+<header>
+  <div class="wrap nav">
+    <div class="brand">
+      <img src="logo.png" alt="The Collect" />
+      <div class="bt"><b>THE COLLECT</b><span>Racing picks <span class="dot">proven</span> in public</span></div>
+    </div>
+    <nav class="links">
+      <a href="results.html">Results</a>
+      <a href="#how">How it works</a>
+      <a href="#join">Membership</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+    <div class="nav-cta">
+      <a class="login" href="members/">Log in</a>
+      <a class="btn btn-primary" href="#join">Get first month free</a>
+      <button class="menu-btn" aria-label="Menu">≡</button>
+    </div>
   </div>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="wrap hero-inner">
+    <div class="hero-logo"><img src="logo.png" alt="The Collect" /><b>THE COLLECT</b></div>
+    <div class="eyebrow">Real data. Real results. No hype.</div>
+    <h1 class="hero-h">Smarter racing decisions. <span class="green">Proven in public.</span></h1>
+    <p class="hero-sub">Daily NZ &amp; Australian selections from a rating engine that publishes every result — win or lose.</p>
+    <div class="hero-cta">
+      <a class="btn btn-primary btn-lg" href="#join">Get first month free →</a>
+      <a class="btn btn-ghost btn-lg" href="#free">See today's free race</a>
+    </div>
+    <div class="countdown" id="countdown"></div>
+    <div class="ticks">
+      <div class="tick"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M20 6 9 17l-5-5" stroke="#D4AF37" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Every pick published</div>
+      <div class="tick"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M20 6 9 17l-5-5" stroke="#D4AF37" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Live results &amp; dividends</div>
+      <div class="tick"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8z" fill="#D4AF37"/></svg>Locked overnight — never changed</div>
+    </div>
+  </div>
+</section>
+
+<!-- PROOF BAR -->
+<div class="wrap">
   <div class="proof" id="proofStrip">
-    <div class="chip"><div class="n" id="pWins">—</div><div class="l">winners this week</div></div>
-    <div class="chip"><div class="n" id="pStrike">—</div><div class="l">win strike rate</div></div>
-    <div class="chip"><div class="n" id="pBest">—</div><div class="l">biggest collect this week</div></div>
+    <div class="stat"><div class="ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 0 1-10 0V4zM17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3" stroke="#D4AF37" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div><div class="num" id="pWins">113</div><div class="lbl">winners this week</div></div></div>
+    <div class="stat"><div class="ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2" stroke="#D4AF37" stroke-width="1.8" stroke-linecap="round"/></svg></div><div><div class="num" id="pStrike">33.4%</div><div class="lbl">win strike rate</div></div></div>
+    <div class="stat"><div class="ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><ellipse cx="12" cy="6" rx="7" ry="3" stroke="#D4AF37" stroke-width="1.8"/><path d="M5 6v6c0 1.7 3.1 3 7 3s7-1.3 7-3V6M5 12v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6" stroke="#D4AF37" stroke-width="1.8"/></svg></div><div><div class="num" id="pBest">—</div><div class="lbl">biggest dividend this week</div></div></div>
+    <a class="see" href="results.html">See every result →</a>
   </div>
-  <div class="proof-note" id="proofNote">live from the engine</div>
-  <div style="margin-top:14px"><a href="results.html" style="font-weight:700">See every result — winners and losers →</a></div>
-</div></div>
+  <p class="proof-note" id="proofNote">Live from the engine — last 7 days</p>
+</div>
 
-<section><div class="wrap">
-  <div class="kicker">How it works</div>
-  <h2>A machine that does the form. Honestly.</h2>
-  <div class="grid c3" style="margin-top:22px">
-    <div class="card"><div class="step">01</div><h3>The engine rates every runner</h3>
-      <p>Around thirty evidence checks per horse — class against official ratings, form,
-      track and distance records, the speed map, track bias, sectionals. The order is locked
-      <b>before</b> the market is looked at, so the numbers are never bent to fit the odds.</p></div>
-    <div class="card"><div class="step">02</div><h3>Your picks are ready at midnight</h3>
-      <p>Wake up to the full day: the Top&nbsp;5 board, every race's pick with plain-English
-      reasons, trifecta and first-four plays. Then the engine re-checks each race at 10, 5, 3
-      and 2 minutes out — the final word lands a minute before the jump, never later.</p></div>
-    <div class="card"><div class="step">03</div><h3>Results go up the same night</h3>
-      <p>Every result and dividend, posted win or lose. The scoreboard is the whole pitch:
-      if we're good, you'll see it. If we have a bad day, you'll see that too — at full size.</p></div>
-  </div>
-</div></section>
-
-<section style="padding-top:0"><div class="wrap">
-  <div class="kicker">Why The Collect</div>
-  <h2>No hype merchants. Just arithmetic.</h2>
-  <div class="grid c3" style="margin-top:22px">
-    <div class="card"><h3>The honesty scoreboard</h3><p>Today, yesterday and the week —
-      wins, strike rate, and what a $1 collect returned. Public, permanent, and never
-      cherry-picked. Find another tipster who does that.</p></div>
-    <div class="card"><h3>Live results with dividends</h3><p>Placings, win and place
-      divs, quinellas, trifectas and first fours as races settle through the day.</p></div>
-    <div class="card"><h3>Fresh to the final minute</h3><p>Scratchings and market moves
-      are re-weighed right up to a minute before each jump — and one tap of the refresh
-      button shows you exactly how current your numbers are.</p></div>
-    <div class="card"><h3>The Engine's Blackbook</h3><p>Horses to follow, curated by the
-      machine: quiet achievers that flew home at odds, and bias victims beaten by the
-      track pattern, not by ability.</p></div>
-    <div class="card"><h3>Every meeting, both countries</h3><p>NZ and every Australian
-      state, every race day. AU for win value, NZ for placings reliability — the engine
-      plays each for what it is.</p></div>
-    <div class="card"><h3>A free race every day</h3><p>One full selection with the
-      complete reasoning, free to everyone, every day. Judge us on it.</p></div>
-  </div>
-</div></section>
-
-<section id="free" style="padding-top:0"><div class="wrap">
-  <div class="kicker">Free race of the day</div>
-  <h2>Don't take our word for it.</h2>
-  <div class="free" style="margin-top:20px" id="freeRace">
-    <span class="tag">TODAY'S FREE RACE</span>
-    <p class="muted">Loading today's free race…</p>
-  </div>
-</div></section>
-
-<section style="padding-top:0"><div class="wrap">
-  <div class="kicker">This week's board</div>
-  <h2>The collects that made the week.</h2>
-  <div class="card" style="margin-top:20px" id="weekWins">
-    <p class="muted">Loading…</p>
-  </div>
-</div></section>
-
-<section id="join" style="padding-top:0"><div class="wrap">
-  <div class="kicker">Membership</div>
-  <h2 style="text-align:center">Simple price. Everything included.</h2>
-  <div class="price-box" style="margin-top:24px">
-    <div class="p">$25<span class="per"> / week</span></div>
-    <ul>
-      <li>Every meeting, every race, NZ &amp; Australia</li>
-      <li>Top 5 board + best bets, ready at midnight</li>
-      <li>Plain-English reasons on every pick</li>
-      <li>Trifecta &amp; first-four plays</li>
-      <li>Live results, dividends and the honesty scoreboard</li>
-      <li>The Engine's Blackbook</li>
-      <li>Cancel any time</li>
-    </ul>
-    <p class="founding" style="margin-bottom:14px">Doors open 1 December — founding members get their
-      <b>first month free</b>.</p>
-    <form id="joinForm" novalidate>
-      <input type="text" name="first_name" placeholder="First name" required maxlength="60" autocomplete="given-name" />
-      <input type="email" name="email" placeholder="Email" required autocomplete="email" />
-      <select name="region" aria-label="Region">
-        <option value="">Region (optional)</option>
-        <option>Northland</option><option>Auckland</option><option>Waikato</option>
-        <option>Bay of Plenty</option><option>Gisborne</option><option>Hawke's Bay</option>
-        <option>Taranaki</option><option>Manawatū-Whanganui</option><option>Wellington</option>
-        <option>Tasman</option><option>Nelson</option><option>Marlborough</option>
-        <option>West Coast</option><option>Canterbury</option><option>Otago</option>
-        <option>Southland</option><option>Australia</option><option>Other</option>
-      </select>
-      <label class="ck"><input type="checkbox" name="over18" required /><span>I confirm I am 18 or over.</span></label>
-      <label class="ck"><input type="checkbox" name="email_ok" required /><span>Email me racing results and launch news. Unsubscribe any time.</span></label>
-      <input type="text" name="company" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true" />
-      <input type="hidden" name="source" /><input type="hidden" name="campaign" /><input type="hidden" name="refcode" />
-      <button class="btn gold" type="submit" style="width:100%">Claim my free first month</button>
-      <div class="fmini">Free until 1 January. No card required. 18+.</div>
-      <div id="joinErr" class="fmini" style="display:none;color:var(--gold-hi)">Something went wrong — email
-        <a href="mailto:hello@thecollect.nz">hello@thecollect.nz</a> and we'll add you by hand.</div>
-    </form>
-    <div id="joinDone" style="display:none;text-align:left">
-      <h4>You're on the founding list.</h4>
-      <p>Your first month is free from 1 December. Watch your inbox — we publish every result,
-        win or lose.</p>
-      <div style="margin-top:16px;border-top:1px solid rgba(242,234,211,.12);padding-top:14px">
-        <p style="font-size:14px;color:var(--gold-hi);font-weight:700;margin:0 0 6px">Want a second month free?</p>
-        <p class="muted" style="font-size:13px;margin:0 0 10px">Send this link to two mates who follow the racing —
-          if they both join the founding list, your second month is on us too.</p>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-          <input id="refLink" readonly aria-label="Your referral link"
-            style="flex:1;min-width:180px;padding:10px 12px;border-radius:9px;border:1px solid rgba(242,234,211,.22);background:rgba(14,18,23,.55);color:var(--paper);font-size:13px" />
-          <button type="button" id="refCopy" class="btn ghost small">Copy link</button>
+<!-- FREE RACE -->
+<section id="free">
+  <div class="wrap">
+    <div class="sec-head"><div class="eyebrow">Free race of the day</div><h2>Don't take our word for it.</h2><p>One best-bet race, opened to everyone — the full selection and the reasoning behind it.</p></div>
+    <div class="race" style="margin-top:28px" id="freeRace">
+      <div class="race-media">
+        <div class="badge">FREE</div>
+        <div class="play"><svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"/></svg></div>
+      </div>
+      <div class="race-body">
+        <h3 class="track">Today's free race <span class="green" style="font-size:14px;font-weight:700">• live</span></h3>
+        <div class="meta">Loading today's free race…</div>
+        <div class="pick">
+          <div class="star"><svg width="18" height="18" viewBox="0 0 24 24" fill="#D4AF37"><path d="m12 2 3 6.9 7.6.6-5.8 5 1.8 7.4L12 18l-6.4 3.9 1.8-7.4-5.8-5 7.6-.6z"/></svg></div>
+          <div><div class="no">Free selection</div><div class="why">The full pick and reasoning go up with the morning card.</div></div>
         </div>
-        <div style="margin-top:10px;font-size:13px">
-          Share: <a id="refWa" target="_blank" rel="noopener">WhatsApp</a> ·
-          <a id="refFb" target="_blank" rel="noopener">Facebook</a>
-        </div>
+        <a class="race-link" href="#join">See full reasoning &amp; today's Top&nbsp;5 →</a>
       </div>
     </div>
-    <div class="muted" style="margin-top:16px">Already have an invite code?
-      <a href="app/">Open the app</a></div>
   </div>
-</div></section>
+</section>
 
-<section style="padding-top:0"><div class="wrap">
-  <div class="kicker">Questions</div>
-  <h2>Fair questions, straight answers.</h2>
-  <div style="margin-top:14px">
-    <details><summary>What exactly do I get each day?</summary>
-      <p>The full day's card for NZ and Australia: our Top 5 win bets, every race's pick
-      with the reasoning in plain punter English, exotic plays where the race shape suits,
-      and live results with dividends as they settle. Picks are on the app from midnight
-      and stay fresh to a minute before each jump.</p></details>
-    <details><summary>What's your strike rate, honestly?</summary>
-      <p>It lives on the scoreboard in the app, updated every day — typically around
-      30% winners on top picks, with the AU board carrying the win value lately. We
-      publish the losing days at the same size as the winning ones, which is exactly
-      why you can trust the winning ones.</p></details>
-    <details><summary>How do I know the results aren't massaged?</summary>
-      <p>The pick that counts is the one published before the race jumped — and that's
-      the one the scoreboard settles against. Our engine keeps an internal audit that
-      reconciles every published pick against every result, and races lock permanently
-      the moment they've run.</p></details>
-    <details><summary>Is this betting advice?</summary>
-      <p>No. Our selections are opinions based on evidence — not guarantees and not
-      financial advice. Racing involves risk. Set a budget, stick to it, and never stake
-      more than you can afford to lose.</p></details>
-    <details><summary>Can I cancel whenever I want?</summary>
-      <p>Yes. No contracts, no minimum term, no hoops. If we're not earning your $25 a
-      week, you shouldn't be paying it.</p></details>
-    <details><summary>Who's behind The Collect?</summary>
-      <p>The Collect Limited, New Zealand — two partners: one who built the engine, one
-      who spent decades doing the form the hard way. The engine is the automation of
-      that craft, tested against nearly two thousand settled races before a single pick
-      went public.</p></details>
+<!-- WHY THE COLLECT -->
+<section class="why-collect">
+  <div class="wrap">
+    <div class="sec-head"><div class="eyebrow">Why The Collect</div><h2>No hype merchants. Just arithmetic.</h2><p>Everything we do is built to be checked. The scoreboard is the whole pitch.</p></div>
+    <div class="features">
+      <div class="feat"><div class="fi"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 3 4 6v5c0 5 3.4 8.4 8 10 4.6-1.6 8-5 8-10V6l-8-3z" stroke="#D4AF37" stroke-width="1.7"/><path d="m9 12 2 2 4-4" stroke="#D4AF37" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></div><h3>Honest scoreboard</h3><p>Every result published, win or lose. No cherry-picking, ever.</p></div>
+      <div class="feat"><div class="fi"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M5 12a7 7 0 0 1 14 0M8.5 12a3.5 3.5 0 0 1 7 0M12 12h.01" stroke="#D4AF37" stroke-width="1.7" stroke-linecap="round"/></svg></div><h3>Live results &amp; dividends</h3><p>Prices and payouts as they settle — not screenshots after the fact.</p></div>
+      <div class="feat"><div class="fi"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#D4AF37" stroke-width="1.7"/><path d="M12 7v5l3 2" stroke="#D4AF37" stroke-width="1.7" stroke-linecap="round"/></svg></div><h3>Locked overnight</h3><p>Picks publish after midnight and never change — so we can't quietly swap one.</p></div>
+      <div class="feat"><div class="fi"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4 5a2 2 0 0 1 2-2h12v18H6a2 2 0 0 1-2-2V5z" stroke="#D4AF37" stroke-width="1.7"/><path d="M8 7h7M8 11h7" stroke="#D4AF37" stroke-width="1.7" stroke-linecap="round"/></svg></div><h3>The engine's blackbook</h3><p>Horses to follow, flagged by the model before the crowd catches on.</p></div>
+      <div class="feat"><div class="fi"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 21s7-5.5 7-11a7 7 0 1 0-14 0c0 5.5 7 11 7 11z" stroke="#D4AF37" stroke-width="1.7"/><circle cx="12" cy="10" r="2.4" stroke="#D4AF37" stroke-width="1.7"/></svg></div><h3>Every meeting, NZ &amp; AU</h3><p>Full coverage across both countries — every card, every day.</p></div>
+      <div class="feat"><div class="fi"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="3" y="8" width="18" height="13" rx="2" stroke="#D4AF37" stroke-width="1.7"/><path d="M12 8v13M3 12h18M12 8c-2-4-6-3-6-1s4 1 6 1zM12 8c2-4 6-3 6-1s-4 1-6 1z" stroke="#D4AF37" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></div><h3>A free race, daily</h3><p>Full selection and reasoning, free every day — taste before you join.</p></div>
+    </div>
   </div>
-</div></section>
+</section>
 
-<footer><div class="wrap">
-  <div class="links">
-    <a href="terms.html">Terms</a><a href="privacy.html">Privacy</a>
-    <a href="responsible.html">Responsible gambling</a>
-    <a href="mailto:hello@thecollect.nz">hello@thecollect.nz</a>
+<!-- REPEAT CTA -->
+<div class="wrap">
+  <div class="cta-band">
+    <div><h3>Ready to see tomorrow's card?</h3><p>Founding members get their first month free. Cancel any time. R18.</p></div>
+    <a class="btn btn-primary btn-lg" href="#join">Get first month free →</a>
   </div>
-  <div><span class="r18">R18</span> Please gamble responsibly. Our selections are opinions
-    based on evidence — not guarantees. In NZ: Gambling Helpline 0800 654 655.
-    In Australia: Gambling Help 1800 858 858.</div>
-  <div style="margin-top:10px">© The Collect Ltd — thecollect.nz</div>
-</div></footer>
+</div>
 
+<!-- HOW IT WORKS -->
+<section id="how">
+  <div class="wrap">
+    <div class="sec-head"><div class="eyebrow">How it works</div><h2>A machine that does the form. Honestly.</h2></div>
+    <div class="steps">
+      <div class="step"><div class="n">01</div><h3>The engine rates every runner</h3><p>Around thirty evidence checks per horse — class, form, track &amp; distance, speed map, track bias, sectionals. Locked before the market is looked at, so numbers are never bent to fit the odds.</p></div>
+      <div class="step"><div class="n">02</div><h3>Your picks are ready at midnight</h3><p>The full day: the Top 5 board, every race's pick with plain-English reasons, trifecta and first-four plays. Published overnight and locked — what's there at dawn is the final word, never swapped later.</p></div>
+      <div class="step"><div class="n">03</div><h3>Results go up the same night</h3><p>Every result and dividend, posted win or lose. If we're good, you'll see it. If we have a bad day, you'll see that too — at full size.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- THIS WEEK'S BOARD -->
+<section style="padding-top:0">
+  <div class="wrap">
+    <div class="sec-head"><div class="eyebrow">This week's board</div><h2>The collects that made the week.</h2></div>
+    <div class="board" id="weekWins"><p class="muted">Loading this week's collects…</p></div>
+  </div>
+</section>
+
+<!-- JOIN / MEMBERSHIP -->
+<section id="join">
+  <div class="wrap">
+    <div class="sec-head"><div class="eyebrow">Membership</div><h2>Simple price. Everything included.</h2></div>
+    <div class="join-wrap" style="margin-top:26px">
+      <div class="join-pitch">
+        <div class="price">$25 <small>/ week — everything included</small></div>
+        <ul>
+          <li>Every meeting, every race, NZ &amp; Australia</li>
+          <li>Top 5 board + best bets, ready at midnight</li>
+          <li>Plain-English reasons on every pick</li>
+          <li>Trifecta &amp; first-four plays</li>
+          <li>Live results, dividends and the honesty scoreboard</li>
+          <li>The Engine's Blackbook</li>
+          <li>$25/week, charged weekly in advance until you cancel</li>
+        </ul>
+      </div>
+      <div class="join-box">
+        <h3>Claim your founding spot</h3>
+        <p class="founding">Doors open 1 December — founding members get their first month free.</p>
+        <form id="joinForm" novalidate>
+          <input type="text" name="first_name" placeholder="First name" required maxlength="60" autocomplete="given-name" />
+          <input type="email" name="email" placeholder="Email" required autocomplete="email" />
+          <select name="region" aria-label="Region">
+            <option value="">Region (optional)</option>
+            <option>Northland</option><option>Auckland</option><option>Waikato</option>
+            <option>Bay of Plenty</option><option>Gisborne</option><option>Hawke's Bay</option>
+            <option>Taranaki</option><option>Manawatū-Whanganui</option><option>Wellington</option>
+            <option>Tasman</option><option>Nelson</option><option>Marlborough</option>
+            <option>West Coast</option><option>Canterbury</option><option>Otago</option>
+            <option>Southland</option><option>Australia</option><option>Other</option>
+          </select>
+          <label class="ck"><input type="checkbox" name="over18" required /><span>I confirm I am 18 or over.</span></label>
+          <label class="ck"><input type="checkbox" name="terms_ok" required /><span>I agree to the <a href="terms.html" target="_blank" rel="noopener">Terms &amp; Conditions</a> and <a href="privacy.html" target="_blank" rel="noopener">Privacy Policy</a>.</span></label>
+          <label class="ck"><input type="checkbox" name="email_ok" required /><span>Email me racing results and launch news. Unsubscribe any time.</span></label>
+          <input type="text" name="company" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true" />
+          <input type="hidden" name="source" /><input type="hidden" name="campaign" /><input type="hidden" name="refcode" />
+          <button class="btn btn-primary" type="submit" style="width:100%;justify-content:center">Get first month free</button>
+          <div class="fmini">First month free, from the day you start. No card required now. Then $25 per week, charged weekly in advance until you cancel. Cancel any time in your account. 18+.</div>
+          <div id="joinErr" class="fmini" style="display:none;color:var(--green)">Something went wrong — email
+            <a href="mailto:hello@thecollect.nz" style="color:var(--green)">hello@thecollect.nz</a> and we'll add you by hand.</div>
+        </form>
+        <div id="joinDone" style="display:none">
+          <h4>You're on the founding list.</h4>
+          <p>Your first month is free from 1 December. Watch your inbox — we publish every result, win or lose.</p>
+          <div style="margin-top:16px;border-top:1px solid var(--line);padding-top:14px">
+            <p style="font-size:14px;color:var(--green);font-weight:700;margin:0 0 6px">Want a second month free?</p>
+            <p class="muted" style="font-size:13px;margin:0 0 10px">Send this link to two mates who follow the racing — if they both join the founding list, your second month is on us too.</p>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+              <input id="refLink" readonly aria-label="Your referral link"
+                style="flex:1;min-width:180px;padding:10px 12px;border-radius:9px;border:1px solid var(--line-2);background:rgba(5,8,6,.6);color:var(--text);font-size:13px" />
+              <button type="button" id="refCopy" class="btn btn-ghost" style="padding:9px 16px;font-size:13.5px">Copy link</button>
+            </div>
+            <div style="margin-top:10px;font-size:13px">
+              Share: <a id="refWa" target="_blank" rel="noopener" style="color:var(--green)">WhatsApp</a> ·
+              <a id="refFb" target="_blank" rel="noopener" style="color:var(--green)">Facebook</a>
+            </div>
+          </div>
+        </div>
+        <div class="muted" style="margin-top:16px;font-size:13px">Already have an invite code? <a href="app/" style="color:var(--green)">Open the app</a></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="faq" id="faq" style="padding-top:0">
+  <div class="wrap">
+    <div class="sec-head"><div class="eyebrow">Questions</div><h2>Fair questions, straight answers.</h2></div>
+    <div style="margin-top:14px">
+      <details><summary>What exactly do I get each day?</summary>
+        <p>The full day's card for NZ and Australia: our Top 5 win bets, every race's pick with the reasoning in plain punter English, exotic plays where the race shape suits, and live results with dividends as they settle. Picks are on the app from midnight and stay locked — they don't change before the jump.</p></details>
+      <details><summary>What's your strike rate, honestly?</summary>
+        <p>It lives on the scoreboard in the app and on our <a href="results.html">public results page</a>, updated every day. We publish the losing days at the same size as the winning ones, which is exactly why you can trust the winning ones.</p></details>
+      <details><summary>How do I know the results aren't massaged?</summary>
+        <p>The pick that counts is the one published before the race jumped — and that's the one the scoreboard settles against. Our engine keeps an internal audit that reconciles every published pick against every result, and races lock permanently the moment they've run.</p></details>
+      <details><summary>Is this betting advice?</summary>
+        <p>No. Our selections are opinions based on evidence — not guarantees and not financial advice. Racing involves risk. Set a budget, stick to it, and never stake more than you can afford to lose.</p></details>
+      <details><summary>Can I cancel whenever I want?</summary>
+        <p>Yes. No contracts, no minimum term, no hoops. If we're not earning your $25 a week, you shouldn't be paying it.</p></details>
+      <details><summary>Who's behind The Collect?</summary>
+        <p>The Collect Limited, New Zealand — two partners: one who built the engine, one who spent decades doing the form the hard way. The engine is the automation of that craft, tested against nearly two thousand settled races before a single pick went public.</p></details>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="wrap foot">
+    <div>
+      <div class="brand">
+        <img src="logo.png" alt="The Collect" />
+        <div class="bt"><b>THE COLLECT</b><span>Racing picks <span class="dot">proven</span> in public</span></div>
+      </div>
+      <div class="r18">🔞 The Collect is not a bookmaker and takes no bets. Gamble responsibly · R18 · NZ 0800 654 655 · AU 1800 858 858</div>
+    </div>
+    <div class="cols">
+      <div class="col"><b>Product</b><a href="results.html">Results</a><a href="#how">How it works</a><a href="#free">Free race</a><a href="#join">Membership</a></div>
+      <div class="col"><b>Company</b><a href="#faq">FAQ</a><a href="mailto:hello@thecollect.nz">Contact</a></div>
+      <div class="col"><b>Legal</b><a href="terms.html">Terms</a><a href="privacy.html">Privacy</a><a href="responsible.html">Responsible gambling</a><a href="refunds.html">Refunds</a></div>
+    </div>
+  </div>
+  <div class="wrap" style="margin-top:28px;font-size:12.5px;color:var(--muted-2)">© 2026 The Collect Ltd — thecollect.nz · Selections are opinions based on evidence, not financial advice. Past results do not guarantee future outcomes.</div>
+</footer>
+
+<!-- live data: proof strip, free race, week winners -->
 <script>
 (async function(){
   try{
@@ -357,54 +430,45 @@
       document.getElementById('pWins').textContent = w.wins;
       document.getElementById('pStrike').textContent = (w.win_pct||0).toFixed(1) + '%';
       const best = (w.best && w.best[0]) ? w.best[0] : null;
-      document.getElementById('pBest').textContent =
-        best ? '$' + Math.round(best.collect) : '—';
+      document.getElementById('pBest').textContent = (best && best.div != null) ? '$' + (+best.div).toFixed(2) : '—';
       let upd = '';
-      try {
-        upd = new Date(d.generated_at).toLocaleTimeString([],
-              {hour:'numeric', minute:'2-digit'});
-      } catch(e){}
+      try { upd = new Date(d.generated_at).toLocaleTimeString([], {hour:'numeric', minute:'2-digit'}); } catch(e){}
       document.getElementById('proofNote').textContent =
-        'live from the engine — last 7 days, ' + w.races + ' races' +
-        (upd ? ', updated ' + upd : '');
+        'Live from the engine — last 7 days, ' + w.races + ' races' + (upd ? ', updated ' + upd : '');
     }
-    // free race
+    // free race — rendered in the direction-C card
     const fr = d.free_race;
     if (fr && fr.race){
       const race = fr.race, pick = race.pick || {};
-      let h = '<span class="tag">TODAY\'S FREE RACE</span>';
-      h += '<div class="race-head"><b>' + fr.track + ' ' + race.race_no +
-           (race.race_name ? ' · ' + race.race_name : '') + '</b>' +
-           '<span class="muted">' + (race.distance||'') +
-           (race.start_time ? ' · jumps ' + race.start_time.slice(0,5) : '') + '</span></div>';
-      h += '<div class="pick-line">#' + pick.number + ' ' + pick.horse + '</div>';
-      if (race.verdict) h += '<p class="why"><b>' + race.verdict + '</b></p>';
-      if (race.why) h += '<p class="why" style="margin-top:8px">' + race.why + '</p>';
-      h += '<p class="muted" style="margin-top:14px">Members get this for every race, ' +
-           'every day — plus the Top 5 board and the exotic plays.</p>';
-      document.getElementById('freeRace').innerHTML = h;
-    } else {
-      document.getElementById('freeRace').innerHTML =
-        '<span class="tag">FREE RACE</span><p class="why">Today\'s free race goes up ' +
-        'with the morning picks — check back after midnight.</p>';
+      let media = '<div class="race-media"><div class="badge">FREE</div>' +
+        '<div class="play"><svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"/></svg></div></div>';
+      let body = '<div class="race-body">' +
+        '<h3 class="track">' + fr.track + ' ' + race.race_no +
+          (race.distance ? ' <span class="green" style="font-size:14px;font-weight:700">• ' + race.distance + '</span>' : '') + '</h3>' +
+        '<div class="meta">' + (race.race_name ? race.race_name : '') +
+          (race.start_time ? ' · Jumps ' + race.start_time.slice(0,5) : '') + '</div>' +
+        '<div class="pick"><div class="star"><svg width="18" height="18" viewBox="0 0 24 24" fill="#D4AF37"><path d="m12 2 3 6.9 7.6.6-5.8 5 1.8 7.4L12 18l-6.4 3.9 1.8-7.4-5.8-5 7.6-.6z"/></svg></div>' +
+          '<div><div class="no">#' + pick.number + ' ' + pick.horse + '</div>' +
+          '<div class="why">' + (race.verdict ? race.verdict : 'Best bet — our evidence model and the market agree.') + '</div></div></div>';
+      if (race.why) body += '<p class="why-text">' + race.why + '</p>';
+      body += '<a class="race-link" href="#join">See full reasoning &amp; today\'s Top 5 →</a></div>';
+      document.getElementById('freeRace').innerHTML = media + body;
     }
     // week winners
     if (w.best && w.best.length){
       let h = '';
       w.best.slice(0,5).forEach(b => {
-        h += '<div class="win-row"><span>' + b.race + ' — <b>' + b.horse + '</b>' +
-             ' <span class="muted">won at $' + (b.price||0).toFixed(2) + '</span></span>' +
-             '<span class="c">$' + b.collect.toFixed(2) + ' collect</span></div>';
+        h += '<div class="win-row"><span>' + b.race + ' — <b>' + b.horse + '</b></span>' +
+             (b.div != null ? '<span class="c">paid $' + (+b.div).toFixed(2) + '</span>' : '') + '</div>';
       });
-      h += '<p class="muted" style="margin-top:10px">Collects from our published ' +
-           'staking plan. Every one was published before the jump — and every loser ' +
-           'is on the scoreboard too.</p>';
+      h += '<p class="muted" style="margin-top:12px;font-size:13px">Every winner above was published before the jump — and every loser is on the scoreboard too. Prices shown are the TAB win dividend.</p>';
       document.getElementById('weekWins').innerHTML = h;
     }
   } catch(e){ /* static fallbacks stay */ }
 })();
 </script>
 
+<!-- founding signup -->
 <script>
 (function(){
   var form = document.getElementById('joinForm');
@@ -424,17 +488,18 @@
     btn.disabled = true; btn.textContent = 'Adding you…';
     var data = {
       first_name: form.first_name.value.trim(),
-      email: form.email.value.trim(),
+      email: form.email.value.trim().toLowerCase(),
       region: form.region.value,
       over18: form.over18.checked,
       email_ok: form.email_ok.checked,
+      terms_ok: form.terms_ok.checked,
       source: form.source.value, campaign: form.campaign.value, refcode: form.refcode.value
     };
     fetch(ENDPOINT, { method:'POST', mode:'no-cors',
       headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify(data) })
       .then(function(){ show(); })
       .catch(function(){
-        btn.disabled=false; btn.textContent='Claim my free first month';
+        btn.disabled=false; btn.textContent='Get first month free';
         document.getElementById('joinErr').style.display='block';
       });
   });
@@ -470,19 +535,40 @@
   }
 })();
 </script>
+
+<!-- countdown -->
 <script>
 (function(){
   var el = document.getElementById('countdown');
   if(!el) return;
-  var launch = new Date(2026, 11, 1);   // 1 December 2026, local
+  // "days to go" is anchored to the NZ calendar date (Pacific/Auckland) so every
+  // viewer sees the same count regardless of their own timezone.
+  function nzToday(){
+    try { return new Date().toLocaleDateString('en-CA', { timeZone: 'Pacific/Auckland' }); }
+    catch(e){ return new Date().toISOString().slice(0,10); }
+  }
+  var launch = new Date('2026-12-01T12:00:00Z');
   function tick(){
-    var days = Math.ceil((launch - new Date()) / 86400000);
-    if(days > 1) el.innerHTML = 'Doors open 1 December — <b>' + days + '</b> days to go. Founding members join free.';
-    else if(days === 1) el.innerHTML = 'Doors open <b>tomorrow</b> — last call for founding members.';
-    else if(days === 0) el.innerHTML = '<b>Doors are open.</b> Welcome to The Collect.';
-    else el.innerHTML = '';
+    var days = Math.round((launch - new Date(nzToday()+'T12:00:00Z')) / 86400000);
+    if(days > 1) el.innerHTML = '⏳ Doors open 1 December — <b>' + days + '</b> days to go';
+    else if(days === 1) el.innerHTML = '⏳ Doors open <b>tomorrow</b> — last call for founding members';
+    else if(days === 0) el.innerHTML = '<b>Doors are open.</b> Welcome to The Collect';
+    else el.style.display = 'none';
   }
   tick();
+})();
+</script>
+
+<!-- mobile menu -->
+<script>
+(function(){
+  var b = document.querySelector('.menu-btn'), links = document.querySelector('nav.links');
+  if(!b || !links) return;
+  b.addEventListener('click', function(){
+    var open = links.style.display === 'flex';
+    links.style.display = open ? 'none' : 'flex';
+    links.style.cssText += open ? '' : ';position:absolute;top:60px;left:0;right:0;flex-direction:column;background:var(--ink-2);padding:16px 20px;border-bottom:1px solid var(--line);gap:16px';
+  });
 })();
 </script>
 </body>

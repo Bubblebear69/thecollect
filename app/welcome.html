@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Welcome to The Collect</title>
+<link rel="icon" type="image/svg+xml" href="icon.svg" />
+<style>
+  :root{--ink:#050806;--surface:#0f1b13;--line:rgba(242,234,211,.12);
+        --turf:#31C47C;--turf-dim:#3DBE7A;--gold:#D4AF37;--paper:#F2EAD3;--dim:rgba(242,234,211,.70);--faint:rgba(242,234,211,.45)}
+  *{box-sizing:border-box}
+  body{margin:0;min-height:100vh;background:radial-gradient(900px 500px at 50% -120px,#15271d 0%,var(--ink) 70%);
+       color:var(--paper);font:16px/1.6 -apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+       display:flex;align-items:center;justify-content:center;padding:28px 20px}
+  .card{max-width:440px;width:100%;text-align:center}
+  .mark{width:64px;height:64px;margin:0 auto 18px;display:flex;align-items:center;justify-content:center;
+        background:var(--surface);border:1px solid var(--line);border-radius:18px}
+  .mark svg{width:40px;height:40px}
+  .tick{width:56px;height:56px;margin:0 auto 18px;border-radius:999px;background:rgba(49,196,124,.16);
+        border:1px solid rgba(49,196,124,.5);display:flex;align-items:center;justify-content:center}
+  h1{font-family:Georgia,"Times New Roman",serif;font-size:30px;font-weight:700;margin:0 0 10px}
+  .lead{color:var(--dim);font-size:16.5px;margin:0 0 8px}
+  .lead b{color:var(--paper)}
+  .meta{color:var(--faint);font-size:13.5px;margin:14px 0 24px}
+  .btn{display:block;width:100%;padding:15px 22px;border-radius:12px;border:0;cursor:pointer;
+       font-weight:800;font-size:16px;text-decoration:none;
+       background:linear-gradient(135deg,#F0D078,var(--gold) 55%,#A07E1E);color:#171204}
+  .btn.ghost{background:transparent;color:var(--paper);border:1px solid rgba(242,234,211,.28);margin-top:12px;font-weight:700}
+  .r18{display:inline-block;border:1px solid var(--faint);border-radius:6px;padding:1px 7px;font-weight:800;margin-right:8px}
+  footer{margin-top:26px;font-size:12px;color:var(--faint);line-height:1.5}
+  a.portal{color:var(--turf);font-size:13.5px;text-decoration:none}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="tick"><svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M20 6 9 17l-5-5" stroke="#31C47C" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+  <h1>You're in.</h1>
+  <p class="lead">Welcome to The Collect. Your <b>first month is free</b> — we won't charge your card until it ends.</p>
+  <p class="lead">After that it's <b>$25 a week</b>, and you can cancel any time.</p>
+  <p class="meta" id="meta">Every pick, every meeting, NZ &amp; Australia — ready at midnight, fresh to the jump.</p>
+  <a class="btn" href="index.html">Open today's picks →</a>
+  <a class="btn ghost" id="manage" href="#" style="display:none">Manage billing</a>
+  <div style="margin-top:16px"><a class="portal" href="results.html">See the public scoreboard</a></div>
+  <footer>
+    <div><span class="r18">18+</span> The Collect is not a bookmaker and takes no bets. Please gamble responsibly. Gambling Helpline 0800 654 655.</div>
+    <div style="margin-top:8px">A receipt is on its way from Stripe. Billing is handled securely by Stripe — we never see your card details.</div>
+  </footer>
+</div>
+<script>
+  // Stripe customer portal link, when Launch provides it (window.COLLECT_PORTAL or ?portal=).
+  (function(){
+    var portal = window.COLLECT_PORTAL || new URLSearchParams(location.search).get('portal') || '';
+    if(portal){ var a=document.getElementById('manage'); a.href=portal; a.style.display='block'; }
+  })();
+</script>
+</body>
+</html>

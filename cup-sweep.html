@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Melbourne Cup sweep sheet — The Collect</title>
+<link rel="icon" type="image/png" href="logo.png" />
+<style>
+  :root{--ink:#0E1217;--green:#C8A13A;--green-hi:#E0B357;--gold:#C8A13A;--paper:#F2EAD3;--line:#e3e3df;--row:#faf9f6}
+  *{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  body{margin:0;background:#e9eae7;color:#14181d;
+       font:13px/1.4 -apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  .sheet{max-width:860px;margin:0 auto;background:#fff;box-shadow:0 14px 48px rgba(0,0,0,.18)}
+
+  /* masthead */
+  .mast{background:linear-gradient(120deg,#0E1217 0%,#0b2a1e 55%,#0B3D2E 100%);color:var(--paper);
+        padding:20px 26px;display:flex;align-items:center;gap:16px;position:relative;overflow:hidden}
+  .mast::after{content:"";position:absolute;right:-60px;top:-40px;width:260px;height:260px;border-radius:50%;
+               background:radial-gradient(circle,rgba(47,181,107,.28),transparent 60%)}
+  .mast img{width:50px;height:50px;border-radius:11px;flex:none;position:relative;z-index:1}
+  .mast .mid{flex:1;position:relative;z-index:1}
+  .mast .eyebrow{font-size:11px;letter-spacing:.22em;font-weight:800;color:var(--gold);text-transform:uppercase}
+  .mast h1{font-size:25px;font-weight:900;letter-spacing:.01em;margin:3px 0 2px}
+  .mast .race{font-size:13px;color:rgba(242,234,211,.82)}
+  .mast .tag{position:relative;z-index:1;flex:none;text-align:center;border:1px solid rgba(200,161,58,.6);
+             border-radius:12px;padding:10px 14px;color:var(--gold);line-height:1.1}
+  .mast .tag b{display:block;font-size:22px;font-weight:900;font-variant-numeric:tabular-nums}
+  .mast .tag span{font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:rgba(242,234,211,.7)}
+
+  /* intro */
+  .intro{padding:14px 26px 6px;display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
+  .intro .lead{font-size:13.5px;color:#30363d;max-width:560px}
+  .intro .lead b{color:#14181d}
+  .intro .meta{font-size:11.5px;color:#7a8089;white-space:nowrap}
+
+  /* table */
+  .tbl{padding:4px 26px 2px}
+  .hrow,.row{display:grid;grid-template-columns:30px 30px 1fr 150px 190px;align-items:center;gap:10px}
+  .hrow{font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:#9aa0a8;font-weight:800;
+        padding:0 10px 6px;border-bottom:2px solid var(--ink)}
+  .hrow .rrt{padding-left:2px}
+  .row{padding:5px 10px;border-bottom:1px solid var(--line);min-height:30px}
+  .row:nth-child(even){background:var(--row)}
+  .row .rk{font-weight:900;font-size:15px;color:var(--green);font-variant-numeric:tabular-nums;text-align:center}
+  .row .no{font-weight:800;color:#5c636b;font-variant-numeric:tabular-nums;text-align:center}
+  .row .hz{font-size:13.5px}
+  .row .hz b{font-weight:700}
+  .row .hz .br{color:#9aa0a8;font-size:11px;font-weight:700;margin-left:7px}
+  .row .star{color:var(--gold);font-weight:900;margin-right:3px}
+  .rt{display:flex;align-items:center;gap:8px}
+  .bar{flex:1;height:8px;border-radius:999px;background:#e9e9e4;overflow:hidden}
+  .bar span{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--green),var(--green-hi))}
+  .rtn{width:26px;text-align:right;font-weight:900;font-size:13px;color:var(--green);font-variant-numeric:tabular-nums}
+  .nm{height:20px;border:1px dashed #c4c4bd;border-radius:6px;background:#fff}
+
+  .row.pick{background:rgba(200,161,58,.08);border-bottom:1px solid rgba(200,161,58,.25)}
+  .row.pick .rk{color:#15713f}
+  .row.scr{color:#aeb3b9}
+  .row.scr .hz b{text-decoration:line-through}
+  .row.scr .bar span{background:#c8ccce}
+  .row.scr .rtn{color:#aeb3b9}
+  .scrtag{font-size:8.5px;font-weight:900;color:#b00;border:1px solid #d79a9a;border-radius:3px;padding:0 4px;margin-left:6px;vertical-align:middle}
+
+  /* footer band */
+  .foot{background:var(--green);color:#eafff2;padding:12px 26px;margin-top:4px;
+        display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+  .foot .slogan{font-weight:900;font-size:14px;letter-spacing:.01em}
+  .foot .right{font-size:11px;color:#d6ffe8;text-align:right}
+  .compliance{padding:9px 26px;font-size:10.5px;color:#6b7179;border-top:1px solid var(--line)}
+  .compliance .r18{border:1px solid #b9bcc1;border-radius:4px;padding:0 5px;font-weight:800;margin-right:6px}
+
+  .printbar{max-width:860px;margin:18px auto 34px;text-align:center}
+  .printbtn{background:var(--green);color:#fff;border:0;border-radius:10px;padding:13px 28px;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 8px 24px rgba(200,161,58,.3)}
+  .back{display:inline-block;margin-left:16px;font-size:13px;color:#15713f;text-decoration:none}
+  @media print{
+    body{background:#fff}
+    .sheet{max-width:none;box-shadow:none}
+    .printbar{display:none}
+    @page{margin:9mm}
+  }
+  @media(max-width:620px){
+    .hrow,.row{grid-template-columns:26px 26px 1fr 96px 110px;gap:7px}
+    .mast{flex-wrap:wrap}
+    .rtn{width:22px}
+  }
+</style>
+</head>
+<body>
+<div class="sheet">
+  <div class="mast">
+    <img src="logo.png" alt="The Collect" />
+    <div class="mid">
+      <div class="eyebrow">The Collect · Powered by the Strategic Logic engine</div>
+      <h1>The Engine's Cup Sweep</h1>
+      <div class="race" id="race">2026 Melbourne Cup · Flemington · Tuesday 3 November · 3200m</div>
+    </div>
+    <div class="tag"><b id="fieldN">24</b><span id="fieldLbl">Runners rated</span></div>
+  </div>
+
+  <div class="intro">
+    <div class="lead" id="lead"><b>Draw a horse, write your name on it, and let the office argue.</b> Every runner ranked 1 to 24 by the engine — the bar shows how strongly we rate each one.</div>
+    <div class="meta" id="meta">Loading the field…</div>
+  </div>
+
+  <div class="tbl">
+    <div class="hrow"><span style="text-align:center">#</span><span style="text-align:center">No</span><span>Horse</span><span class="rrt">Engine rating</span><span>Your name</span></div>
+    <div id="rows"><div class="row"><span class="rk">—</span><span></span><span class="hz">Loading…</span><span></span><span></span></div></div>
+  </div>
+
+  <div class="foot">
+    <div class="slogan">Every pick published. Every result shown. Win or lose.</div>
+    <div class="right">Full card &amp; reasoning: <b>thecollect.nz/cup</b><br/>Every result: <b>thecollect.nz/results</b></div>
+  </div>
+  <div class="compliance"><span class="r18">18+</span> The Collect is not a bookmaker and takes no bets. Please gamble responsibly. Gambling Helpline 0800 654 655. Ratings compare runners within this race only — not a probability and not a prediction.</div>
+</div>
+
+<div class="printbar">
+  <button class="printbtn" onclick="window.print()">Print / Save as PDF</button>
+  <a class="back" href="cup.html">&larr; Back to the card</a>
+</div>
+
+<script>
+(function(){
+  function esc(s){ return String(s==null?'':s).replace(/[&<>]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c]; }); }
+  function clamp(n){ n=Number(n)||0; return n<0?0:(n>100?100:n); }
+  fetch('cup.json',{cache:'no-store'}).then(function(r){ return r.json(); }).then(function(d){
+    var ev = d.event||{};
+    var unrated = !((d.runners||[]).some(function(x){ return x.rating != null; }));
+    var ran = (d.status === 'result' || d.status === 'abandoned');
+    // a void race (abandoned, or our pick scratched) carries no live pick — drop the star
+    var _sr = d.result||{}, _sp = d.pick||{};
+    var voided = (d.void === true) || (_sp.void === true) || (d.status === 'abandoned') || (_sr.our_pick_outcome === 'scratched') || (_sr.our_pick_outcome === 'abandoned');
+    if(ev.name) document.getElementById('race').textContent =
+      ev.name + ' · ' + (ev.track||'') + (ev.distance?(' · '+ev.distance):'');
+    var runners = (d.runners||[]).slice().sort(function(a,b){ return a.rank-b.rank; });
+    var scratched = runners.filter(function(x){ return x.scratched; }).length;
+    if(!runners.length){
+      document.getElementById('fieldN').textContent = '—';
+      document.getElementById('meta').textContent = 'Field not yet declared — the final 24 come out about Sat 31 October.';
+      document.getElementById('rows').innerHTML = '<div class="row"><span class="rk">—</span><span></span><span class="hz">The sweep sheet fills with all 24 the moment the field declares — about Saturday 31 October.</span><span></span><span></span></div>';
+      return;
+    }
+    document.getElementById('fieldN').textContent = unrated ? (ev.field_size!=null?ev.field_size:(ev.nominations||runners.length)) : (ev.nominations || runners.length);
+    document.getElementById('meta').textContent =
+      (ev.nominations? ev.nominations+' nominated' : runners.length+' runners') +
+      (scratched? ' · '+scratched+' scratched' : '');
+    if(unrated){
+      var _fl=document.getElementById('fieldLbl'); if(_fl) _fl.textContent='In the field';
+      var _ld=document.getElementById('lead'); if(_ld) _ld.innerHTML = ran
+        ? '<b>Draw a horse, write your name on it, and let the office argue.</b> The full field is declared.'
+        : '<b>Draw a horse, write your name on it, and let the office argue.</b> The full field is declared — the engine’s ratings land on Cup morning.';
+      var _rh=document.querySelector('.hrow .rrt'); if(_rh) _rh.textContent='';
+    }
+    document.getElementById('rows').innerHTML = runners.map(function(r){
+      var scr = !!r.scratched, pick = (r.tier==='pick') && !voided;
+      var tag = scr ? '<span class="scrtag">SCR</span>' : '';
+      var star = pick ? '<span class="star">&#9733;</span>' : '';
+      return '<div class="row'+(pick?' pick':'')+(scr?' scr':'')+'">'+
+        '<div class="rk">'+(unrated?'·':(r.rank!=null?r.rank:'·'))+'</div>'+
+        '<div class="no">'+esc(r.number)+'</div>'+
+        '<div class="hz">'+star+'<b>'+esc(r.horse)+'</b>'+tag+'<span class="br">B'+(r.barrier!=null?r.barrier:'–')+'</span></div>'+
+        (unrated ? '<div class="rt"></div>'
+                  : '<div class="rt"><div class="bar"><span style="width:'+clamp(r.rating)+'%"></span></div>'+
+                    '<div class="rtn">'+(r.rating!=null?Math.round(r.rating):'')+'</div></div>')+
+        '<div class="nm"></div>'+
+      '</div>';
+    }).join('');
+  }).catch(function(){
+    document.getElementById('rows').innerHTML = '<div class="row"><span class="rk">—</span><span></span><span class="hz">The field is loading — try a refresh.</span><span></span><span></span></div>';
+    document.getElementById('meta').textContent='';
+  });
+})();
+</script>
+</body>
+</html>
