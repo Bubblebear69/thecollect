@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="referrer" content="no-referrer" />
 <meta name="theme-color" content="#050806" media="(prefers-color-scheme: dark)" />
 <meta name="theme-color" content="#EEF1EC" media="(prefers-color-scheme: light)" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -652,7 +653,7 @@ function hasAccess(){ return localStorage.getItem(LS.access) === 'yes'; }
 // Stamped by the publisher at deploy time. When data.json carries a NEWER
 // shell version than the code that's running, the app reloads itself once —
 // so an always-open home-screen app picks up new features without sign-outs.
-const SHELL_VERSION = "29139c80ee88";
+const SHELL_VERSION = "4c0b8a0f2c99";
 
 // The "race day" the app shows is referenced to ONE zone, so every viewer —
 // NZ, Perth, Sydney, anywhere — agrees with the engine on what "today" is,
@@ -765,16 +766,15 @@ function bbTodayIndex(){
 const bbStar = (horse) =>
   `<button class="bb-btn ${bbHas(horse)?'on':''}" data-bb="${esc(horse)}" aria-label="Blackbook">★</button>`;
 
-// A subscriber can be sent a one-tap link — ?token=… (and optionally ?api=…) —
-// which signs them in and then drops the query so the code isn't left in the bar.
-(function absorbLink(){
-  try {
-    const q = new URLSearchParams(location.search);
-    let touched = false;
-    if (q.get('api'))   { localStorage.setItem(LS.api,   q.get('api').trim());   touched = true; }
-    if (q.get('token')) { localStorage.setItem(LS.token, q.get('token').trim()); touched = true; }
-    if (touched) history.replaceState(null, '', location.pathname);
-  } catch (e) { /* ignore */ }
+// Sign-in NEVER comes from the URL. A `?api=` / `?token=` in the query — on our own domain —
+// could repoint the app at an attacker host and exfiltrate the member's stored Bearer on every
+// /picks call (it persists in localStorage, with nothing to tip the member off). The sanctioned
+// paths are the Settings field (manual/dev) and — once the auth Worker is live — a single-use
+// `?code=` traded via POST /auth/exchange, so a credential never rides in a URL (thecollect.nz/app
+// is served by a third party whose request logs we don't own). Strip any stray query defensively.
+(function stripQuery(){
+  try { if (location.search) history.replaceState(null, '', location.pathname + location.hash); }
+  catch (e) { /* ignore */ }
 })();
 
 const state = {
@@ -1671,23 +1671,15 @@ function toggleTheme(){
 /* -------------------------------------------------- boot + routing */
 /* ---- §3 subscription paywall display.
    BUILD computes { access, plan, current_period_end } server-side from KV and the
-   front-end only READS it (never computes the gate). Live: window.COLLECT_AUTH.
-   Dev/testing: ?auth=free|trialing|active|pastdue. No status present = legacy
-   invite-code behaviour, so the live app is undisturbed until the backend wires it. ---- */
+   front-end only READS it (never computes the gate). Live: window.COLLECT_AUTH /
+   COLLECT_AUTH_URL. No status present = legacy invite-code behaviour, so the live app is
+   undisturbed until the backend wires it. (Dev ?auth= URL stub removed — #108.) ---- */
 var _auth = { loaded:false, status:null };
 async function loadAuthStatus(){
   if (_auth.loaded) return _auth.status;
   _auth.loaded = true;
-  try {
-    var q = new URLSearchParams(location.search).get('auth');   // dev/testing stub
-    if (q){
-      var now = Date.now(), day = 86400000, iso = function(ms){ return new Date(ms).toISOString(); };
-      if (q === 'trialing') { _auth.status = { access:true,  plan:'trialing', current_period_end: iso(now + 8*day) }; return _auth.status; }
-      if (q === 'active')   { _auth.status = { access:true,  plan:'active',   current_period_end: iso(now + 20*day) }; return _auth.status; }
-      if (q === 'pastdue')  { _auth.status = { access:true,  plan:'past_due', current_period_end: iso(now - 1*day) }; return _auth.status; }
-      if (q === 'free')     { _auth.status = { access:false, plan:'none',     current_period_end: null }; return _auth.status; }
-    }
-  } catch(e){}
+  // Dev ?auth= stub removed (#108): it set access:true straight from the URL. Auth status comes
+  // only from the server (COLLECT_AUTH_URL) or an explicit push override — never a query param.
   if (window.COLLECT_AUTH && typeof window.COLLECT_AUTH === 'object'){ _auth.status = window.COLLECT_AUTH; return _auth.status; }  // optional push override
   var url = window.COLLECT_AUTH_URL;   // BUILD's fetch endpoint — set ~3 Nov (stub), KV-backed ~10 Nov
   if (url){

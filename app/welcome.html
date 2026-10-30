@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="referrer" content="no-referrer" />
 <title>Welcome to The Collect</title>
 <link rel="icon" type="image/svg+xml" href="icon.svg" />
 <style>
@@ -47,10 +48,14 @@
   </footer>
 </div>
 <script>
-  // Stripe customer portal link, when Launch provides it (window.COLLECT_PORTAL or ?portal=).
+  // "Manage billing" link — ONLY from window.COLLECT_PORTAL (our own global), NEVER from the URL:
+  // a ?portal= value could be javascript:… (steals the stored token on click) or a fake billing
+  // page. Accept only an https billing URL on our own portal host or Stripe's. (#108 security.)
   (function(){
-    var portal = window.COLLECT_PORTAL || new URLSearchParams(location.search).get('portal') || '';
-    if(portal){ var a=document.getElementById('manage'); a.href=portal; a.style.display='block'; }
+    var portal = window.COLLECT_PORTAL || '';
+    if(/^https:\/\/(api\.thecollect\.nz\/billing\/|billing\.stripe\.com\/)/.test(portal)){
+      var a=document.getElementById('manage'); a.href=portal; a.style.display='block';
+    }
   })();
 </script>
 </body>
