@@ -434,7 +434,7 @@
       let upd = '';
       try { upd = new Date(d.generated_at).toLocaleTimeString([], {hour:'numeric', minute:'2-digit'}); } catch(e){}
       document.getElementById('proofNote').textContent =
-        'Live from the engine — last 7 days, ' + w.races + ' races' + (upd ? ', updated ' + upd : '');
+        'Live from the engine — last 7 days, ' + (w.scored != null ? w.scored : w.races) + ' races' + (upd ? ', updated ' + upd : '');
     }
     // free race — rendered in the direction-C card
     const fr = d.free_race;

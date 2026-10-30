@@ -1120,7 +1120,9 @@ async function paintResults(){
       if (pk){
         const won = pk.won, placed = pk.pos && pk.pos <= 3;
         const cls = won ? 'ourpick-won' : (placed ? 'ourpick-plc' : 'ourpick-out');
-        const badge = won ? `WON${pk.div?(' · $'+pk.div.toFixed(2)):''}` :
+        const badge = (r.void || pk.void) ?
+                        (r.void_reason==='abandoned'?'Abandoned, not counted':'Scratched, not counted') :
+                      won ? `WON${pk.div?(' · $'+pk.div.toFixed(2)):''}` :
                       (pk.pos ? ord(pk.pos) : 'unplaced');
         h += `<div class="ourpick ${cls}">
           <span class="op-lab">Our pick</span>
