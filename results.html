@@ -221,12 +221,15 @@
                '<div class="mt">'+esc(b.race)+(when?' · '+when:'')+'</div></div>';
       }).join('');
     }
-    var exo = sb.exotics_got||{}, parts=[];
-    if(exo.trifecta) parts.push(exo.trifecta+' trifecta'+(exo.trifecta>1?'s':'')+' from our top 5 boxed');
-    if(exo.first_four) parts.push(exo.first_four+' first-four'+(exo.first_four>1?'s':'')+' from our top 6 boxed');
     var note='';
-    if(parts.length) note += 'Today alone: <b>'+parts.join('</b> and <b>')+'</b>. ';
-    note += 'Figures shown are the TAB dividend. Every pick above was published before the jump — and every loser is on the scoreboard too.';
+    if(best.length){
+      var exo = sb.exotics_got||{}, parts=[];
+      if(exo.trifecta) parts.push(exo.trifecta+' trifecta'+(exo.trifecta>1?'s':'')+' from our top 5 boxed');
+      if(exo.first_four) parts.push(exo.first_four+' first-four'+(exo.first_four>1?'s':'')+' from our top 6 boxed');
+      if(parts.length) note += 'Today alone: <b>'+parts.join('</b> and <b>')+'</b>. ';
+      // "every pick above" only makes sense when collects are shown above — stay silent when empty.
+      note += 'Figures shown are the TAB dividend. Every pick above was published before the jump — and every loser is on the scoreboard too.';
+    }
     document.getElementById('cnote').innerHTML = note;
   }
 
