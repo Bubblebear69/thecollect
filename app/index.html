@@ -399,6 +399,10 @@
 .badge.pending{ background:rgba(128,128,128,.10); color:var(--faint,#8a94a0); font-weight:600; }
 .badge.void{ background:rgba(128,128,128,.14); color:var(--muted,#9bb0a4); }
 .res-row.voided .res-pick b{ text-decoration:line-through; color:var(--muted,#9bb0a4); }
+/* today's card: a race that won't run (abandoned / transferred meeting) is struck through, not a live pick */
+.r-card.voided{ opacity:.72; }
+.r-card.voided .r-name, .r-card.voided .r-horse{ text-decoration:line-through; color:var(--muted,#9bb0a4); }
+.r-card .void-note{ font-size:12.5px; color:var(--muted,#9bb0a4); margin:6px 0 2px; line-height:1.45; }
 .res-pick{ font-size:13.5px; margin-top:5px; }
 .res-div{ font-size:12px; color:var(--faint,#8a94a0); margin-top:4px; line-height:1.5; }
 .sub-n{ font-size:13px; color:var(--faint,#8a94a0); font-weight:700; }
@@ -653,7 +657,7 @@ function hasAccess(){ return localStorage.getItem(LS.access) === 'yes'; }
 // Stamped by the publisher at deploy time. When data.json carries a NEWER
 // shell version than the code that's running, the app reloads itself once —
 // so an always-open home-screen app picks up new features without sign-outs.
-const SHELL_VERSION = "32844e3bbd5f";
+const SHELL_VERSION = "737434e2fbe9";
 
 // The "race day" the app shows is referenced to ONE zone, so every viewer —
 // NZ, Perth, Sydney, anywhere — agrees with the engine on what "today" is,
@@ -1106,12 +1110,19 @@ function raceCard(r, m){
   const val = !best && isValue(r.verdict);
   const tier = gradeTier(p.confidence);
   const whys = (r.why||[]).slice(0,2);
-  return `<div class="r-card ${best?'best':''}" data-race-no="${esc(r.race_no)}">
+  // Race-level void only (the meeting is abandoned or transferred — #135's void_reason; a
+  // scratched pick is not a void race). Label off void_reason, "Abandoned" when it is absent.
+  const vr = String(r.void_reason||'').toLowerCase();
+  const rvoid = !!(r.abandoned || vr);
+  const vlabel = vr==='transferred' ? 'Transferred' : 'Abandoned';
+  return `<div class="r-card ${best?'best':''}${rvoid?' voided':''}" data-race-no="${esc(r.race_no)}">
     <div class="r-top">
       <span class="r-no">${esc(r.race_no)}</span>
       <span class="r-name">${esc(r.race_name||'')}</span>
+      ${rvoid ? '<span class="badge void">'+vlabel+'</span>' : ''}
       <span class="r-time tnum">${esc(hhmm(r.start_time))}</span>
     </div>
+    ${rvoid ? `<div class="void-note">${vr==='transferred' ? 'This race was transferred — it doesn’t count toward our win, place or exotic rates.' : 'This race was abandoned — it doesn’t count toward our win, place or exotic rates.'}</div>` : ''}
     ${r.data_flag ? `<div class="dflag"><span class="dflag-b">👁 ${esc(r.data_flag.label)}</span><span class="dflag-n">${esc(r.data_flag.note)}</span></div>` : ''}
     <div class="r-runner">
       <div class="saddle tnum">${esc(p.number)}</div>
@@ -1180,7 +1191,7 @@ function renderLanding(){
       <div class="tag">Real winners, picked by the numbers — proven in public, every single day.</div>
     </div>
   </div>`;
-  if (sb.races){
+  if (dayHasScored(sb)){
     h += `<div class="proof">
       <div class="cell"><div class="n tnum">${sb.wins}</div><div class="l">Winners today</div></div>
       <div class="cell"><div class="n tnum">${Math.round(sb.win_pct)}%</div><div class="l">Strike rate today</div></div>
@@ -1460,7 +1471,7 @@ function renderResults(){
     h += legal() + '</div>' + navBar();
     app().innerHTML = h; window.scrollTo(0,0); return;
   }
-  if (sb && sb.races){
+  if (dayHasScored(sb)){
     const t4 = sb.top4 || {}, eg = sb.exotics_got || {};
     h += `<div class="eyebrow">Our top pick</div>
       <div class="tally">
@@ -1503,6 +1514,16 @@ function renderResults(){
 }
 
 /* ------------------------------------------- render: winners */
+// A day has started once a race has been SCORED. A void race — the pick
+// scratched, the meeting abandoned — is resolved but out of every percentage,
+// so it must not switch a scoreboard on: four scratchings before the first
+// jump put "0% Strike rate today" on the landing page (31 Oct 2026). Payloads
+// from before `scored` existed fall back to `races`.
+function dayHasScored(sb){
+  if (!sb) return false;
+  return (sb.scored != null ? sb.scored : sb.races) > 0;
+}
+
 function scoreBlock(sb, label){
   // One day's glory, reusable for Today and Yesterday.
   let h = '';
@@ -1530,7 +1551,7 @@ function scoreBlock(sb, label){
 }
 
 function weekBlock(wk){
-  if (!wk || !wk.races) return '';
+  if (!dayHasScored(wk)) return '';
   let h = `<div class="eyebrow">🏆 This week's best</div>`;
   h += `<div class="tally">
     <div class="cell"><div class="n tnum good">${wk.wins}</div><div class="l">Winners this week</div></div>
@@ -1552,17 +1573,17 @@ function weekBlock(wk){
 
 function renderWinners(){
   const d = state.data, sb = d.scoreboard, y = d.yesterday, wk = d.week;
-  const todayLive = sb && sb.races > 0;
+  const todayLive = dayHasScored(sb);
   let h = topBar();
   h += '<div class="fade">';
   h += `<div class="datehead"><div class="d">Winners</div><div class="c tnum">${esc(prettyDate(d.date))}</div></div>`;
 
   if (todayLive){
     h += `<div class="eyebrow">Today so far</div>` + scoreBlock(sb, "Today's");
-    if (y && y.races) h += `<div class="eyebrow">Yesterday — ${esc(prettyDate(y.date))}</div>` + scoreBlock(y, "Yesterday's");
+    if (dayHasScored(y)) h += `<div class="eyebrow">Yesterday — ${esc(prettyDate(y.date))}</div>` + scoreBlock(y, "Yesterday's");
     h += weekBlock(wk);
   } else {
-    if (y && y.races){
+    if (dayHasScored(y)){
       h += `<div class="eyebrow">Yesterday — ${esc(prettyDate(y.date))}</div>` + scoreBlock(y, "Yesterday's");
     }
     h += weekBlock(wk);
@@ -1589,9 +1610,9 @@ function renderTomorrow(){
   let h = topBar();
   h += '<div class="fade">';
   h += `<div class="datehead"><div class="d">Tomorrow</div><div class="c">Early value</div></div>`;
-  h += `<div class="tmr-note">Our strongest early picks at today's fixed price — get set before the market wakes up. Early prices move; fixed-odds bets refund if your horse scratches.</div>`;
+  h += `<div class="tmr-note">Our strongest early picks at today's fixed price — get set before the market wakes up. Early picks are provisional; the final pick locks at 8am local on race day (8:30am in SA and NT). Early prices move; fixed-odds bets refund if your horse scratches.</div>`;
   if (!tm.length){
-    h += `<div class="banner"><span>🌅</span><div>Tomorrow's early picks land here once the fields and prices are up — usually by early evening.</div></div>`;
+    h += `<div class="banner"><span>🌅</span><div>Tomorrow's early picks are coming soon — today's picks lock at 8am local.</div></div>`;
   } else {
     tm.forEach(t => {
       const when = t.days === 1 ? 'Tomorrow' : `In ${t.days} days`;
