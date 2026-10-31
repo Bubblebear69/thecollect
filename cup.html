@@ -3,11 +3,16 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>The Engine's Cup Card — all 24 runners rated | The Collect</title>
-<meta name="description" content="Every runner in the 2026 Melbourne Cup rated 1 to 24 by the Strategic Logic engine. Free, no signup. The result gets published against this card on Tuesday night, win or lose." />
-<meta property="og:title" content="All 24. Rated." />
-<meta property="og:description" content="The engine's Melbourne Cup card — every runner, rated, with the reasoning. Free. We publish the result against it on Tuesday night." />
-<meta property="og:image" content="https://thecollect.nz/logo.png" />
+<!-- data-tc / tc: markers are stamped by the cup publisher to match the feed state
+     (placeholder / declared / rated / result). The committed defaults below are the
+     SAFE pre-rating wording: they never claim the field is "rated" before the engine
+     rates it on Cup morning, so an unstamped or stamp-failed state still reads true in
+     link previews (which run no JS). og:image stays on logo.png until #77's crop lands. -->
+<title data-tc="cup-title">The Engine's Cup Card — the 2026 Melbourne Cup | The Collect</title>
+<meta name="description" content="Every runner in the 2026 Melbourne Cup, put through the same checks the Strategic Logic engine runs on any race. Free, no signup. The result gets published against this card on Tuesday night, win or lose." />
+<meta property="og:title" data-tc="cup-ogtitle" content="The Engine's Melbourne Cup Card" />
+<meta property="og:description" content="The engine's Melbourne Cup card — every runner, with the reasoning. Free. We publish the result against it on Tuesday night." />
+<meta property="og:image" data-tc="cup-ogimage" content="https://thecollect.nz/logo.png" />
 <meta property="og:url" content="https://thecollect.nz/cup" />
 <meta name="twitter:card" content="summary_large_image" />
 <link rel="icon" type="image/png" href="logo.png" />
@@ -119,6 +124,12 @@
   .rrow.scr .barf{background:var(--off)}
   .scr-tag{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.08em;color:#ff8f8f;border:1px solid rgba(255,143,143,.4);border-radius:999px;padding:2px 8px;margin-left:6px}
 
+  /* emergency — nominated past the field cap; runs only if a starter scratches.
+     Kept in its rated spot (never dropped, never renumbered) and dimmed + tagged. */
+  .rrow.em{opacity:.6}
+  .rrow.em .rk{color:var(--off)}
+  .em-tag{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.06em;color:var(--green-soft);border:1px solid var(--line2);border-radius:999px;padding:2px 8px;margin-left:6px}
+
   /* sweep + cta */
   .band{background:linear-gradient(90deg,#08190f,#061a10);border:1px solid rgba(212,175,55,.3);border-radius:16px;padding:28px 30px;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap}
   .band h3{font-size:22px;font-weight:800;margin:0 0 4px}
@@ -223,7 +234,7 @@
   <div class="band" style="background:radial-gradient(700px 300px at 20% -40px,#102a1c,var(--ink2));border-color:var(--line2)">
     <div>
       <h3>Every runner. Every day. Rated.</h3>
-      <p>The Collect publishes a rating for every runner at every New Zealand and Australian meeting, every day. Doors open 1 December. Anyone on the founding list before then gets their first month free. After that it's $25 a week, and you can cancel any time.</p>
+      <p>The Collect publishes a rating for every runner at every New Zealand and Australian meeting, every day. Doors open 1 December. Anyone on the founding list before then gets their first month free. After that it's A$25 a week in Australia and NZ$31.22 a week in New Zealand, both GST inclusive, and you can cancel any time.</p>
     </div>
     <div style="display:flex;flex-direction:column;gap:10px">
       <a class="btn btn-primary" href="index.html#join">Join the founding list</a>
@@ -244,7 +255,7 @@
 <script>
 (function(){
   var SHARE_URL = 'https://thecollect.nz/cup';
-  var SHARE_TXT = "The engine's Melbourne Cup card — all 24 runners rated. Free.";
+  /*tc:share*/ var SHARE_TXT = "The engine's Melbourne Cup card — every runner, free.";
 
   function esc(s){ return String(s==null?'':s).replace(/[&<>]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c]; }); }
   function price(v){ return (v==null)?'':'$'+Number(v).toFixed(2); }
@@ -278,7 +289,7 @@
     // on any void, a pick row that was not individually struck must not read as a live pick either.
     var dropLive = window.__abandoned || (window.__void && (r.tier==='pick') && !scr);
     var tier = dropLive ? 'outsider' : (r.tier || 'outsider');
-    var cls = 'rrow t-'+tier + (scr?' scr':'');
+    var cls = 'rrow t-'+tier + (scr?' scr':'') + (r.emergency?' em':'');
     var labelCls = tier==='pick'?'pick':(tier==='danger'?'danger':(tier==='chance'?'chance':''));
     var h = '<div class="'+cls+'">';
     h += '<span class="rk">'+(window.__unrated?'·':(r.rank!=null?r.rank:'·'))+'</span>';
@@ -287,6 +298,7 @@
     h +=   '<div class="hz"><span class="no">#'+esc(r.number)+'</span><b>'+esc(r.horse)+'</b>';
     if(scr) h += '<span class="scr-tag">SCRATCHED</span>';
     else if(r.label && !window.__abandoned && !dropLive) h += '<span class="lbl '+labelCls+'">'+esc(r.label)+'</span>';
+    if(r.emergency) h += '<span class="em-tag">EMERGENCY</span>';
     h +=   '</div>';
     var meta = [];
     if(r.barrier!=null) meta.push('Barrier '+r.barrier);
@@ -326,6 +338,14 @@
     catch(e){ return ''; }
   }
 
+  // The engine's own ranked count — how many runners it actually rated (all rated runners,
+  // emergencies included, per Blair Q2's default). Guaranteed >= every shown rank, so we never
+  // print "ranked 28 of 24"; field_cap is the race capacity, NOT the ranked count. (#100 Charter.)
+  function rankedN(d){
+    var rated = (d.runners||[]).filter(function(x){ return x.rating != null; });
+    var mx = rated.reduce(function(m,x){ return (x.rank!=null && x.rank>m) ? x.rank : m; }, 0);
+    return Math.max(rated.length, mx);
+  }
   function renderResult(d){
     var r = d.result || {};
     var pick = d.pick || {};
@@ -360,7 +380,7 @@
     var sp = win.win_div!=null ? ' at $'+Number(win.win_div).toFixed(2) : '';
     document.getElementById('resultLede').innerHTML =
       '<b>'+esc(win.horse)+'</b> won the 2026 Melbourne Cup'+sp+'.' +
-      (rank? ' The engine had it ranked <b>'+rank+'</b> of '+((d.event&&d.event.nominations)||24)+'.' : '');
+      (rank? ' The engine had it ranked <b>'+rank+'</b> of '+rankedN(d)+'.' : '');
     document.getElementById('resultBlock').style.display='block';
   }
 
@@ -379,11 +399,15 @@
     window.__abandoned = (d.status === 'abandoned') || (__vo === 'abandoned') || ((d.void_reason || __vp.void_reason) === 'abandoned');
     window.__void = (d.void === true) || (__vp.void === true) || (__vo === 'scratched') || (__vo === 'abandoned') || window.__abandoned;
     // subtitle: like the hero, only change it once the field is declared; placeholder keeps the signed-off static line
-    try{ if(__hasField){ var _cs=document.getElementById('cardSub'); if(_cs) _cs.textContent = window.__unrated ? (__ran ? 'The declared field, in saddlecloth order.' : 'The declared field, in saddlecloth order — the engine\'s ratings land on Cup morning.') : 'Ranked 1 to 24 on the engine\'s rating. Scroll for the reasoning on each.'; } }catch(e){}
+    try{ if(__hasField){ var _cs=document.getElementById('cardSub'); if(_cs) _cs.textContent = window.__unrated ? (__ran ? 'The declared field, in saddlecloth order.' : 'The declared field, in saddlecloth order — the engine\'s ratings land on Cup morning.') : ('Ranked 1 to '+rankedN(d)+' on the engine\'s rating. Scroll for the reasoning on each.'); } }catch(e){}
     try{ var _rh=document.querySelector('.fhead .rth'); if(_rh) _rh.textContent = window.__unrated ? '' : 'Rating'; }catch(e){}
     // hero: leave the signed-off headline on placeholder; once the field is declared, Declared → Rated keyed on whether ratings have landed
-    try{ if(__hasField){ var _hh=document.getElementById('heroHead'); if(_hh) _hh.innerHTML = 'All 24.<br/>'+(window.__unrated?'Declared.':'Rated.'); } }catch(e){}
-    var runners = (d.runners||[]).slice().sort(function(a,b){ return a.rank-b.rank; });
+    try{ if(__hasField){ var _hh=document.getElementById('heroHead'); var _ev=d.event||{}; var _n=(_ev.nominations!=null&&_ev.emergency_count!=null)?(_ev.nominations-_ev.emergency_count):(_ev.field_cap!=null?_ev.field_cap:(d.runners||[]).length); if(_hh) _hh.innerHTML = 'All '+_n+'.<br/>'+(window.__unrated?'Declared.':'Rated.'); } }catch(e){}
+    // Keep the feed's order: it is rank-ordered once rated and saddlecloth-ordered while
+    // unrated (ranks are null then, so a numeric sort would scramble it). Emergencies stay
+    // in their given spot — dimmed + tagged by renderRunner, never pulled out or renumbered.
+    var runners = (d.runners||[]).slice();
+    if(!window.__unrated){ runners.sort(function(a,b){ return (a.rank==null?9999:a.rank)-(b.rank==null?9999:b.rank); }); }
     if(!runners.length){
       var waiting = (d.status==='placeholder' || d.status==='nominations');
       var msg = waiting
@@ -396,11 +420,27 @@
     // data note
     var ev = d.event||{};
     var age = d.generated_at ? fmtAge(d.generated_at) : '';
-    var live = ev.field_size!=null ? ev.field_size+' running' : '';
-    var scratched = runners.filter(function(x){ return x.scratched; }).length;
+    // Field counts come straight from the feed's reconciled, DISJOINT pass (event.*):
+    //   field_size === nominations - non_starters,  non_starters === emergency_count + scratched_count
+    // scratched_count is in-field only (a scratched emergency sits in emergency_count, never both),
+    // so these never double-count. If a feed ever breaks the invariant, fail LOUD to the console and
+    // drop the "N running" figure rather than print a number we can't stand behind.
+    var noms = (ev.nominations!=null) ? ev.nominations : null;
+    var nonStarters = (ev.non_starters!=null) ? ev.non_starters : null;
+    var fieldSize = (ev.field_size!=null) ? ev.field_size : null;
+    var scratchedN = (ev.scratched_count!=null) ? ev.scratched_count
+                   : runners.filter(function(x){ return x.scratched && !x.emergency; }).length;
+    var emsN = (ev.emergency_count!=null) ? ev.emergency_count
+             : runners.filter(function(x){ return x.emergency; }).length;
+    var reconciled = (noms!=null && nonStarters!=null && fieldSize!=null && fieldSize === (noms - nonStarters));
+    if(noms!=null && nonStarters!=null && fieldSize!=null && !reconciled){
+      try{ console.error('[cup] field-count mismatch: field_size('+fieldSize+') != nominations('+noms+') - non_starters('+nonStarters+') — hiding the "running" figure'); }catch(e){}
+    }
     var bits = [];
-    if(ev.nominations) bits.push(ev.nominations+' nominated');
-    if(scratched) bits.push(scratched+' scratched');
+    if(noms) bits.push(noms+' nominated');
+    if(scratchedN) bits.push(scratchedN+' scratched');
+    if(emsN) bits.push(emsN+(emsN===1?' emergency':' emergencies'));
+    if(reconciled && fieldSize!=null) bits.push(fieldSize+' running');
     var note = (d.status==='placeholder') ? 'Placeholder field — the real field declares about Saturday 31 October. '
              : (d.status==='declared') ? 'The full field is declared — the engine rates the field on Cup morning. Scratchings struck through. '
              : '';

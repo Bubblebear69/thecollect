@@ -1,0 +1,28 @@
+{
+  "generated_at": "2026-10-31T21:01:19+00:00",
+  "status": "placeholder",
+  "void": false,
+  "void_reason": "",
+  "event": {
+    "name": "2026 Melbourne Cup",
+    "race_no": "",
+    "track": "Flemington",
+    "country": "AUS",
+    "date": "2026-11-03",
+    "distance": "3200m",
+    "condition": "",
+    "start_time": "",
+    "field_cap": 24,
+    "nominations": 0,
+    "emergency_count": 0,
+    "scratched_count": 0,
+    "field_size": 0,
+    "non_starters": 0
+  },
+  "pick": null,
+  "verdict": "",
+  "why": [],
+  "runners": [],
+  "result": null,
+  "note": "Field not yet declared - placeholder feed."
+}

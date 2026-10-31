@@ -60,6 +60,10 @@
   .row.scr .bar span{background:#c8ccce}
   .row.scr .rtn{color:#aeb3b9}
   .scrtag{font-size:8.5px;font-weight:900;color:#b00;border:1px solid #d79a9a;border-radius:3px;padding:0 4px;margin-left:6px;vertical-align:middle}
+  /* emergency — nominated past the field cap; kept in its spot, dimmed + tagged */
+  .row.em{color:#aeb3b9}
+  .row.em .rk{color:#aeb3b9}
+  .emtag{font-size:8.5px;font-weight:900;color:#8a7320;border:1px solid #d8c488;border-radius:3px;padding:0 4px;margin-left:6px;vertical-align:middle}
 
   /* footer band */
   .foot{background:var(--green);color:#eafff2;padding:12px 26px;margin-top:4px;
@@ -123,6 +127,14 @@
 (function(){
   function esc(s){ return String(s==null?'':s).replace(/[&<>]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c]; }); }
   function clamp(n){ n=Number(n)||0; return n<0?0:(n>100?100:n); }
+  // The engine's ranked count, identical to cup.html's rankedN: every rated
+  // runner, emergencies included, so a rank of 28 is never printed "of 24".
+  // This is NOT the field count in the big tag above (nominations - emergencies).
+  function rankedN(d){
+    var rated = (d.runners||[]).filter(function(x){ return x.rating != null; });
+    var mx = rated.reduce(function(m,x){ return (x.rank!=null && x.rank>m) ? x.rank : m; }, 0);
+    return Math.max(rated.length, mx);
+  }
   fetch('cup.json',{cache:'no-store'}).then(function(r){ return r.json(); }).then(function(d){
     var ev = d.event||{};
     var unrated = !((d.runners||[]).some(function(x){ return x.rating != null; }));
@@ -132,33 +144,53 @@
     var voided = (d.void === true) || (_sp.void === true) || (d.status === 'abandoned') || (_sr.our_pick_outcome === 'scratched') || (_sr.our_pick_outcome === 'abandoned');
     if(ev.name) document.getElementById('race').textContent =
       ev.name + ' · ' + (ev.track||'') + (ev.distance?(' · '+ev.distance):'');
-    var runners = (d.runners||[]).slice().sort(function(a,b){ return a.rank-b.rank; });
-    var scratched = runners.filter(function(x){ return x.scratched; }).length;
+    // Keep the feed's order (rank once rated, saddlecloth while unrated); emergencies
+    // stay in their given spot, dimmed + tagged — never pulled out or renumbered.
+    var runners = (d.runners||[]).slice();
+    if(!unrated){ runners.sort(function(a,b){ return (a.rank==null?9999:a.rank)-(b.rank==null?9999:b.rank); }); }
     if(!runners.length){
       document.getElementById('fieldN').textContent = '—';
       document.getElementById('meta').textContent = 'Field not yet declared — the final 24 come out about Sat 31 October.';
       document.getElementById('rows').innerHTML = '<div class="row"><span class="rk">—</span><span></span><span class="hz">The sweep sheet fills with all 24 the moment the field declares — about Saturday 31 October.</span><span></span><span></span></div>';
       return;
     }
-    document.getElementById('fieldN').textContent = unrated ? (ev.field_size!=null?ev.field_size:(ev.nominations||runners.length)) : (ev.nominations || runners.length);
+    // The big number is the Cup field = nominations - emergency_count (same rule as #77 / the
+    // card's "ALL N"): excludes emergencies but NOT scratchings, so it holds after a late scratch
+    // and always matches the card. Not field_cap, not the ranked count. (#100 Charter.)
+    document.getElementById('fieldN').textContent = ((ev.nominations!=null && ev.emergency_count!=null) ? (ev.nominations - ev.emergency_count) : (ev.field_cap!=null ? ev.field_cap : (ev.nominations || runners.length)));
+    var scratchedN = (ev.scratched_count!=null) ? ev.scratched_count
+                   : runners.filter(function(x){ return x.scratched && !x.emergency; }).length;
+    var emsN = (ev.emergency_count!=null) ? ev.emergency_count
+             : runners.filter(function(x){ return x.emergency; }).length;
     document.getElementById('meta').textContent =
       (ev.nominations? ev.nominations+' nominated' : runners.length+' runners') +
-      (scratched? ' · '+scratched+' scratched' : '');
+      (scratchedN? ' · '+scratchedN+' scratched' : '') +
+      (emsN? ' · '+emsN+(emsN===1?' emergency':' emergencies') : '');
     if(unrated){
       var _fl=document.getElementById('fieldLbl'); if(_fl) _fl.textContent='In the field';
       var _ld=document.getElementById('lead'); if(_ld) _ld.innerHTML = ran
         ? '<b>Draw a horse, write your name on it, and let the office argue.</b> The full field is declared.'
         : '<b>Draw a horse, write your name on it, and let the office argue.</b> The full field is declared — the engine’s ratings land on Cup morning.';
       var _rh=document.querySelector('.hrow .rrt'); if(_rh) _rh.textContent='';
+    } else {
+      // RATED: the static line promised "ranked 1 to 24". Wrong on a 22-runner
+      // field, and wrong again whenever rated emergencies outrank in-field
+      // horses — live ranks run past the field size (cup.html's subtitle says
+      // "Ranked 1 to 28"), which is the likely Cup-morning state. Take the
+      // number from the same rankedN cup.html's subtitle uses. (#100 Charter.)
+      var _ld2=document.getElementById('lead');
+      if(_ld2) _ld2.innerHTML = '<b>Draw a horse, write your name on it, and let the office argue.</b> '
+        + 'Every runner ranked 1 to '+rankedN(d)+' by the engine — the bar shows how strongly we rate each one.';
     }
     document.getElementById('rows').innerHTML = runners.map(function(r){
       var scr = !!r.scratched, pick = (r.tier==='pick') && !voided;
       var tag = scr ? '<span class="scrtag">SCR</span>' : '';
+      var emtag = r.emergency ? '<span class="emtag">EM</span>' : '';
       var star = pick ? '<span class="star">&#9733;</span>' : '';
-      return '<div class="row'+(pick?' pick':'')+(scr?' scr':'')+'">'+
+      return '<div class="row'+(pick?' pick':'')+(scr?' scr':'')+(r.emergency?' em':'')+'">'+
         '<div class="rk">'+(unrated?'·':(r.rank!=null?r.rank:'·'))+'</div>'+
         '<div class="no">'+esc(r.number)+'</div>'+
-        '<div class="hz">'+star+'<b>'+esc(r.horse)+'</b>'+tag+'<span class="br">B'+(r.barrier!=null?r.barrier:'–')+'</span></div>'+
+        '<div class="hz">'+star+'<b>'+esc(r.horse)+'</b>'+tag+emtag+'<span class="br">B'+(r.barrier!=null?r.barrier:'–')+'</span></div>'+
         (unrated ? '<div class="rt"></div>'
                   : '<div class="rt"><div class="bar"><span style="width:'+clamp(r.rating)+'%"></span></div>'+
                     '<div class="rtn">'+(r.rating!=null?Math.round(r.rating):'')+'</div></div>')+

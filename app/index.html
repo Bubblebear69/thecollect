@@ -653,7 +653,7 @@ function hasAccess(){ return localStorage.getItem(LS.access) === 'yes'; }
 // Stamped by the publisher at deploy time. When data.json carries a NEWER
 // shell version than the code that's running, the app reloads itself once —
 // so an always-open home-screen app picks up new features without sign-outs.
-const SHELL_VERSION = "4c0b8a0f2c99";
+const SHELL_VERSION = "32844e3bbd5f";
 
 // The "race day" the app shows is referenced to ONE zone, so every viewer —
 // NZ, Perth, Sydney, anywhere — agrees with the engine on what "today" is,
@@ -1023,7 +1023,7 @@ function renderHome(){
   h += `<div class="cd-band" id="cdBand"></div>`;
 
   if (state.demo){
-    h += `<div class="banner"><span>🔒</span><div><b>Sample day.</b> Add your access code in settings to load live picks.</div></div>`;
+    h += `<div class="banner"><span>🔒</span><div><b>Sample day.</b> Your access code will be emailed to you on 1 December 2026, and live picks load once you add it in settings.</div></div>`;
   }
 
   if (bb.length){
@@ -1205,7 +1205,7 @@ function renderLanding(){
       <div class="tmr-note" style="margin-top:0">Every race looks like this inside — the pick, the reasoning, the exotics and a line on every runner.</div>`;
     h += raceCard(fr.race, fr);
   }
-  h += `<div class="price-card"><div class="p">$25 / week</div>
+  h += `<div class="price-card"><div class="p">A$25 / NZ$31.22 per week</div>
     <div class="s">Coming soon. The Collect is currently <b>invite-only</b> while our
     founding testers put it through its paces.</div></div>`;
   h += `<div class="field"><label for="acc">Have an invite code?</label>
@@ -1226,7 +1226,7 @@ function renderLanding(){
 function renderGate(kind, preview){
   const titles = {
     signin:   ['Enter your access code', 'Your code unlocks every pick for the day, with the evidence behind each one.'],
-    subscribe:['Unlock The Collect', 'First month free, then $25/week — billed weekly in advance, auto-renews, cancel any time. Every pick, every meeting, NZ and Australia.'],
+    subscribe:['Unlock The Collect', 'First month free, then A$25/week in Australia or NZ$31.22/week in New Zealand, GST inclusive — billed weekly in advance, auto-renews, cancel any time. Every pick, every meeting, NZ and Australia.'],
     empty:    ['No picks published yet', 'Today’s selections aren’t up yet. Check back a little later.'],
     error:    ['Something went wrong', 'We couldn’t reach the picks service. Try again in a moment.'],
     offline:  ['Can’t connect', 'Check your internet connection, then try again.'],
@@ -1257,7 +1257,7 @@ function renderGate(kind, preview){
           <input id="subemail" type="email" autocomplete="email" autocapitalize="off" spellcheck="false" placeholder="you@email.com" value="${esc(state.email||'')}" /></div>
           <label class="subterms" style="display:flex;gap:9px;align-items:flex-start;font-size:13px;color:var(--muted);margin:2px 2px 12px;cursor:pointer"><input type="checkbox" id="subterms" style="margin-top:3px;flex-shrink:0" /><span>I agree to the <a href="terms.html" target="_blank" rel="noopener" style="color:var(--brass)">Terms &amp; Conditions</a> and <a href="privacy.html" target="_blank" rel="noopener" style="color:var(--brass)">Privacy Policy</a>.</span></label>
           <button class="btn" data-subscribe>Start my free month</button>
-          <p class="hint" style="text-align:center;margin-top:10px">First month free, from the day you start — then $25 per week, charged weekly in advance until you cancel. Cancel any time in your account. Secured by Stripe.</p>
+          <p class="hint" style="text-align:center;margin-top:10px">First month free, from the day you start — then A$25 per week in Australia or NZ$31.22 per week in New Zealand, GST inclusive, charged weekly in advance until you cancel. Cancel any time in your account. Secured by Stripe.</p>
           <div class="msg" id="submsg"></div>`;
       } else {
         // Pre-launch: no live checkout — point to the founding list, never a dead pay button.
@@ -1710,7 +1710,7 @@ function paywallBanner(){
     var d = trialDaysLeft(s);
     var txt = (d === null) ? 'Your free month is running.'
             : (d === 0 ? 'Last day of your free month.' : (d + (d === 1 ? ' day' : ' days') + ' left on your free month.'));
-    return '<div id="pw-banner" class="pw-banner pw-trial"><span><b>Free month</b> — ' + esc(txt) + ' Then $25/week, billed weekly in advance.</span><button ' + act('#E0B357') + '>Manage</button></div>';
+    return '<div id="pw-banner" class="pw-banner pw-trial"><span><b>Free month</b> — ' + esc(txt) + ' Then A$25 / NZ$31.22 per week, billed weekly in advance.</span><button ' + act('#E0B357') + '>Manage</button></div>';
   }
   if (s.plan === 'past_due'){
     return '<div id="pw-banner" class="pw-banner pw-due"><span><b>Payment needed</b> — update your card to keep your picks.</span><button ' + act('#E9906B') + '>Fix it</button></div>';
