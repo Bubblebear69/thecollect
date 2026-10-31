@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>The Collect — racing picks proven in public</title>
-<meta name="description" content="Daily NZ & Australian racing selections from a rating engine that publishes every result, win or lose. Picks published overnight and locked — they don't change. $25/week." />
+<meta name="description" content="Daily NZ & Australian racing selections from a rating engine that publishes every result, win or lose. Picks published overnight and locked — they don't change. NZ$31.22/week (A$25 in Australia), GST incl." />
 <meta property="og:title" content="The Collect — racing picks proven in public" />
 <meta property="og:description" content="Every pick published. Every result shown. Win or lose. Powered by the Strategic Logic engine." />
 <meta property="og:image" content="https://thecollect.nz/logo.png" />
@@ -320,7 +320,7 @@
     <div class="sec-head"><div class="eyebrow">Membership</div><h2>Simple price. Everything included.</h2></div>
     <div class="join-wrap" style="margin-top:26px">
       <div class="join-pitch">
-        <div class="price">$25 <small>/ week — everything included</small></div>
+        <div class="price">NZ$31.22 <small>/ week (A$25 in Australia) — GST incl.</small></div>
         <ul>
           <li>Every meeting, every race, NZ &amp; Australia</li>
           <li>Top 5 board + best bets, ready at midnight</li>
@@ -328,15 +328,15 @@
           <li>Trifecta &amp; first-four plays</li>
           <li>Live results, dividends and the honesty scoreboard</li>
           <li>The Engine's Blackbook</li>
-          <li>$25/week, charged weekly in advance until you cancel</li>
+          <li>NZ$31.22/week in NZ, A$25/week in Australia — GST incl., charged weekly in advance until you cancel</li>
         </ul>
       </div>
       <div class="join-box">
         <h3>Claim your founding spot</h3>
         <p class="founding">Doors open 1 December — founding members get their first month free.</p>
         <form id="joinForm" novalidate>
-          <input type="text" name="first_name" placeholder="First name" required maxlength="60" autocomplete="given-name" />
-          <input type="email" name="email" placeholder="Email" required autocomplete="email" />
+          <input type="text" name="first_name" placeholder="First name" aria-label="First name" required maxlength="60" autocomplete="given-name" />
+          <input type="email" name="email" placeholder="Email" aria-label="Email" required autocomplete="email" />
           <select name="region" aria-label="Region">
             <option value="">Region (optional)</option>
             <option>Northland</option><option>Auckland</option><option>Waikato</option>
@@ -349,16 +349,18 @@
           <label class="ck"><input type="checkbox" name="over18" required /><span>I confirm I am 18 or over.</span></label>
           <label class="ck"><input type="checkbox" name="terms_ok" required /><span>I agree to the <a href="terms.html" target="_blank" rel="noopener">Terms &amp; Conditions</a> and <a href="privacy.html" target="_blank" rel="noopener">Privacy Policy</a>.</span></label>
           <label class="ck"><input type="checkbox" name="email_ok" required /><span>Email me racing results and launch news. Unsubscribe any time.</span></label>
-          <input type="text" name="company" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true" />
+          <input type="text" name="hp_field" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true" />
           <input type="hidden" name="source" /><input type="hidden" name="campaign" /><input type="hidden" name="refcode" />
           <button class="btn btn-primary" type="submit" style="width:100%;justify-content:center">Get first month free</button>
-          <div class="fmini">First month free, from the day you start. No card required now. Then $25 per week, charged weekly in advance until you cancel. Cancel any time in your account. 18+.</div>
-          <div id="joinErr" class="fmini" style="display:none;color:var(--green)">Something went wrong — email
-            <a href="mailto:hello@thecollect.nz" style="color:var(--green)">hello@thecollect.nz</a> and we'll add you by hand.</div>
+          <div class="fmini">First month free, from the day you start. A card will be required before your access code is sent. Your access code will be emailed to you on 1 December 2026. Then NZ$31.22/week in New Zealand or A$25/week in Australia (GST incl.), charged weekly in advance until you cancel. Cancel any time in your account. 18+.</div>
+          <div id="joinErr" class="fmini" role="alert" tabindex="-1" style="display:none;color:var(--green)">That didn't go through — please try again, or email
+            <a href="mailto:hello@thecollect.nz" style="color:var(--green)">hello@thecollect.nz</a>.</div>
         </form>
         <div id="joinDone" style="display:none">
           <h4>You're on the founding list.</h4>
           <p>Your first month is free from 1 December. Watch your inbox — we publish every result, win or lose.</p>
+          <p class="muted" style="font-size:13px;margin:8px 0 0">A card will be required before your access code is sent. Your access code will be emailed to you on 1 December 2026.</p>
+          <p class="muted" style="font-size:13px;margin:8px 0 0">While you wait, <a href="install.html" style="color:var(--green)">add The Collect to your home screen</a> — it opens like an app.</p>
           <div style="margin-top:16px;border-top:1px solid var(--line);padding-top:14px">
             <p style="font-size:14px;color:var(--green);font-weight:700;margin:0 0 6px">Want a second month free?</p>
             <p class="muted" style="font-size:13px;margin:0 0 10px">Send this link to two mates who follow the racing — if they both join the founding list, your second month is on us too.</p>
@@ -393,7 +395,7 @@
       <details><summary>Is this betting advice?</summary>
         <p>No. Our selections are opinions based on evidence — not guarantees and not financial advice. Racing involves risk. Set a budget, stick to it, and never stake more than you can afford to lose.</p></details>
       <details><summary>Can I cancel whenever I want?</summary>
-        <p>Yes. No contracts, no minimum term, no hoops. If we're not earning your $25 a week, you shouldn't be paying it.</p></details>
+        <p>Yes. No contracts, no minimum term, no hoops. If we're not earning your weekly fee, you shouldn't be paying it.</p></details>
       <details><summary>Who's behind The Collect?</summary>
         <p>The Collect Limited, New Zealand — two partners: one who built the engine, one who spent decades doing the form the hard way. The engine is the automation of that craft, tested against nearly two thousand settled races before a single pick went public.</p></details>
     </div>
@@ -411,7 +413,7 @@
       <div class="r18">🔞 The Collect is not a bookmaker and takes no bets. Gamble responsibly · R18 · NZ 0800 654 655 · AU 1800 858 858</div>
     </div>
     <div class="cols">
-      <div class="col"><b>Product</b><a href="results.html">Results</a><a href="#how">How it works</a><a href="#free">Free race</a><a href="#join">Membership</a></div>
+      <div class="col"><b>Product</b><a href="results.html">Results</a><a href="#how">How it works</a><a href="#free">Free race</a><a href="#join">Membership</a><a href="install.html">Install the app</a></div>
       <div class="col"><b>Company</b><a href="#faq">FAQ</a><a href="mailto:hello@thecollect.nz">Contact</a></div>
       <div class="col"><b>Legal</b><a href="terms.html">Terms</a><a href="privacy.html">Privacy</a><a href="responsible.html">Responsible gambling</a><a href="refunds.html">Refunds</a></div>
     </div>
@@ -476,20 +478,64 @@
 <!-- founding signup -->
 <script>
 (function(){
+  // --- Signup POST: DOM-free so it can run under node with a mocked fetch. ---
+  // Returns {ok:true,dup} ONLY when the server wrote the row and replied {ok:true}.
+  // Every other outcome (network, timeout, non-200, non-JSON, a redirect/HTML page,
+  // {ok:false}, lock or quota error) returns {ok:false}, so the form never thanks on
+  // a failed save.
+  async function postSignupOnce(endpoint, data, timeoutMs, fetchImpl){
+    var f = fetchImpl || (typeof fetch !== 'undefined' ? fetch : null);
+    if(!f) return { ok:false, reason:'no_fetch' };
+    var ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+    var timer = ctrl ? setTimeout(function(){ try{ ctrl.abort(); }catch(e){} }, timeoutMs) : null;
+    try{
+      var res = await f(endpoint, {
+        method:'POST',
+        headers:{ 'Content-Type':'text/plain;charset=utf-8' },
+        body: JSON.stringify(data),
+        redirect:'follow',
+        signal: ctrl ? ctrl.signal : undefined
+      });
+      if(timer) clearTimeout(timer);
+      if(!res || !res.ok) return { ok:false, reason:'http_' + (res ? res.status : 'none') };
+      var text = await res.text();
+      var json = null;
+      try{ json = JSON.parse(text); }catch(e){ return { ok:false, reason:'bad_json' }; }
+      if(json && json.ok === true) return { ok:true, dup: !!json.duplicate };
+      return { ok:false, reason:(json && json.error) || 'not_ok' };
+    }catch(e){
+      if(timer) clearTimeout(timer);
+      return { ok:false, reason:(e && e.name === 'AbortError') ? 'timeout' : 'network' };
+    }
+  }
+  function retryableFail(r){
+    return r && r.ok === false && (r.reason === 'network' || r.reason === 'timeout' || r.reason === 'busy' || /^http_5\d\d$/.test(r.reason));
+  }
+  async function submitSignup(endpoint, data, opts){
+    opts = opts || {};
+    var timeoutMs = opts.timeoutMs || 10000;
+    var r = await postSignupOnce(endpoint, data, timeoutMs, opts.fetchImpl);
+    if(r.ok || !retryableFail(r)) return r;        // don't retry definite rejections (validation / 4xx / bad reply)
+    return await postSignupOnce(endpoint, data, timeoutMs, opts.fetchImpl);   // retry once on a transient failure
+  }
+  try{ window.TC_signup = { submitSignup: submitSignup, postSignupOnce: postSignupOnce }; }catch(e){}
+
   var form = document.getElementById('joinForm');
   if(!form) return;
   var ENDPOINT = 'https://script.google.com/macros/s/AKfycbyzvDpTsIuuaXfv3ELxYiPBIrSmg8IDB0fmHBJ8_yGdCwF7bTvrBNKVK9YnIsujA3MB/exec';
+  var joinErrDefault = (document.getElementById('joinErr') || {}).innerHTML || '';
   try{
     var q = new URLSearchParams(location.search);
     if(q.get('utm_source')) form.source.value = q.get('utm_source');
     if(q.get('utm_campaign')) form.campaign.value = q.get('utm_campaign');
     var ref = q.get('r') || q.get('ref'); if(ref) form.refcode.value = ref;
   }catch(e){}
-  form.addEventListener('submit', function(ev){
+  form.addEventListener('submit', async function(ev){
     ev.preventDefault();
-    if(form.company && form.company.value){ show(); return; }      // honeypot: silent success
     if(!form.checkValidity()){ form.reportValidity(); return; }
     var btn = form.querySelector('button[type=submit]');
+    var errEl = document.getElementById('joinErr');
+    if(errEl) errEl.style.display='none';
     btn.disabled = true; btn.textContent = 'Adding you…';
     var data = {
       first_name: form.first_name.value.trim(),
@@ -498,15 +544,23 @@
       over18: form.over18.checked,
       email_ok: form.email_ok.checked,
       terms_ok: form.terms_ok.checked,
+      hp_field: form.hp_field ? form.hp_field.value : '',
       source: form.source.value, campaign: form.campaign.value, refcode: form.refcode.value
     };
-    fetch(ENDPOINT, { method:'POST', mode:'no-cors',
-      headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify(data) })
-      .then(function(){ show(); })
-      .catch(function(){
-        btn.disabled=false; btn.textContent='Get first month free';
-        document.getElementById('joinErr').style.display='block';
-      });
+    // Real confirmation, not fire-and-forget: thank-you ONLY when the server wrote the row
+    // and returned {ok:true}. Honeypot hits are parked server-side and also reply ok:true, so
+    // every thank-you has a row. Retries once on a transient failure only; a definite rejection
+    // (e.g. a bad email the browser let through) shows its own message instead of looping.
+    var result = await submitSignup(ENDPOINT, data, { timeoutMs: 10000 });
+    if(result && result.ok){ show(); return; }
+    btn.disabled=false; btn.textContent='Get first month free';
+    if(errEl){
+      errEl.innerHTML = (result && (result.reason === 'email_invalid' || result.reason === 'no email'))
+        ? 'Please check your email address and try again.'
+        : joinErrDefault;
+      errEl.style.display='block';
+      try{ errEl.focus(); }catch(e){}          // move focus to the alert (F11)
+    }
   });
   function show(){
     form.style.display='none';
