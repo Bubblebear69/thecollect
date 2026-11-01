@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-01T22:00:35+00:00",
+  "generated_at": "2026-11-01T23:00:35+00:00",
   "status": "placeholder",
   "void": false,
   "void_reason": "",
@@ -17,7 +17,8 @@
     "emergency_count": 0,
     "scratched_count": 0,
     "field_size": 0,
-    "non_starters": 0
+    "non_starters": 0,
+    "field_n": 0
   },
   "pick": null,
   "verdict": "",

@@ -154,10 +154,12 @@
       document.getElementById('rows').innerHTML = '<div class="row"><span class="rk">—</span><span></span><span class="hz">The sweep sheet fills with all 24 the moment the field declares — about Saturday 31 October.</span><span></span><span></span></div>';
       return;
     }
-    // The big number is the Cup field = nominations - emergency_count (same rule as #77 / the
-    // card's "ALL N"): excludes emergencies but NOT scratchings, so it holds after a late scratch
-    // and always matches the card. Not field_cap, not the ranked count. (#100 Charter.)
-    document.getElementById('fieldN').textContent = ((ev.nominations!=null && ev.emergency_count!=null) ? (ev.nominations - ev.emergency_count) : (ev.field_cap!=null ? ev.field_cap : (ev.nominations || runners.length)));
+    // The big number is the Cup field: the feed's field_n when it is above zero (the names in
+    // the field, struck scratchings included, capped at field_cap, so it stays 24 when an
+    // emergency takes a scratched runner's place). Older feeds fall back to nominations -
+    // emergency_count, capped the same way. Same rule as the card's "ALL N" and the share
+    // preview. Not field_cap, not the ranked count. (#100 Charter, #84 follow-up.)
+    document.getElementById('fieldN').textContent = ((ev.field_n>0) ? ev.field_n : ((ev.nominations!=null && ev.emergency_count!=null) ? (ev.field_cap ? Math.min(ev.field_cap, ev.nominations - ev.emergency_count) : (ev.nominations - ev.emergency_count)) : (ev.field_cap!=null ? ev.field_cap : (ev.nominations || runners.length))));
     var scratchedN = (ev.scratched_count!=null) ? ev.scratched_count
                    : runners.filter(function(x){ return x.scratched && !x.emergency; }).length;
     var emsN = (ev.emergency_count!=null) ? ev.emergency_count

@@ -402,7 +402,7 @@
     try{ if(__hasField){ var _cs=document.getElementById('cardSub'); if(_cs) _cs.textContent = window.__unrated ? (__ran ? 'The declared field, in saddlecloth order.' : 'The declared field, in saddlecloth order — the engine\'s ratings land on Cup morning.') : ('Ranked 1 to '+rankedN(d)+' on the engine\'s rating. Scroll for the reasoning on each.'); } }catch(e){}
     try{ var _rh=document.querySelector('.fhead .rth'); if(_rh) _rh.textContent = window.__unrated ? '' : 'Rating'; }catch(e){}
     // hero: leave the signed-off headline on placeholder; once the field is declared, Declared → Rated keyed on whether ratings have landed
-    try{ if(__hasField){ var _hh=document.getElementById('heroHead'); var _ev=d.event||{}; var _n=(_ev.nominations!=null&&_ev.emergency_count!=null)?(_ev.nominations-_ev.emergency_count):(_ev.field_cap!=null?_ev.field_cap:(d.runners||[]).length); if(_hh) _hh.innerHTML = 'All '+_n+'.<br/>'+(window.__unrated?'Declared.':'Rated.'); } }catch(e){}
+    try{ if(__hasField){ var _hh=document.getElementById('heroHead'); var _ev=d.event||{}; var _n=(_ev.field_n>0)?_ev.field_n:((_ev.nominations!=null&&_ev.emergency_count!=null)?(_ev.field_cap?Math.min(_ev.field_cap,_ev.nominations-_ev.emergency_count):(_ev.nominations-_ev.emergency_count)):(_ev.field_cap!=null?_ev.field_cap:(d.runners||[]).length)); if(_hh) _hh.innerHTML = 'All '+_n+'.<br/>'+(window.__unrated?'Declared.':'Rated.'); } }catch(e){}
     // Keep the feed's order: it is rank-ordered once rated and saddlecloth-ordered while
     // unrated (ranks are null then, so a numeric sort would scramble it). Emergencies stay
     // in their given spot — dimmed + tagged by renderRunner, never pulled out or renumbered.
