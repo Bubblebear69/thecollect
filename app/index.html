@@ -399,10 +399,15 @@
 .badge.pending{ background:rgba(128,128,128,.10); color:var(--faint,#8a94a0); font-weight:600; }
 .badge.void{ background:rgba(128,128,128,.14); color:var(--muted,#9bb0a4); }
 .res-row.voided .res-pick b{ text-decoration:line-through; color:var(--muted,#9bb0a4); }
-/* today's card: a race that won't run (abandoned / transferred meeting) is struck through, not a live pick */
+/* a void race (abandoned / transferred meeting, or our pick scratched — raceVoid()) is never shown as a live play */
+/* today's card: struck through, labelled, with a note — a scratched pick (.scr) strikes the horse only, the race still runs */
 .r-card.voided{ opacity:.72; }
-.r-card.voided .r-name, .r-card.voided .r-horse{ text-decoration:line-through; color:var(--muted,#9bb0a4); }
+.r-card.voided:not(.scr) .r-name, .r-card.voided .r-horse{ text-decoration:line-through; color:var(--muted,#9bb0a4); }
 .r-card .void-note{ font-size:12.5px; color:var(--muted,#9bb0a4); margin:6px 0 2px; line-height:1.45; }
+/* best bets list: struck through, unranked, not counted */
+.bb-row.voided{ opacity:.72; }
+.bb-row.voided .br-name{ text-decoration:line-through; color:var(--muted,#9bb0a4); }
+.bb-row.voided .br-meta .badge{ margin-right:6px; }
 .res-pick{ font-size:13.5px; margin-top:5px; }
 .res-div{ font-size:12px; color:var(--faint,#8a94a0); margin-top:4px; line-height:1.5; }
 .sub-n{ font-size:13px; color:var(--faint,#8a94a0); font-weight:700; }
@@ -657,7 +662,7 @@ function hasAccess(){ return localStorage.getItem(LS.access) === 'yes'; }
 // Stamped by the publisher at deploy time. When data.json carries a NEWER
 // shell version than the code that's running, the app reloads itself once —
 // so an always-open home-screen app picks up new features without sign-outs.
-const SHELL_VERSION = "737434e2fbe9";
+const SHELL_VERSION = "c67cfe0aa2ba";
 
 // The "race day" the app shows is referenced to ONE zone, so every viewer —
 // NZ, Perth, Sydney, anywhere — agrees with the engine on what "today" is,
@@ -887,7 +892,22 @@ function bestBets(data){
   }));
   return out;
 }
-function meetingBB(m){ return (m.races||[]).filter(r => r.pick && r.pick.best_bet).length; }
+// A race that is not a live play: the meeting is abandoned or transferred (race-level
+// void_reason, #135; the bare abandoned flag reads as "abandoned"), or OUR pick is scratched —
+// Blair's 27 Oct rule: a scratched top pick voids the whole race. Today's feed marks a scratch
+// on the pick only (pick.scratched / pick.is_scratched / pick.void_reason "scratched"); a
+// race-level "scratched" from the feed maps to the same label when Building adds it. This is
+// the one key every screen uses — a void race is never counted or ranked as a live play.
+function raceVoid(r){
+  const p = (r && r.pick) || {};
+  let vr = String((r && r.void_reason)||'').toLowerCase();
+  if (!vr && r && r.abandoned) vr = 'abandoned';
+  if (!vr && (p.scratched === true || p.is_scratched === true || String(p.void_reason||'').toLowerCase() === 'scratched')) vr = 'scratched';
+  const label = vr==='transferred' ? 'Transferred' : vr==='scratched' ? 'Scratched' : 'Abandoned';
+  return { on: !!vr, reason: vr, label };
+}
+function liveBestBets(data){ return bestBets(data).filter(x => !raceVoid(x.r).on); }
+function meetingBB(m){ return (m.races||[]).filter(r => r.pick && r.pick.best_bet && !raceVoid(r).on).length; }
 
 /* -------------------------------------------------- next-race countdown */
 function nzNow(){
@@ -934,25 +954,29 @@ function tickCountdown(){
 /* -------------------------------------------------- render: best bets */
 function renderBestBets(){
   const d = state.data;
-  const bb = bestBets(d).sort((a,b) => (b.r.pick.bet_rating||0) - (a.r.pick.bet_rating||0));
+  const all = bestBets(d).sort((a,b) => (b.r.pick.bet_rating||0) - (a.r.pick.bet_rating||0));
+  // Live plays first, ranked; a void race's best bet sits last — struck through, unranked, not counted.
+  const live = all.filter(x => !raceVoid(x.r).on), gone = all.filter(x => raceVoid(x.r).on);
+  const bb = live.concat(gone);
   let h = topBar();
   h += '<div class="fade">';
   h += `<div class="backbar"><button class="back" data-back>
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></svg>Today</button></div>`;
   h += `<div class="detail-head"><div class="t">Today's Best Bets</div>
-      <div class="m">${bb.length} play${bb.length===1?'':'s'} · ranked by our rating</div></div>`;
+      <div class="m">${live.length} play${live.length===1?'':'s'} · ranked by our rating</div></div>`;
   if (!bb.length){
     h += `<div class="banner"><span>☕</span><div>No best bets flagged today — the engine only stars a pick when the evidence and the market line up. The full card is on the Today tab.</div></div>`;
   } else {
     h += '<div class="bblist">';
     bb.forEach(({m,r}, i) => {
       const p = r.pick || {};
+      const v = raceVoid(r);
       const rating = (p.bet_rating!=null) ? (+p.bet_rating).toFixed(1) : '—';
-      h += `<button class="bb-row ${i===0?'top1':''}" data-goto="${esc(m.track)}" data-race="${esc(r.race_no)}">
+      h += `<button class="bb-row ${i===0 && !v.on?'top1':''}${v.on?' voided':''}" data-goto="${esc(m.track)}" data-race="${esc(r.race_no)}">
         <div class="br-rate"><div class="br-num tnum">${esc(rating)}</div><div class="br-lab">Rating</div></div>
         <div class="br-main">
-          <div class="br-name"><span class="br-rank tnum">${i+1}.</span> #${esc(p.number||'')} ${esc(p.horse||'')}</div>
-          <div class="br-meta">${esc(m.track)} · ${esc(r.race_no)} · ${esc(hhmm(r.start_time))} · ${esc(r.distance||'')}</div>
+          <div class="br-name">${v.on ? '' : `<span class="br-rank tnum">${i+1}.</span> `}#${esc(p.number||'')} ${esc(p.horse||'')}</div>
+          <div class="br-meta">${v.on ? `<span class="badge void">${v.label}</span>` : ''}${esc(m.track)} · ${esc(r.race_no)} · ${esc(hhmm(r.start_time))} · ${esc(r.distance||'')}</div>
         </div>
         <div class="br-right"><div class="br-grade">${esc(p.confidence||'')}</div>${p.price?`<div class="br-price tnum">$${(+p.price).toFixed(2)}</div>`:''}</div>
       </button>`;
@@ -1011,7 +1035,7 @@ async function loadPreview(){
 /* -------------------------------------------------- render: home */
 function renderHome(){
   const d = state.data;
-  const bb = bestBets(d);
+  const bb = liveBestBets(d);   // a void race's best bet is not counted anywhere on the home screen
   let h = '';
 
   h += topBar();
@@ -1110,19 +1134,16 @@ function raceCard(r, m){
   const val = !best && isValue(r.verdict);
   const tier = gradeTier(p.confidence);
   const whys = (r.why||[]).slice(0,2);
-  // Race-level void only (the meeting is abandoned or transferred — #135's void_reason; a
-  // scratched pick is not a void race). Label off void_reason, "Abandoned" when it is absent.
-  const vr = String(r.void_reason||'').toLowerCase();
-  const rvoid = !!(r.abandoned || vr);
-  const vlabel = vr==='transferred' ? 'Transferred' : 'Abandoned';
-  return `<div class="r-card ${best?'best':''}${rvoid?' voided':''}" data-race-no="${esc(r.race_no)}">
+  // One rule for every screen (raceVoid): abandoned / transferred meeting, or our pick scratched.
+  const v = raceVoid(r), rvoid = v.on, vlabel = v.label;
+  return `<div class="r-card ${best?'best':''}${rvoid?' voided':''}${v.reason==='scratched'?' scr':''}" data-race-no="${esc(r.race_no)}">
     <div class="r-top">
       <span class="r-no">${esc(r.race_no)}</span>
       <span class="r-name">${esc(r.race_name||'')}</span>
       ${rvoid ? '<span class="badge void">'+vlabel+'</span>' : ''}
       <span class="r-time tnum">${esc(hhmm(r.start_time))}</span>
     </div>
-    ${rvoid ? `<div class="void-note">${vr==='transferred' ? 'This race was transferred — it doesn’t count toward our win, place or exotic rates.' : 'This race was abandoned — it doesn’t count toward our win, place or exotic rates.'}</div>` : ''}
+    ${rvoid ? `<div class="void-note">${v.reason==='transferred' ? 'This race was transferred — it doesn’t count toward our win, place or exotic rates.' : v.reason==='scratched' ? 'Our top pick was scratched — this race doesn’t count toward our win, place or exotic rates.' : 'This race was abandoned — it doesn’t count toward our win, place or exotic rates.'}</div>` : ''}
     ${r.data_flag ? `<div class="dflag"><span class="dflag-b">👁 ${esc(r.data_flag.label)}</span><span class="dflag-n">${esc(r.data_flag.note)}</span></div>` : ''}
     <div class="r-runner">
       <div class="saddle tnum">${esc(p.number)}</div>
