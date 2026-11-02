@@ -440,7 +440,7 @@
     if(noms) bits.push(noms+' nominated');
     if(scratchedN) bits.push(scratchedN+' scratched');
     if(emsN) bits.push(emsN+(emsN===1?' emergency':' emergencies'));
-    if(reconciled && fieldSize!=null) bits.push(fieldSize+' running');
+    if(reconciled && fieldSize!=null && runners.length) bits.push(fieldSize+' running');   // no "0 running" on the placeholder
     var note = (d.status==='placeholder') ? 'Placeholder field — the real field declares about Saturday 31 October. '
              : (d.status==='declared') ? 'The full field is declared — the engine rates the field on Cup morning. Scratchings struck through. '
              : '';
