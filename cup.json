@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-03T04:03:24+00:00",
-  "status": "final",
+  "generated_at": "2026-11-03T05:03:40+00:00",
+  "status": "result",
   "void": false,
   "void_reason": "",
   "event": {
@@ -10,7 +10,7 @@
     "country": "AUS",
     "date": "2026-11-03",
     "distance": "3200m",
-    "condition": "Soft5",
+    "condition": "Good4",
     "start_time": "17:00:00",
     "field_cap": 24,
     "nominations": 24,
@@ -24,7 +24,7 @@
     "number": "2",
     "horse": "Trustyourinstinct",
     "confidence": "A",
-    "price": 9.0,
+    "price": 9.5,
     "best_bet": false,
     "rating": 100.0,
     "confidence_band": {
@@ -51,7 +51,7 @@
       "rating": 100.0,
       "tier": "pick",
       "label": "Our pick",
-      "price": 9.0,
+      "price": 9.5,
       "top3": 42,
       "top4": 53,
       "why": [
@@ -72,7 +72,7 @@
       "rating": 94.1,
       "tier": "danger",
       "label": "Main danger",
-      "price": 9.5,
+      "price": 11.0,
       "top3": 27,
       "top4": 36,
       "why": [
@@ -93,7 +93,7 @@
       "rating": 92.8,
       "tier": "danger",
       "label": "Main danger",
-      "price": 10.0,
+      "price": 9.5,
       "top3": 24,
       "top4": 31,
       "why": [
@@ -114,7 +114,7 @@
       "rating": 90.2,
       "tier": "chance",
       "label": "Each-way hope",
-      "price": 14.0,
+      "price": 13.0,
       "top3": 20,
       "top4": 27,
       "why": [
@@ -135,7 +135,7 @@
       "rating": 89.4,
       "tier": "chance",
       "label": "Each-way hope",
-      "price": 26.0,
+      "price": 23.0,
       "top3": 19,
       "top4": 25,
       "why": [
@@ -156,7 +156,7 @@
       "rating": 87.0,
       "tier": "chance",
       "label": "Wider chance",
-      "price": 6.5,
+      "price": 7.0,
       "top3": 16,
       "top4": 21,
       "why": [
@@ -195,7 +195,7 @@
       "rating": 84.6,
       "tier": "outsider",
       "label": "",
-      "price": 17.0,
+      "price": 16.0,
       "top3": 12,
       "top4": 16,
       "why": [],
@@ -213,7 +213,7 @@
       "rating": 84.6,
       "tier": "outsider",
       "label": "",
-      "price": 21.0,
+      "price": 23.0,
       "top3": 12,
       "top4": 17,
       "why": [],
@@ -267,7 +267,7 @@
       "rating": 82.7,
       "tier": "outsider",
       "label": "",
-      "price": 6.5,
+      "price": 7.0,
       "top3": 11,
       "top4": 15,
       "why": [],
@@ -285,7 +285,7 @@
       "rating": 81.9,
       "tier": "outsider",
       "label": "",
-      "price": 20.0,
+      "price": 26.0,
       "top3": 10,
       "top4": 14,
       "why": [],
@@ -321,7 +321,7 @@
       "rating": 81.2,
       "tier": "outsider",
       "label": "",
-      "price": 31.0,
+      "price": 27.0,
       "top3": 9,
       "top4": 12,
       "why": [],
@@ -375,7 +375,7 @@
       "rating": 78.9,
       "tier": "outsider",
       "label": "",
-      "price": 31.0,
+      "price": 26.0,
       "top3": 7,
       "top4": 10,
       "why": [],
@@ -393,7 +393,7 @@
       "rating": 78.4,
       "tier": "outsider",
       "label": "",
-      "price": 46.0,
+      "price": 41.0,
       "top3": 7,
       "top4": 9,
       "why": [],
@@ -429,7 +429,7 @@
       "rating": 74.3,
       "tier": "outsider",
       "label": "",
-      "price": 27.0,
+      "price": 31.0,
       "top3": 5,
       "top4": 7,
       "why": [],
@@ -447,7 +447,7 @@
       "rating": 74.1,
       "tier": "outsider",
       "label": "",
-      "price": 35.0,
+      "price": 41.0,
       "top3": 5,
       "top4": 7,
       "why": [],
@@ -483,7 +483,7 @@
       "rating": 60.0,
       "tier": "outsider",
       "label": "",
-      "price": 61.0,
+      "price": 67.0,
       "top3": 1,
       "top4": 2,
       "why": [],
@@ -493,6 +493,44 @@
       "void": false
     }
   ],
-  "result": null,
+  "result": {
+    "settled_at": "2026-11-03T05:03:40+00:00",
+    "placings": [
+      {
+        "pos": 1,
+        "number": "20",
+        "horse": "Point Of Law",
+        "win_div": 7.8,
+        "place_div": 3.1
+      },
+      {
+        "pos": 2,
+        "number": "15",
+        "horse": "Zahrann",
+        "win_div": null,
+        "place_div": 11.0
+      },
+      {
+        "pos": 3,
+        "number": "11",
+        "horse": "Juja Kibo",
+        "win_div": null,
+        "place_div": 4.4
+      },
+      {
+        "pos": 4,
+        "number": "1",
+        "horse": "Sons And Lovers",
+        "win_div": null,
+        "place_div": null
+      }
+    ],
+    "exotics": {
+      "First Four": 50275.1,
+      "Quinella": 141.0,
+      "Trifecta": 2422.3
+    },
+    "our_pick_outcome": "unplaced"
+  },
   "note": ""
 }
