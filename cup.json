@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-03T12:03:08+00:00",
+  "generated_at": "2026-11-03T13:03:41+00:00",
   "status": "result",
   "void": false,
   "void_reason": "",
@@ -10,7 +10,7 @@
     "country": "AUS",
     "date": "2026-11-03",
     "distance": "3200m",
-    "condition": "Soft5",
+    "condition": "Good4",
     "start_time": "17:00:00",
     "field_cap": 24,
     "nominations": 24,
@@ -494,7 +494,7 @@
     }
   ],
   "result": {
-    "settled_at": "2026-11-03T12:03:08+00:00",
+    "settled_at": "2026-11-03T13:03:41+00:00",
     "placings": [
       {
         "pos": 1,
