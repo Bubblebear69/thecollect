@@ -283,9 +283,9 @@
                 '<div class="rr-l">'+
                   '<div class="rr-h">'+esc(r.race_no)+(r.time?' · '+esc(r.time):'')+'</div>'+
                   '<div class="rr-pick">Our pick: '+esc(r.pick)+'</div>'+
-                  (r.void?'<div class="rr-res">'+(r.void_reason==='abandoned'?'This race was abandoned — it doesn\'t count toward our win, place or exotic rates.':'Our top pick was scratched — this race doesn\'t count toward our win, place or exotic rates.')+'</div>':((res?'<div class="rr-res">'+res+'</div>':'')+ exo))+
+                  (r.void?'<div class="rr-res">'+(r.void_reason==='abandoned'?'This race was abandoned — it doesn\'t count toward our win, place or exotic rates.':r.void_reason==='transferred'?'This race was transferred — it doesn\'t count toward our win, place or exotic rates.':'Our top pick was scratched — this race doesn\'t count toward our win, place or exotic rates.')+'</div>':((res?'<div class="rr-res">'+res+'</div>':'')+ exo))+
                 '</div>'+
-                '<div class="badge '+c+'">'+(r.void?(r.void_reason==='abandoned'?'Abandoned':'Scratched'):outcomeLabel(c))+'</div>'+
+                '<div class="badge '+c+'">'+(r.void?(r.void_reason==='abandoned'?'Abandoned':r.void_reason==='transferred'?'Transferred':'Scratched'):outcomeLabel(c))+'</div>'+
                 '</div>';
       });
       html += '</div>';

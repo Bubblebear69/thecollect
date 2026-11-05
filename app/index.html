@@ -662,7 +662,7 @@ function hasAccess(){ return localStorage.getItem(LS.access) === 'yes'; }
 // Stamped by the publisher at deploy time. When data.json carries a NEWER
 // shell version than the code that's running, the app reloads itself once —
 // so an always-open home-screen app picks up new features without sign-outs.
-const SHELL_VERSION = "c67cfe0aa2ba";
+const SHELL_VERSION = "0660a2ce8ab7";
 
 // The "race day" the app shows is referenced to ONE zone, so every viewer —
 // NZ, Perth, Sydney, anywhere — agrees with the engine on what "today" is,
@@ -1444,7 +1444,7 @@ function resRow(r){
   const won = r.outcome === 'won';
   const p1 = (r.placings||[])[0];
   let badge;
-  if (r.void) badge = '<span class="badge void">' + (r.void_reason==='abandoned'?'Abandoned':'Scratched') + '</span>';
+  if (r.void) badge = '<span class="badge void">' + (r.void_reason==='abandoned'?'Abandoned':r.void_reason==='transferred'?'Transferred':'Scratched') + '</span>';
   else if (won && p1 && p1.win_div) badge = `<span class="badge won">WON $${(+p1.win_div).toFixed(2)}</span>`;
   else if (won) badge = '<span class="badge won">WON</span>';
   else if (r.outcome === 'placed') badge = '<span class="badge placed">▲ placed</span>';
@@ -1462,7 +1462,7 @@ function resRow(r){
   return `<div class="res-row ${won?'iswon':''}${r.void?' voided':''}">
     <div class="res-head"><span class="res-where">${esc(r.race_no)}</span><span class="res-time tnum">${esc(r.time)}</span>${badge}${t4}</div>
     ${r.pick ? `<div class="res-pick">Our pick: <b>${esc(r.pick)}</b>${r.top5?' <span class="star">★</span>':''}</div>` : ''}
-    ${r.void ? `<div class="res-note" style="color:var(--muted);font-size:12.5px;margin-top:4px">${r.void_reason==='abandoned'?'This race was abandoned — it doesn’t count toward our win, place or exotic rates.':'Our top pick was scratched — this race doesn’t count toward our win, place or exotic rates.'}</div>` : ''}
+    ${r.void ? `<div class="res-note" style="color:var(--muted);font-size:12.5px;margin-top:4px">${r.void_reason==='abandoned'?'This race was abandoned — it doesn’t count toward our win, place or exotic rates.':r.void_reason==='transferred'?'This race was transferred — it doesn’t count toward our win, place or exotic rates.':'Our top pick was scratched — this race doesn’t count toward our win, place or exotic rates.'}</div>` : ''}
     ${r.settled && (r.placings||[]).length ? `<div class="res-div">${
       r.placings.map(p => `${p.pos}. #${esc(p.number)} ${esc(p.horse)}${p.win_div?` $${(+p.win_div).toFixed(2)}`:(p.place_div?` ($${(+p.place_div).toFixed(2)})`:'')}`).join(' &nbsp;·&nbsp; ')
     }${r.exotics && r.exotics.Trifecta ? ` &nbsp;·&nbsp; Trifecta $${(+r.exotics.Trifecta).toFixed(2)}` : ''}${r.exotics && r.exotics['First Four'] ? ` &nbsp;·&nbsp; First 4 $${(+r.exotics['First Four']).toFixed(2)}` : ''}</div>` : ''}

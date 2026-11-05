@@ -916,7 +916,7 @@ function paintPicks(){
       <span class="saddle ${won?'pl-1':'pl-4'}">${(r.pick.match(/#(\d+)/)||[])[1]||'·'}</span>
       <div class="pl-txt"><span class="pl-pos">${r.race}</span>
         <b>${r.pick.replace(/#\d+\s*/,'')}</b>${vd?` <span class="frow-c">— voided, not counted toward our rates</span>`:''}</div>
-      <span class="op-badge ob-${out}">${vd ? (r.void_reason==='abandoned'?'Abandoned':'Scratched') : `${r.outcome}${r.div?' · $'+r.div.toFixed(2):''}`}</span>
+      <span class="op-badge ob-${out}">${vd ? (r.void_reason==='abandoned'?'Abandoned':r.void_reason==='transferred'?'Transferred':'Scratched') :`${r.outcome}${r.div?' · $'+r.div.toFixed(2):''}`}</span>
     </div>`;
   });
   body.innerHTML = h + '</div></article>';
@@ -1121,7 +1121,7 @@ async function paintResults(){
         const won = pk.won, placed = pk.pos && pk.pos <= 3;
         const cls = won ? 'ourpick-won' : (placed ? 'ourpick-plc' : 'ourpick-out');
         const badge = (r.void || pk.void) ?
-                        (r.void_reason==='abandoned'?'Abandoned, not counted':'Scratched, not counted') :
+                        (r.void_reason==='abandoned'?'Abandoned, not counted':r.void_reason==='transferred'?'Transferred, not counted':'Scratched, not counted') :
                       won ? `WON${pk.div?(' · $'+pk.div.toFixed(2)):''}` :
                       (pk.pos ? ord(pk.pos) : 'unplaced');
         h += `<div class="ourpick ${cls}">
