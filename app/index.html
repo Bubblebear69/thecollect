@@ -662,7 +662,7 @@ function hasAccess(){ return localStorage.getItem(LS.access) === 'yes'; }
 // Stamped by the publisher at deploy time. When data.json carries a NEWER
 // shell version than the code that's running, the app reloads itself once —
 // so an always-open home-screen app picks up new features without sign-outs.
-const SHELL_VERSION = "0660a2ce8ab7";
+const SHELL_VERSION = "aad30a57816e";
 
 // The "race day" the app shows is referenced to ONE zone, so every viewer —
 // NZ, Perth, Sydney, anywhere — agrees with the engine on what "today" is,
@@ -1499,8 +1499,10 @@ function renderResults(){
         <div class="cell"><div class="n tnum good">${sb.wins}<span class="sub-n">/${sb.scored!=null?sb.scored:sb.races}</span></div><div class="l">Winners</div></div>
         <div class="cell"><div class="n tnum">${Math.round(sb.win_pct)}%</div><div class="l">Win strike</div></div>
         <div class="cell"><div class="n tnum">${Math.round(sb.place_pct)}%</div><div class="l">Top-3 strike</div></div>
-      </div>
-      <div class="eyebrow">Our top 4</div>
+      </div>`;
+    // No top4 in the payload = the publisher could not count it (its results
+    // view failed). Show nothing rather than 0 winners and 0%.
+    if (sb.top4) h += `<div class="eyebrow">Our top 4</div>
       <div class="tally">
         <div class="cell"><div class="n tnum good">${t4.wins||0}</div><div class="l">Winners</div></div>
         <div class="cell"><div class="n tnum">${Math.round(t4.win_pct||0)}%</div><div class="l">Win strike</div></div>
