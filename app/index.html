@@ -662,7 +662,7 @@ function hasAccess(){ return localStorage.getItem(LS.access) === 'yes'; }
 // Stamped by the publisher at deploy time. When data.json carries a NEWER
 // shell version than the code that's running, the app reloads itself once —
 // so an always-open home-screen app picks up new features without sign-outs.
-const SHELL_VERSION = "aad30a57816e";
+const SHELL_VERSION = "a77bdc60a758";
 
 // The "race day" the app shows is referenced to ONE zone, so every viewer —
 // NZ, Perth, Sydney, anywhere — agrees with the engine on what "today" is,
@@ -1633,7 +1633,7 @@ function renderTomorrow(){
   let h = topBar();
   h += '<div class="fade">';
   h += `<div class="datehead"><div class="d">Tomorrow</div><div class="c">Early value</div></div>`;
-  h += `<div class="tmr-note">Our strongest early picks at today's fixed price — get set before the market wakes up. Early picks are provisional; the final pick locks at 8am local on race day (8:30am in SA and NT). Early prices move; fixed-odds bets refund if your horse scratches.</div>`;
+  h += `<div class="tmr-note">Our strongest early picks at today's fixed price — get set before the market wakes up. Early picks are provisional; the final pick locks at 8am local on race day. Early prices move; fixed-odds bets refund if your horse scratches.</div>`;
   if (!tm.length){
     h += `<div class="banner"><span>🌅</span><div>Tomorrow's early picks are coming soon — today's picks lock at 8am local.</div></div>`;
   } else {
