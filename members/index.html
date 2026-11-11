@@ -5,6 +5,29 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>The Collect — members</title>
 <meta name="robots" content="noindex" />
+<!-- Content Security Policy. The page is one file of inline style and
+     script blocks, so script-src and style-src must allow 'unsafe-inline'
+     until those are split out — which is why the escaping in the render
+     functions matters more than the policy does. What this DOES buy, today:
+       * connect-src 'self' https://api.thecollect.nz — a script that did run
+         could post what it scraped only to us: this site, and the auth and
+         paid-data API on its own host (auth/deploy/Caddyfile);
+       * img-src 'self' data: — no beacon back to an attacker's host;
+       * object-src 'none', base-uri 'none' — no plugins, and no <base> tag
+         rewriting every relative fetch on the page;
+       * form-action 'none' — this page has no form, and now cannot grow one
+         that submits somewhere else.
+     frame-ancestors is deliberately absent: browsers ignore it in a meta tag,
+     so clickjacking cover needs a real response header from the host.
+
+     MOVING THE API? ADD ITS ORIGIN TO connect-src IN THE SAME CHANGE.
+     COLLECT_AUTH_URL and COLLECT_API point at https://api.thecollect.nz,
+     which is another origin from this page: without it in connect-src the
+     gate's fetch is refused and members cannot get in, with the page's own
+     tests green (Juan, 9 Nov: 0 requests, 2 policy refusals in Chromium).
+     tests/test_members_page_hardening.py pins the value, and checks that
+     every COLLECT_* origin this page assigns is in it. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://api.thecollect.nz; object-src 'none'; base-uri 'none'; form-action 'none'" />
 <link rel="icon" href="../app/icon.svg" type="image/svg+xml" />
 <style>
   :root{
@@ -25,6 +48,12 @@
   .top .name{ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; font-weight:700; font-size:17px; }
   .top .spacer{ flex:1; }
   .top a.plain{ color:var(--dim); font-size:13.5px; margin-left:14px; }
+  .top button.so{ background:none; border:1px solid var(--line); color:var(--dim); font:inherit; font-size:13.5px;
+        margin-left:14px; padding:5px 12px; border-radius:8px; cursor:pointer; white-space:nowrap; flex-shrink:0; }
+  .top button.so[hidden]{ display:none; }
+  .top button.so:disabled{ opacity:.6; cursor:default; }
+  #signOutMsg{ color:#E9906B; font-size:13px; padding-top:8px; }
+  #signOutMsg:empty{ display:none; }
 
   .tabs{ display:flex; gap:6px; margin:22px 0 6px; flex-wrap:wrap; }
   .tabs button{ background:var(--card); color:var(--dim); border:1px solid var(--line);
@@ -392,7 +421,9 @@
   <span class="spacer"></span>
   <a class="plain" href="../app/">Phone app</a>
   <a class="plain" href="../">Public site</a>
+  <button type="button" id="signOut" class="so" hidden>Sign out</button>
 </div></div>
+<div id="signOutMsg" class="wrap" role="status" aria-live="polite"></div>
 
 <div id="pw-slot" class="wrap"></div>
 <div id="page" class="wrap"></div>
@@ -631,6 +662,7 @@ async function paidFetch(path){
   if (res.status === 401 || res.status === 402){
     _auth.loaded = false; _auth.status = null;
     await loadAuthStatus();
+    syncSignOut();   // the session may have ended: the button follows the fresh status
     // 402 = known member, no active subscription -> subscribe gate. 401 = not signed in:
     // with auth on that is the subscribe/sign-in gate too (never the invite screen);
     // only with no auth configured does the legacy invite gate apply.
@@ -639,19 +671,108 @@ async function paidFetch(path){
   }
   return res;
 }
+/* Email sign-in link (spec item 2 §3). The server answers 204 whether or not the address is a member,
+   so the page must never say "not found" either. Shown to a signed-out visitor (status has no email)
+   whenever /auth/status answered 200 (that is the only way renderAuthGate runs). */
+/* The request goes to the SAME origin /auth/status came from, so a staging page can never send a prod link
+   (and vice versa). No COLLECT_AUTH_URL (status pushed in by the page) -> no endpoint -> no form. */
+function linkRequestUrl(){
+  try { return window.COLLECT_AUTH_URL ? new URL(window.COLLECT_AUTH_URL, location.href).origin + '/auth/request-link' : ''; }
+  catch (e) { return ''; }
+}
+var LINK_SENT_MSG = 'If that address is a member, a link is on its way.';
+function linkExpired(){
+  try { return new URLSearchParams(location.search).get('login') === 'expired'; } catch (e) { return false; }
+}
+async function requestSignInLink(email){
+  try {
+    var url = linkRequestUrl();
+    if (!url) return 'error';
+    var res = await fetch(url, { method:'POST', headers:{ 'Content-Type':'application/json' },
+                                              body: JSON.stringify({ email: email }), credentials:'omit' });
+    if (res.ok) return 'sent';
+    return res.status === 429 ? 'busy' : 'error';
+  } catch (e) { return 'error'; }
+}
+/* Sign out (Worker's note on #193; the phone app does the same). POST /auth/logout to the SAME origin /auth/status came from, with the
+   cookie (credentials:'include') and no body or Authorization header: the server revokes this browser's session and clears the cookie
+   (204). The button shows only when the status identifies a member and there is an endpoint to end the session with, or when the
+   legacy invite code is what lets this browser in (that one is local: nothing to end on a server). The page never says it is signed
+   out until the server has said so AND a fresh /auth/status agrees. */
+function logoutUrl(){
+  try { return window.COLLECT_AUTH_URL ? new URL(window.COLLECT_AUTH_URL, location.href).origin + '/auth/logout' : ''; }
+  catch (e) { return ''; }
+}
+function syncSignOut(){
+  var b = document.getElementById('signOut');
+  if (!b) return;
+  var st = getAuthStatus();
+  b.hidden = !(st ? (!!st.email && logoutUrl() !== '') : hasAccess());
+}
+async function signOutRemote(){
+  try {
+    var res = await fetch(logoutUrl(), { method:'POST', credentials:'include', cache:'no-store' });
+    return res.ok || res.status === 401;   // 204; a 401 means there was no session left to end
+  } catch (e) { return false; }
+}
+var SIGNOUT_FAIL_MSG = 'Couldn’t sign you out — please try again.';
+async function signOut(){
+  var b = document.getElementById('signOut'), m = document.getElementById('signOutMsg');
+  if (b) b.disabled = true;
+  if (m) m.textContent = '';
+  var ok = false;
+  try {
+    var st0 = getAuthStatus();
+    ok = (st0 && st0.email && logoutUrl() !== '') ? await signOutRemote() : true;   // no member status: only the local invite flag to clear
+    if (ok){
+      try { localStorage.removeItem('tc_access'); } catch (e) { /* storage blocked: there is no flag to clear */ }
+      _auth.loaded = false; _auth.status = null;   // the cached status said signed in
+      clearPaywallBanner();
+      await boot();                                // re-reads /auth/status and shows the right gate
+      var st1 = getAuthStatus();
+      if (st1 && st1.email) ok = false;            // the server said yes but still sees a session: do not pretend
+    }
+  } catch (e) { ok = false; }                      // anything unexpected: say so, and never leave the button dead
+  if (!ok && m) m.textContent = SIGNOUT_FAIL_MSG;
+  if (b) b.disabled = false;
+}
+
 function renderAuthGate(){
   clearPaywallBanner();
   var st = getAuthStatus() || {};
   var offer = trialOffer(Date.now(), st.founding === true, st.trial_days);
+  var signedOut = !st.email && linkRequestUrl() !== '';
+  var expired = signedOut && linkExpired();
   page().innerHTML = `<div class="gate">
     <img src="../logo.png" alt="" />
     <h1>Members only</h1>
+    ${expired ? '<p id="linkExpired" role="status">That link has expired — send another.</p>' : ''}
     <p>This is the full desk — every meeting, every race, the archive.
        Your subscription unlocks it: ${offer.lead}, then NZ$31.22/week (A$25 in Australia), GST incl., until you cancel.</p>
     <button id="goSub">${offer.button}</button>
+    ${signedOut ? `<form id="linkForm" novalidate style="margin-top:22px">
+      <p style="margin-bottom:8px">Already a member? Email me a sign-in link</p>
+      <input id="linkEmail" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" placeholder="you@email.com" aria-label="Your email address" style="text-transform:none;letter-spacing:normal" />
+      <button id="linkGo" type="submit">Email me a sign-in link</button>
+      <div class="err" id="linkMsg" role="status" aria-live="polite"></div>
+    </form>` : ''}
     <p style="margin-top:16px"><a href="../">Back to the public site</a></p>
   </div>`;
   document.getElementById('goSub').onclick = () => { location.href = '../#join'; };
+  var f = document.getElementById('linkForm');
+  if (f) f.onsubmit = async (e) => {
+    e.preventDefault();
+    var email = (document.getElementById('linkEmail').value || '').trim();
+    var msg = document.getElementById('linkMsg'), btn = document.getElementById('linkGo');
+    if (!email || email.indexOf('@') < 1){ msg.textContent = 'Enter the email address you joined with.'; return; }
+    btn.disabled = true; msg.textContent = '';
+    var r = await requestSignInLink(email);
+    btn.disabled = false;
+    msg.style.color = r === 'sent' ? 'var(--paper)' : '';   // a sent notice is not an error: no error colour
+    msg.textContent = r === 'sent' ? LINK_SENT_MSG
+                    : r === 'busy' ? 'Too many tries — please wait a few minutes and try again.'
+                    : 'That didn’t go through — please try again in a moment.';
+  };
 }
 
 async function checkCode(code){
@@ -913,7 +1034,7 @@ function renderToday(){
             ${p.firming ? '<span class="chip-money live-pulse">MONEY COMING</span>' : ''}
             ${p.confidence_band ? `<span class="band band-${p.confidence_band.level}">${p.confidence_band.label}</span>` : ''}</div>
           ${conf ? `<div class="pick-conf"><span class="conf-line">${CONF_TEXT[conf]||''}</span></div>` : ''}
-          ${p.confidence_band && p.confidence_band.note ? `<div class="band-note">${p.confidence_band.note}</div>` : ''}
+          ${p.confidence_band && p.confidence_band.note ? `<div class="band-note">${esc(p.confidence_band.note)}</div>` : ''}
         </div>
         ${conf ? confDial(conf) : ''}
       </div>`;
@@ -1077,7 +1198,7 @@ function renderBlackbook(){
       s += `<div class="pl-row">
         <span class="saddle ${cls==='bb-quiet'?'pl-1':'s-chance'}">★</span>
         <div class="pl-txt"><b>${x.horse}</b>
-          ${x.note ? `<span class="frow-c">${x.note}</span>` : ''}</div>
+          ${x.note ? `<span class="frow-c">${esc(x.note)}</span>` : ''}</div>
         ${x.seen ? `<span class="bb-seen">${x.seen}</span>` : ''}
       </div>`;
     });
@@ -1428,6 +1549,7 @@ document.addEventListener('change', e => {
 
 async function boot(){
   await loadAuthStatus();
+  syncSignOut();
   if (!accessGranted()){
     // No access: a known-but-unsubscribed member gets the subscribe gate; with no auth
     // status configured we keep the legacy invite gate so the live page is undisturbed.
@@ -1449,6 +1571,7 @@ async function boot(){
   }
   renderTab();
 }
+(function(){ var so = document.getElementById('signOut'); if (so) so.addEventListener('click', function(){ signOut(); }); })();
 boot();
 </script>
 </body>

@@ -662,7 +662,7 @@ function hasAccess(){ return localStorage.getItem(LS.access) === 'yes'; }
 // Stamped by the publisher at deploy time. When data.json carries a NEWER
 // shell version than the code that's running, the app reloads itself once —
 // so an always-open home-screen app picks up new features without sign-outs.
-const SHELL_VERSION = "28e0b7dd04c1";
+const SHELL_VERSION = "f72d55a44db9";
 
 // The "race day" the app shows is referenced to ONE zone, so every viewer —
 // NZ, Perth, Sydney, anywhere — agrees with the engine on what "today" is,
@@ -696,7 +696,10 @@ async function refreshIfStale(force){
   const before = (state.data||{}).generated_at || '';
   const r = await loadPicks();
   _lastFetch = Date.now();
-  if (!r.ok) return;
+  if (!r.ok){
+    if (r.gate === 'unavailable') renderGate('unavailable');
+    return;
+  }
 
   // Newer app code has shipped: reload the shell itself (once per version,
   // so a caching hiccup can never loop us).
@@ -713,7 +716,12 @@ async function refreshIfStale(force){
 
   if (((state.data||{}).generated_at || '') !== before){
     // fresh publish — repaint whatever the user is looking at
-    if (!accessGranted()){ if (!getAuthStatus()) renderLanding(); return; }
+    if (!accessGranted()){
+      if (!getAuthStatus()){
+        if (authDown() && rememberedMember()) renderGate('unavailable'); else renderLanding();
+      }
+      return;
+    }
     renderTab(); insertPaywallBanner();
   }
 }
@@ -1113,7 +1121,18 @@ async function loadPicks(){
         state.data = await res.json();
         return { ok:true };
       }
-    } catch (e){ /* fall through to demo */ }
+    } catch (e){ /* fall through */ }
+    // data.json did not load. A MEMBER never sees the sample day: keep today's
+    // real card if we already hold it, otherwise say plainly that it can't
+    // load and keep retrying. Only a visitor who is not signed in falls back
+    // to the demo (the pre-launch landing). Yesterday's card is not "today's
+    // card" - after midnight a stale one is no better than none.
+    const haveToday = !!(state.data && !state.demo && state.data.date === localToday());
+    if (accessGranted()){
+      if (haveToday) return { ok:true, stale:true };
+      return { ok:false, gate:'unavailable' };
+    }
+    if (state.data && !state.demo) return { ok:true, stale:true };
     state.demo = true;
     state.data = (window.SL_DEMO || BUILTIN_DEMO);
     return { ok:true };
@@ -1375,6 +1394,7 @@ function renderGate(kind, preview){
     empty:    ['No picks published yet', 'Today’s selections aren’t up yet. Check back a little later.'],
     error:    ['Something went wrong', 'We couldn’t reach the picks service. Try again in a moment.'],
     offline:  ['Can’t connect', 'Check your internet connection, then try again.'],
+    unavailable: ['Can’t load today’s picks', 'We couldn’t load today’s picks just now. Retrying automatically - or tap Try again.'],
   };
   const [title, sub] = titles[kind] || titles.error;
 
@@ -1441,6 +1461,20 @@ function renderGate(kind, preview){
   h += legal();
   h += '</div>';
   app().innerHTML = h;
+  if (kind === 'unavailable') scheduleRetry();
+}
+
+// The 'unavailable' screen keeps trying on its own: a member should not have
+// to know to tap anything. One timer at a time; it stops when the screen goes.
+let _retryTimer = null;
+function scheduleRetry(){
+  clearTimeout(_retryTimer);
+  _retryTimer = setTimeout(async () => {
+    if (!document.querySelector('[data-retry]')) return;   // the screen has moved on
+    await loadAuthStatus();
+    const r = await loadPicks();
+    if (r.ok && !authDown()) boot(); else scheduleRetry();
+  }, 15000);
 }
 
 /* -------------------------------------------------- shared chrome */
@@ -1843,7 +1877,40 @@ function toggleTheme(){
    front-end only READS it (never computes the gate). Live: window.COLLECT_AUTH /
    COLLECT_AUTH_URL. No status present = legacy invite-code behaviour, so the live app is
    undisturbed until the backend wires it. (Dev ?auth= URL stub removed — #108.) ---- */
-var _auth = { loaded:false, status:null };
+var _auth = { loaded:false, status:null, unreachable:false };
+
+/* A remembered member changes WHICH screen an unreachable /auth/status shows, and
+   nothing else: a signed-in member whose status cannot be fetched sees "can't load"
+   rather than the landing or subscribe page. It never grants access (accessGranted()
+   does not read it) and paid data still needs the server. Written only from a
+   confirmed 200 {access:true}; cleared on a confirmed {access:false} and on sign-out.
+   It expires after 7 days (the session cookie rolls 30 days, a bearer is 90, and iOS
+   caps script-writable storage at 7 days of non-use) or at current_period_end,
+   whichever is first. Storage can throw (private window) - then nothing is remembered. */
+var MEMBER_SEEN_KEY = 'tc_member_seen';
+var MEMBER_SEEN_MS = 7 * 24 * 60 * 60 * 1000;
+function rememberMember(status, now){
+  try {
+    var until = (now || Date.now()) + MEMBER_SEEN_MS;
+    var end = status && status.current_period_end ? new Date(status.current_period_end).getTime() : NaN;
+    if (!isNaN(end)) until = Math.min(until, end);
+    localStorage.setItem(MEMBER_SEEN_KEY, String(until));
+  } catch(e){ /* nothing remembered */ }
+}
+function forgetMember(){
+  try { localStorage.removeItem(MEMBER_SEEN_KEY); } catch(e){ /* ignore */ }
+}
+function rememberedMember(now){
+  try {
+    var until = Number(localStorage.getItem(MEMBER_SEEN_KEY));
+    return !isNaN(until) && until > (now || Date.now());
+  } catch(e){ return false; }
+}
+// True only when a status URL is configured and the status could not be read (network
+// error, non-200 or an unreadable body - after the Bearer attempt and the cookie
+// attempt). "No status configured" is the legacy path and is not an outage.
+function authDown(){ return !!_auth.unreachable; }
+
 async function fetchAuthStatus(url, bearer){
   var opts = { credentials:'include', cache:'no-store' };
   if (bearer) opts.headers = { Authorization: 'Bearer ' + bearer };   // installed PWAs may have no cookie
@@ -1868,8 +1935,15 @@ async function loadAuthStatus(){
         state.token = ''; try { localStorage.removeItem(LS.token); } catch (e) { /* ignore */ }
         d = await fetchAuthStatus(url, '');
       }
-      if (d){ _auth.status = d; return d; }
+      if (d){
+        _auth.status = d; _auth.unreachable = false;
+        if (d.access) rememberMember(d); else forgetMember();
+        return d;
+      }
     } catch(e){ /* auth unreachable → fall through to legacy */ }
+    // Neither the Bearer nor the cookie attempt produced a status. Say so, and let the
+    // next boot ask again instead of treating this as the final answer.
+    _auth.unreachable = true; _auth.loaded = false;
   }
   _auth.status = null; return null;   // nothing configured → legacy invite-code behaviour, live app undisturbed
 }
@@ -1934,7 +2008,11 @@ async function boot(){
   if (r.ok){
     state.view = { name:'home' };
     const st = getAuthStatus();
-    if (!accessGranted()){ if (st){ renderGate('subscribe', await loadPreview()); return; } return renderLanding(); }
+    if (!accessGranted()){
+      if (st){ renderGate('subscribe', await loadPreview()); return; }
+      if (authDown() && rememberedMember()) return renderGate('unavailable');
+      return renderLanding();
+    }
     renderTab(); insertPaywallBanner();
   } else if (r.gate === 'signin' || r.gate === 'subscribe'){
     const pv = await loadPreview();
@@ -2108,6 +2186,7 @@ document.addEventListener('click', async (e) => {
   }
   else if (t.hasAttribute('data-signout')) {
     await signOutRemote(state.token);          // end the session on the server, or the Bearer stays valid
+    forgetMember();
     state.token = '';
     localStorage.removeItem(LS.token);
     localStorage.removeItem(LS.access);
