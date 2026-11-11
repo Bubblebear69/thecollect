@@ -36,8 +36,8 @@
 <div class="card">
   <div class="tick"><svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M20 6 9 17l-5-5" stroke="#31C47C" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
   <h1>You're in.</h1>
-  <p class="lead">Welcome to The Collect. Your <b>first month is free</b> — we won't charge your card until it ends.</p>
-  <p class="lead">After that it's <b>A$25 a week in Australia and NZ$31.22 a week in New Zealand</b>, both GST inclusive, and you can cancel any time.</p>
+  <p class="lead">Welcome to The Collect.<span data-trial="welcome-claim" hidden> Your <b data-trial="welcome">first month is free</b> — we won't charge your card until it ends.</span></p>
+  <p class="lead"><span data-trial="welcome-after">It's</span> <b>A$25 a week in Australia and NZ$31.22 a week in New Zealand</b>, both GST inclusive, and you can cancel any time.</p>
   <p class="meta" id="meta">Every pick, every meeting, NZ &amp; Australia — up race morning from 8am local (8:30am in SA and NT), fresh to the jump.</p>
   <a class="btn" href="index.html">Open today's picks →</a>
   <a class="btn ghost" id="manage" href="#" style="display:none">Manage billing</a>
@@ -47,6 +47,59 @@
     <div style="margin-top:8px">A receipt is on its way from Stripe. Billing is handled securely by Stripe — we never see your card details.</div>
   </footer>
 </div>
+<script>
+  // The trial claim follows the MEMBER, never the clock alone (Blair, 2 Nov): a founding member always gets 30 days; before 1 Jan
+  // (2026-12-31T11:00:00Z = 1 Jan 2027 00:00 NZDT) everyone gets 30; from then others get 7. And the page claims NOTHING about the trial
+  // unless it can tell who is looking (Blair, 31 Oct, reaffirmed 7 Nov): the card is taken before the access link or code is sent, so this
+  // page always comes after card entry and must know the member. An IDENTIFIED answer is one that carries the member's email (Charter,
+  // 5 Nov): an anonymous /auth/status says "7 days" about everyone after 1 Jan, including a founding member signed in only in the app,
+  // so the app's session token is sent the way phoneapp/index.html sends it (the 43-character token in localStorage sl_token, allowed
+  // API host only) and, if the server does not know it, the page asks again with the cookie alone. For anyone it cannot identify (no
+  // endpoint, no answer, an error) the claim stays hidden: "Welcome to The Collect." with no trial length at all, and the price
+  // paragraph loses its "After that". Nothing flashes: the claim is hidden in the static markup and only an identified answer reveals
+  // it, however late. The status URL comes only from our own global COLLECT_AUTH_URL (never the page URL). Worker will make the Stripe
+  // Checkout return carry the session id so the page can always look the member up.
+  // APPROVED by Blair, 7 Nov: the neutral price paragraph for anyone the page cannot identify, "It's A$25 a week ...".
+  (function(){
+    var claim = document.querySelector('[data-trial="welcome-claim"]');
+    var el = document.querySelector('[data-trial="welcome"]');
+    var after = document.querySelector('[data-trial="welcome-after"]');
+    if (!claim || !el) return;
+    var CUTOFF = Date.parse('2026-12-31T11:00:00Z');
+    var API_ALLOW = /^(https:\/\/api\.thecollect\.nz|http:\/\/(localhost|127\.0\.0\.1)(:\d{1,5})?)$/i;   // as phoneapp/index.html
+    var SESSION_TOKEN_RE = /^[A-Za-z0-9_-]{43}$/;                                                       // as phoneapp/index.html
+    // d = an answer that identified a member; the claim is never shown for anyone else
+    function show(d){
+      var n = d.trial_days;
+      var month = (n === 30 || n === 7) ? n === 30 : (d.founding === true || Date.now() < CUTOFF);
+      el.textContent = month ? 'first month is free' : '7-day free trial is on';
+      if (after) after.textContent = "After that it's";
+      claim.hidden = false;
+    }
+    function sessionToken(url){
+      try {
+        if (!API_ALLOW.test(new URL(url, location.href).origin)) return '';
+        var t = localStorage.getItem('sl_token') || '';
+        return SESSION_TOKEN_RE.test(t) ? t : '';
+      } catch (e) { return ''; }
+    }
+    function ask(url, token){
+      var opts = { credentials: 'include', cache: 'no-store' };
+      if (token) opts.headers = { Authorization: 'Bearer ' + token };
+      return fetch(url, opts)
+        .then(function(r){ return r.ok ? r.json() : null; })
+        .then(function(d){ return d && typeof d.access === 'boolean' ? d : null; });
+    }
+    function member(d){ return d && typeof d.email === 'string' && d.email !== '' ? d : null; }
+    var url = window.COLLECT_AUTH_URL;
+    if (!url || typeof fetch !== 'function') return;
+    var token = sessionToken(url);
+    ask(url, token)
+      .then(function(d){ return (token && !member(d)) ? ask(url, '') : d; })   // the server did not know the token: the website cookie can still speak
+      .then(function(d){ var m = member(d); if (m) show(m); })
+      .catch(function(){});
+  })();
+</script>
 <script>
   // "Manage billing" link — ONLY from window.COLLECT_PORTAL (our own global), NEVER from the URL:
   // a ?portal= value could be javascript:… (steals the stored token on click) or a fake billing

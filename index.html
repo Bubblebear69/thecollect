@@ -157,6 +157,7 @@
   .join-box .ck{display:flex;gap:9px;align-items:flex-start;font-size:12.5px;color:var(--muted)}
   .join-box .ck input{margin-top:3px;flex:none}
   .join-box .hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
+  .join-box .refbox{display:flex;flex-direction:column;gap:10px}
   .join-box .fmini{font-size:12px;text-align:center;color:var(--muted-2);margin-top:2px}
   #joinDone h4{font-size:19px;color:var(--pos);margin:0 0 6px}
   #joinDone p{font-size:14px;color:var(--muted);margin:0}
@@ -211,7 +212,7 @@
     </nav>
     <div class="nav-cta">
       <a class="login" href="members/">Log in</a>
-      <a class="btn btn-primary" href="#join">Get first month free</a>
+      <a class="btn btn-primary" href="#join" data-trial="cta">Get first month free</a>
       <button class="menu-btn" aria-label="Menu">≡</button>
     </div>
   </div>
@@ -226,7 +227,7 @@
     <h1 class="hero-h">Smarter racing decisions. <span class="green">Proven in public.</span></h1>
     <p class="hero-sub">Daily NZ &amp; Australian selections from a rating engine that publishes every result — win or lose.</p>
     <div class="hero-cta">
-      <a class="btn btn-primary btn-lg" href="#join">Get first month free →</a>
+      <a class="btn btn-primary btn-lg" href="#join" data-trial="cta" data-arrow="1">Get first month free →</a>
       <a class="btn btn-ghost btn-lg" href="#free">See today's free race</a>
     </div>
     <div class="countdown" id="countdown"></div>
@@ -289,8 +290,8 @@
 <!-- REPEAT CTA -->
 <div class="wrap">
   <div class="cta-band">
-    <div><h3>Ready to see tomorrow's card?</h3><p>Founding members get their first month free. Cancel any time. R18.</p></div>
-    <a class="btn btn-primary btn-lg" href="#join">Get first month free →</a>
+    <div><h3>Ready to see tomorrow's card?</h3><p><span data-trial="band">Founding members get their first month free.</span> Cancel any time. R18.</p></div>
+    <a class="btn btn-primary btn-lg" href="#join" data-trial="cta" data-arrow="1">Get first month free →</a>
   </div>
 </div>
 
@@ -332,8 +333,8 @@
         </ul>
       </div>
       <div class="join-box">
-        <h3>Claim your founding spot</h3>
-        <p class="founding">Doors open 1 December — founding members get their first month free.</p>
+        <h3 data-trial="spot">Claim your founding spot</h3>
+        <p class="founding" data-trial="founding">Doors open 1 December — founding members get their first month free.</p>
         <form id="joinForm" novalidate>
           <input type="text" name="first_name" placeholder="First name" aria-label="First name" required maxlength="60" autocomplete="given-name" />
           <input type="email" name="email" placeholder="Email" aria-label="Email" required autocomplete="email" />
@@ -346,24 +347,28 @@
             <option>West Coast</option><option>Canterbury</option><option>Otago</option>
             <option>Southland</option><option>Australia</option><option>Other</option>
           </select>
+          <div class="refbox" role="group" aria-label="Who referred you? (optional)">
+            <input type="text" name="referrer_name" placeholder="Who referred you? Their name (optional)" aria-label="Who referred you? Their name (optional)" maxlength="60" autocomplete="off" />
+            <input type="text" inputmode="email" autocapitalize="off" spellcheck="false" name="referrer_email" placeholder="Their email (needed if you give a name)" aria-label="Who referred you? Their email (needed if you give a name)" maxlength="254" autocomplete="off" />
+          </div>
           <label class="ck"><input type="checkbox" name="over18" required /><span>I confirm I am 18 or over.</span></label>
           <label class="ck"><input type="checkbox" name="terms_ok" required /><span>I agree to the <a href="terms.html" target="_blank" rel="noopener">Terms &amp; Conditions</a> and <a href="privacy.html" target="_blank" rel="noopener">Privacy Policy</a>.</span></label>
           <label class="ck"><input type="checkbox" name="email_ok" required /><span>Email me racing results and launch news. Unsubscribe any time.</span></label>
           <input type="text" name="hp_field" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true" />
           <input type="hidden" name="source" /><input type="hidden" name="campaign" /><input type="hidden" name="refcode" />
-          <button class="btn btn-primary" type="submit" style="width:100%;justify-content:center">Get first month free</button>
-          <div class="fmini">First month free, from the day you start. A card will be required before your access code is sent. Your access code will be emailed to you on 1 December 2026. Then NZ$31.22/week in New Zealand or A$25/week in Australia (GST incl.), charged weekly in advance until you cancel. Cancel any time in your account. 18+.</div>
+          <button class="btn btn-primary" type="submit" style="width:100%;justify-content:center" data-trial="cta">Get first month free</button>
+          <div class="fmini"><span data-trial="lead">First month free</span>, from the day you start. A card will be required before your access code is sent.<span data-trial="launch"> Your access code will be emailed to you on 1 December 2026.</span> Then NZ$31.22/week in New Zealand or A$25/week in Australia (GST incl.), charged weekly in advance until you cancel. Cancel any time in your account. 18+.</div>
           <div id="joinErr" class="fmini" role="alert" tabindex="-1" style="display:none;color:var(--green)">That didn't go through — please try again, or email
             <a href="mailto:hello@thecollect.nz" style="color:var(--green)">hello@thecollect.nz</a>.</div>
         </form>
         <div id="joinDone" style="display:none">
-          <h4>You're on the founding list.</h4>
-          <p>Your first month is free from 1 December. Watch your inbox — we publish every result, win or lose.</p>
-          <p class="muted" style="font-size:13px;margin:8px 0 0">A card will be required before your access code is sent. Your access code will be emailed to you on 1 December 2026.</p>
+          <h4 data-trial="thanks">You're on the founding list.</h4>
+          <p><span data-trial="freefrom">Your first month is free from 1 December. </span>Watch your inbox — we publish every result, win or lose.</p>
+          <p class="muted" style="font-size:13px;margin:8px 0 0">A card will be required before your access code is sent.<span data-trial="launch"> Your access code will be emailed to you on 1 December 2026.</span></p>
           <p class="muted" style="font-size:13px;margin:8px 0 0">While you wait, <a href="install.html" style="color:var(--green)">add The Collect to your home screen</a> — it opens like an app.</p>
           <div style="margin-top:16px;border-top:1px solid var(--line);padding-top:14px">
-            <p style="font-size:14px;color:var(--green);font-weight:700;margin:0 0 6px">Want a second month free?</p>
-            <p class="muted" style="font-size:13px;margin:0 0 10px">Send this link to two mates who follow the racing — if they both join the founding list, your second month is on us too.</p>
+            <p style="font-size:14px;color:var(--green);font-weight:700;margin:0 0 6px" data-trial="refhead">Want 7 days free?</p>
+            <p class="muted" style="font-size:13px;margin:0 0 10px" data-trial="refbody">Send this link to a mate who follows the racing. They put your name and email in the "Who referred you?" box when they join, and once they have paid four weekly payments in a row, you get 7 days free.</p>
             <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
               <input id="refLink" readonly aria-label="Your referral link"
                 style="flex:1;min-width:180px;padding:10px 12px;border-radius:9px;border:1px solid var(--line-2);background:rgba(5,8,6,.6);color:var(--text);font-size:13px" />
@@ -421,6 +426,62 @@
 </footer>
 
 <!-- live data: proof strip, free race, week winners -->
+<script>
+/* Trial offer copy — same switch as members.html and the app (terms.html): first month free
+   for sign-ups before 1 Jan 2027 NZ, a 7-day free trial for every new sign-up from then.
+   Cutoff = 2026-12-31T11:00:00Z = 1 Jan 2027 00:00 NZDT. The static HTML is the pre-cutoff
+   wording, so it is right with scripts off.
+   Three eras, as the welcome email in Ops/apps-script/signup.gs: before doors open (the static wording), from doors open to the
+   cutoff, and from the cutoff. DOORS_OPEN_MS = 2026-11-30T11:00:00Z = 1 Dec 2026 00:00 NZDT, the instant the countdown below flips
+   to "Doors are open". From then the lines that name 1 December or say "before it opens" are false, so they change; the offer
+   itself does not change until the cutoff.
+   DRAFT (Blair's decision card): the post-cutoff referral heading and text below are new wording, listed in
+   docs/DRAFT-trial-cutoff-copy.md, and stay DRAFT until he answers. APPROVED by Blair on 7 Nov: the post-cutoff band, section heading,
+   join line and share text, and the doors-open object's founding (without "founding"), share and freefrom strings and dropped code date.
+   REFERRAL_REWARD_LIVE (Hub/Charter, 5 Nov): the 7-days-free referral PROMISE is shown from the cutoff only when this is true. It is false
+   until Worker's Stripe grant exists and Blair says so; the clock alone must never switch a promise we cannot yet deliver on. This is the
+   ONE place to flip. While it is false, the referral spot after the cutoff carries a neutral share prompt and no reward. The
+   referrer name and email capture on the form does not depend on it.
+   Blair, 8 Nov: BEFORE the cutoff the referral spot carries the same paid rule (REFERRAL_LINE) whatever this constant says. It replaced
+   the earlier offer of an extra free month for two referrals, which was too generous and which nothing granted. The first reward cannot fall due before a
+   referred member's fourth weekly payment (late January at the earliest), and Worker's reward build must be live before then.
+   Its heading is REFERRAL_HEAD (APPROVED by Blair, 8 Nov about 19:05); the post-cutoff headings are as they were. */
+var TRIAL_CUTOFF_MS = Date.parse('2026-12-31T11:00:00Z');
+var DOORS_OPEN_MS = Date.parse('2026-11-30T11:00:00Z');
+var REFERRAL_REWARD_LIVE = false;
+// APPROVED by Blair, 8 Nov (referral card): the home-page line, word for word. Also the static wording in #joinDone above.
+var REFERRAL_HEAD = 'Want 7 days free?';   // APPROVED by Blair, 8 Nov (about 19:05); shown above REFERRAL_LINE
+var REFERRAL_LINE = 'Send this link to a mate who follows the racing. They put your name and email in the "Who referred you?" box when they join, and once they have paid four weekly payments in a row, you get 7 days free.';
+function trialOffer(now){
+  if (now >= TRIAL_CUTOFF_MS) return { cta:'Get your 7-day free trial', lead:'7-day free trial', thanks:"You're on the list.", launch:false,
+                                       band:'Try The Collect free for 7 days.', spot:'Claim your spot', founding:'Start with a 7-day free trial.',
+                                       refhead: REFERRAL_REWARD_LIVE ? REFERRAL_HEAD : 'Know someone who follows the racing?',
+                                       refbody: REFERRAL_REWARD_LIVE ? REFERRAL_LINE : 'Send them this link.',
+                                       share:'Try The Collect free for 7 days. Join with my link: ', freefrom:'' };
+  if (now >= DOORS_OPEN_MS) return { cta:'Get first month free', lead:'First month free', thanks:"You're on the founding list.", launch:false,
+                                     band:'Founding members get their first month free.', spot:'Claim your founding spot', founding:'Doors are open — your first month is free.',
+                                     refhead:REFERRAL_HEAD, refbody:REFERRAL_LINE,   // doors open: the paid rule under its heading (Blair, 8 Nov)
+                                     share:'Getting on The Collect — free first month. Join with my link: ', freefrom:'Your first month is free. ' };
+  return { cta:'Get first month free', lead:'First month free', thanks:"You're on the founding list.", launch:true,
+           band:'Founding members get their first month free.', spot:'Claim your founding spot', founding:'Doors open 1 December — founding members get their first month free.',
+           refhead:REFERRAL_HEAD, refbody:REFERRAL_LINE,   // before doors open: the paid rule under its heading (Blair, 8 Nov)
+           share:'Getting on The Collect before it opens — free first month. Join with my link: ', freefrom:'Your first month is free from 1 December. ' };
+}
+// Runs at load and again when the sign-up is confirmed (show() below): a page loaded before the doors-open instant or the cutoff
+// and submitted after it must thank the visitor for the offer in force now, which is the one the welcome email is written for.
+function applyTrialOffer(){
+  var o = trialOffer(Date.now());
+  Array.prototype.forEach.call(document.querySelectorAll('[data-trial]'), function(el){
+    var kind = el.getAttribute('data-trial');
+    if (kind === 'cta') el.textContent = o.cta + (el.getAttribute('data-arrow') ? ' \u2192' : '');
+    else if (kind === 'thanks') el.textContent = o.thanks;
+    else if (kind === 'launch') { if (!o.launch) el.textContent = ''; }   // "emailed on 1 December 2026" is past from doors open: drop it, add no new claim
+    else if (kind === 'lead') el.textContent = o.lead;
+    else if (typeof o[kind] === 'string') el.textContent = o[kind];   // band, spot, founding, freefrom, refhead, refbody
+  });
+}
+applyTrialOffer();
+</script>
 <script>
 (async function(){
   try{
@@ -517,7 +578,27 @@
     if(r.ok || !retryableFail(r)) return r;        // don't retry definite rejections (validation / 4xx / bad reply)
     return await postSignupOnce(endpoint, data, timeoutMs, opts.fetchImpl);   // retry once on a transient failure
   }
-  try{ window.TC_signup = { submitSignup: submitSignup, postSignupOnce: postSignupOnce }; }catch(e){}
+  // Blair, 7 Nov: "Who referred you?" is optional, but if either part is filled in BOTH are needed (the email is what we match on, the name is
+  // the check). The same rules as the server's (Ops/apps-script/signup.gs validateSignup_), so the person hears about a problem here first.
+  function referrerProblem(name, email, own){
+    name = String(name == null ? '' : name).trim();
+    email = String(email == null ? '' : email).trim().toLowerCase();
+    if(!name && !email) return '';
+    if(!name || !email) return 'referrer_incomplete';
+    if(name.length > 60) return 'referrer_name_invalid';
+    if(email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || /^[=+\-@]/.test(email)) return 'referrer_email_invalid';
+    if(email === String(own == null ? '' : own).trim().toLowerCase()) return 'referrer_is_self';
+    return '';
+  }
+  // APPROVED by Blair, 8 Nov (referral card): what the person is told.
+  var REFERRER_MSG = {
+    referrer_incomplete: 'If you say who referred you, please give both their name and their email.',
+    referrer_name_invalid: 'Please keep your referrer\u2019s name to 60 characters.',
+    referrer_email_invalid: 'Please check your referrer\u2019s email address.',
+    referrer_is_self: 'Your referrer\u2019s email can\u2019t be your own.'
+  };
+  function referrerMessage(reason){ return Object.prototype.hasOwnProperty.call(REFERRER_MSG, reason) ? REFERRER_MSG[reason] : ''; }
+  try{ window.TC_signup = { submitSignup: submitSignup, postSignupOnce: postSignupOnce, referrerProblem: referrerProblem, referrerMessage: referrerMessage }; }catch(e){}
 
   var form = document.getElementById('joinForm');
   if(!form) return;
@@ -528,12 +609,24 @@
     if(q.get('utm_source')) form.source.value = q.get('utm_source');
     if(q.get('utm_campaign')) form.campaign.value = q.get('utm_campaign');
     var ref = q.get('r') || q.get('ref'); if(ref) form.refcode.value = ref;
+    // Blair, 7 Nov: the "Who referred you?" pair is the referrer's NAME AND EMAIL, matched on the email, so a friend's link (?r=CODE) can no
+    // longer fill it in (a code is neither). The code is still recorded with the sign-up (refcode) as where they came from, and a referral is
+    // only ever credited from what the person types into the pair, never from the hidden refcode.
   }catch(e){}
   form.addEventListener('submit', async function(ev){
     ev.preventDefault();
     if(!form.checkValidity()){ form.reportValidity(); return; }
     var btn = form.querySelector('button[type=submit]');
     var errEl = document.getElementById('joinErr');
+    var rName = form.referrer_name ? form.referrer_name.value.trim() : '';
+    var rEmail = form.referrer_email ? form.referrer_email.value.trim().toLowerCase() : '';
+    var rProblem = referrerProblem(rName, rEmail, form.email.value);
+    if(rProblem){
+      if(errEl){ errEl.textContent = referrerMessage(rProblem); errEl.style.display='block'; }
+      var bad = (rProblem === 'referrer_name_invalid' || (rProblem === 'referrer_incomplete' && !rName)) ? form.referrer_name : form.referrer_email;
+      try{ bad.focus(); }catch(e){}
+      return;
+    }
     if(errEl) errEl.style.display='none';
     btn.disabled = true; btn.textContent = 'Adding you…';
     var data = {
@@ -544,7 +637,8 @@
       email_ok: form.email_ok.checked,
       terms_ok: form.terms_ok.checked,
       hp_field: form.hp_field ? form.hp_field.value : '',
-      source: form.source.value, campaign: form.campaign.value, refcode: form.refcode.value
+      source: form.source.value, campaign: form.campaign.value, refcode: form.refcode.value,
+      referrer_name: rName, referrer_email: rEmail      // optional pair: both or neither, checked above and again by the server
     };
     // Real confirmation, not fire-and-forget: thank-you ONLY when the server wrote the row
     // and returned {ok:true}. Honeypot hits are parked server-side and also reply ok:true, so
@@ -552,9 +646,11 @@
     // (e.g. a bad email the browser let through) shows its own message instead of looping.
     var result = await submitSignup(ENDPOINT, data, { timeoutMs: 10000 });
     if(result && result.ok){ show(); return; }
-    btn.disabled=false; btn.textContent='Get first month free';
+    btn.disabled=false; btn.textContent=trialOffer(Date.now()).cta;
     if(errEl){
-      errEl.innerHTML = (result && (result.reason === 'email_invalid' || result.reason === 'no email'))
+      var rmsg = result ? referrerMessage(result.reason) : '';
+      if(rmsg) errEl.textContent = rmsg;                       // the server refused the pair: say which part, not the generic line
+      else errEl.innerHTML = (result && (result.reason === 'email_invalid' || result.reason === 'no email'))
         ? 'Please check your email address and try again.'
         : joinErrDefault;
       errEl.style.display='block';
@@ -562,6 +658,7 @@
     }
   });
   function show(){
+    applyTrialOffer();   // re-check the clock now: the thank-you is for the offer in force at submit, not the one at page load
     form.style.display='none';
     document.getElementById('joinDone').style.display='block';
     buildRef((form.email && form.email.value || '').trim().toLowerCase());
@@ -580,7 +677,7 @@
       if(!code) code = Math.random().toString(36).slice(2,8).toUpperCase();
       var link = 'https://thecollect.nz/?r=' + code;
       var li = document.getElementById('refLink'); if(li) li.value = link;
-      var msg = 'Getting on The Collect before it opens — free first month. Join with my link: ' + link;
+      var msg = trialOffer(Date.now()).share + link;
       var wa = document.getElementById('refWa'); if(wa) wa.href = 'https://wa.me/?text=' + encodeURIComponent(msg);
       var fb = document.getElementById('refFb'); if(fb) fb.href = 'https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(link);
       var cp = document.getElementById('refCopy');
