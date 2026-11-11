@@ -662,7 +662,7 @@ function hasAccess(){ return localStorage.getItem(LS.access) === 'yes'; }
 // Stamped by the publisher at deploy time. When data.json carries a NEWER
 // shell version than the code that's running, the app reloads itself once —
 // so an always-open home-screen app picks up new features without sign-outs.
-const SHELL_VERSION = "a77bdc60a758";
+const SHELL_VERSION = "28e0b7dd04c1";
 
 // The "race day" the app shows is referenced to ONE zone, so every viewer —
 // NZ, Perth, Sydney, anywhere — agrees with the engine on what "today" is,
@@ -687,6 +687,7 @@ function localToday(){
 
 let _lastFetch = 0;
 async function refreshIfStale(force){
+  if (_codeScreen) return;   // the sign-in code is on screen: never repaint or reload over it
   // A PWA resumed from the home screen never reloads itself — so we do.
   // Showing yesterday's date is ALWAYS stale, no matter what the timer says.
   const dateStale = state.data && state.data.date &&
@@ -781,13 +782,123 @@ const bbStar = (horse) =>
 // paths are the Settings field (manual/dev) and — once the auth Worker is live — a single-use
 // `?code=` traded via POST /auth/exchange, so a credential never rides in a URL (thecollect.nz/app
 // is served by a third party whose request logs we don't own). Strip any stray query defensively.
+// The one thing read from the URL is a login `?code=` (spec item 2 §4a): single-use, dead in 10 minutes, and
+// not a credential, so a log entry is worthless. It is traded for the Bearer over POST /auth/exchange in boot().
+// Format: 8 chars from A-Z and 2-9 without I/O/0/1, shown ABCD-EFGH. Dash, spaces and case are all accepted (so is the server).
+const CODE_RE = /^\s*[A-HJ-NP-Z2-9]{4}[\s-]*[A-HJ-NP-Z2-9]{4}\s*$/i;
+let PENDING_CODE = '';
 (function stripQuery(){
+  try { const c = new URLSearchParams(location.search).get('code'); if (c && CODE_RE.test(c.trim())) PENDING_CODE = c.trim(); }
+  catch (e) { /* ignore */ }
   try { if (location.search) history.replaceState(null, '', location.pathname + location.hash); }
   catch (e) { /* ignore */ }
 })();
 
+// The Bearer is sent to whatever base is stored in LS.api, so that base is ALLOWLISTED, not just
+// kept out of the URL (spec item 2 §5a): exactly https://api.thecollect.nz, or localhost for dev.
+// A stale value from an older build or a crafted `?api=` link is dropped on load, so it can never
+// receive a token that is minted later. The Settings field is validated against the same list.
+const API_ALLOW = /^(https:\/\/api\.thecollect\.nz|http:\/\/(localhost|127\.0\.0\.1)(:\d{1,5})?)$/i;
+function safeApi(v){ const t = String(v == null ? '' : v).trim().replace(/\/+$/, ''); return API_ALLOW.test(t) ? t : ''; }
+function storedApi(){
+  let raw = '';
+  try { raw = localStorage.getItem(LS.api) || ''; } catch (e) { /* storage blocked */ }
+  const ok = safeApi(raw);
+  if (raw && !ok){ try { localStorage.removeItem(LS.api); } catch (e) { /* ignore */ } }
+  return ok || DEFAULT_API;
+}
+
+// Email sign-in (spec item 2 §4): POST /auth/token {email} always answers 204, so the app never says
+// "not found". The emailed link lands on /app/?code=… (or shows an 8-char code to type into Settings);
+// POST /auth/exchange trades it for the Bearer. The auth host is the ORIGIN /auth/status came from (COLLECT_AUTH_URL),
+// and only if it passes the allowlist: a staging page can never post to prod, and a stray origin gets nothing.
+// No allowlisted origin -> no base -> no sign-in form and no request.
+function authBase(){
+  try { return window.COLLECT_AUTH_URL ? safeApi(new URL(window.COLLECT_AUTH_URL, location.href).origin) : ''; }
+  catch (e) { return ''; }
+}
+function looksLikeLoginCode(v){ return CODE_RE.test(String(v == null ? '' : v).trim()); }
+async function exchangeLoginCode(code){
+  const base = authBase();
+  if (!base) return { ok:false, reason:'error' };
+  try {
+    const res = await fetch(base + '/auth/exchange', { method:'POST', headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify({ code: String(code).trim() }), credentials:'omit', cache:'no-store' });
+    if (res.ok){
+      const d = await res.json().catch(() => null);
+      if (d && typeof d.token === 'string' && d.token){
+        state.token = d.token;
+        try { localStorage.setItem(LS.token, d.token); } catch (e) { /* storage blocked: lives for this visit */ }
+        return { ok:true };
+      }
+      return { ok:false, reason:'error' };
+    }
+    return { ok:false, reason: res.status === 401 ? 'invalid' : res.status === 429 ? 'busy' : 'error' };
+  } catch (e) { return { ok:false, reason:'error' }; }
+}
+async function requestAppLink(email){
+  const base = authBase();
+  if (!base) return 'error';
+  try {
+    const res = await fetch(base + '/auth/token', { method:'POST', headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify({ email: email }), credentials:'omit', cache:'no-store' });
+    if (res.ok) return 'sent';
+    return res.status === 429 ? 'busy' : 'error';
+  } catch (e) { return 'error'; }
+}
+// A session token from /auth/exchange is token_urlsafe(32): 43 base64url characters. Only that shape is ever sent as the
+// Bearer on /auth/status: the server lets an Authorization header decide ALONE, so a stale value (an old invite code, a mistyped
+// code) would make a member who is signed in on the web read as signed out.
+const SESSION_TOKEN_RE = /^[A-Za-z0-9_-]{43}$/;
+function isSessionToken(v){ return SESSION_TOKEN_RE.test(String(v == null ? '' : v)); }
+// The Access code fields show an invite code the member typed, NEVER the session Bearer (Juan, 6 Nov): that is a 90-day
+// credential, and members screenshot Settings for support. With a session token the field is empty, and empty keeps it.
+function codeFieldValue(){ return isSessionToken(state.token) ? '' : state.token; }
+// Sign out ends THIS APP's session and THIS BROWSER's web session (Blair, 5 Nov; Juan, 6 Nov): it ends them on the SERVER, or the
+// Bearer stays valid after the app forgets it. The member's other phones and browsers keep their own sessions; on an iPhone
+// home-screen app the cookie jar is the app's own, apart from Safari's. Those are two calls, because an Authorization header decides alone: the cookie call carries NO
+// header (so the server reads the cookie), and the Bearer call carries no cookie. Best effort: offline, the app is still signed out here.
+async function signOutRemote(token){
+  const base = authBase();
+  if (!base) return;
+  const quiet = function(p){ return p.catch(function(){ /* offline */ }); };
+  const calls = [quiet(fetch(base + '/auth/logout', { method:'POST', credentials:'include', cache:'no-store' }))];   // the website cookie session
+  if (isSessionToken(token)) calls.push(quiet(fetch(base + '/auth/logout', { method:'POST', headers:{ Authorization:'Bearer ' + token }, credentials:'omit', cache:'no-store' })));   // this app's session
+  let timer;
+  const guard = new Promise(function(done){ timer = setTimeout(done, 4000); });
+  try { await Promise.race([Promise.all(calls), guard]); }
+  finally { clearTimeout(timer); }
+}
+function loginCodeMessage(reason, formBelow){
+  return reason === 'invalid' ? 'That code isn’t valid or has expired.' + (formBelow ? ' Request a new link below.' : '')
+       : reason === 'busy'    ? 'Too many tries — please wait a few minutes and try again.'
+       :                        'Couldn’t connect. Try again.';
+}
+// On iPhone an app added to the home screen does NOT share Safari's storage. So when the emailed
+// /app/?code= link opens in a browser tab (not the installed app), we must NOT trade the code for the
+// Safari copy: it is single-use, and spending it there would leave the installed app signed out.
+// We show the code instead; "sign in in this browser" is a deliberate button.
+function isStandalone(){
+  try { return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true; }
+  catch (e) { return false; }
+}
+function formatLoginCode(c){ const t = String(c == null ? '' : c).replace(/[\s-]/g, '').toUpperCase(); return t.slice(0, 4) + '-' + t.slice(4); }
+function renderCodeScreen(code){
+  const shown = formatLoginCode(code);
+  _codeScreen = true;
+  app().innerHTML = `<div class="gate" style="text-align:center">
+    <h2>Your sign-in code</h2>
+    <div id="logincode" class="tnum" style="font-size:36px;font-weight:800;letter-spacing:5px;margin:14px 0 6px;user-select:all;-webkit-user-select:all">${esc(shown)}</div>
+    <p class="hint"><b>Open the app and type this code in Settings.</b> Settings &rsaquo; Access code. It works once and expires in 10 minutes.</p>
+    <button class="btn ghost" style="margin-top:14px" data-usecode="${esc(shown)}">Sign in in this browser instead</button>
+    <div class="msg" id="codemsg" role="status" aria-live="polite"></div>
+  </div>`;
+}
+var _codeScreen = false;   // true while the sign-in code screen is up (see refreshIfStale)
+var _loginNote = '';   // set by boot() to the failure reason when a ?code= link could not be traded; shown once on the gate
+
 const state = {
-  api:   localStorage.getItem(LS.api)   || DEFAULT_API,
+  api:   storedApi(),
   token: localStorage.getItem(LS.token) || '',
   data:  null,
   demo:  false,
@@ -1256,9 +1367,11 @@ function renderLanding(){
 
 /* -------------------------------------------------- render: gate */
 function renderGate(kind, preview){
+  const st = getAuthStatus() || {};
+  const offer = trialOffer(Date.now(), st.founding === true, st.trial_days);
   const titles = {
     signin:   ['Enter your access code', 'Your code unlocks every pick for the day, with the evidence behind each one.'],
-    subscribe:['Unlock The Collect', 'First month free, then A$25/week in Australia or NZ$31.22/week in New Zealand, GST inclusive — billed weekly in advance, auto-renews, cancel any time. Every pick, every meeting, NZ and Australia.'],
+    subscribe:['Unlock The Collect', (offer.month ? 'First month free' : '7-day free trial') + ', then A$25/week in Australia or NZ$31.22/week in New Zealand, GST inclusive — billed weekly in advance, auto-renews, cancel any time. Every pick, every meeting, NZ and Australia.'],
     empty:    ['No picks published yet', 'Today’s selections aren’t up yet. Check back a little later.'],
     error:    ['Something went wrong', 'We couldn’t reach the picks service. Try again in a moment.'],
     offline:  ['Can’t connect', 'Check your internet connection, then try again.'],
@@ -1288,8 +1401,8 @@ function renderGate(kind, preview){
         h += `<div class="field"><label for="subemail">Email</label>
           <input id="subemail" type="email" autocomplete="email" autocapitalize="off" spellcheck="false" placeholder="you@email.com" value="${esc(state.email||'')}" /></div>
           <label class="subterms" style="display:flex;gap:9px;align-items:flex-start;font-size:13px;color:var(--muted);margin:2px 2px 12px;cursor:pointer"><input type="checkbox" id="subterms" style="margin-top:3px;flex-shrink:0" /><span>I agree to the <a href="terms.html" target="_blank" rel="noopener" style="color:var(--brass)">Terms &amp; Conditions</a> and <a href="privacy.html" target="_blank" rel="noopener" style="color:var(--brass)">Privacy Policy</a>.</span></label>
-          <button class="btn" data-subscribe>Start my free month</button>
-          <p class="hint" style="text-align:center;margin-top:10px">First month free, from the day you start — then A$25 per week in Australia or NZ$31.22 per week in New Zealand, GST inclusive, charged weekly in advance until you cancel. Cancel any time in your account. Secured by Stripe.</p>
+          <button class="btn" data-subscribe>${offer.button}</button>
+          <p class="hint" style="text-align:center;margin-top:10px">${offer.month ? 'First month free' : '7-day free trial'}, from the day you start — then A$25 per week in Australia or NZ$31.22 per week in New Zealand, GST inclusive, charged weekly in advance until you cancel. Cancel any time in your account. Secured by Stripe.</p>
           <div class="msg" id="submsg"></div>`;
       } else {
         // Pre-launch: no live checkout — point to the founding list, never a dead pay button.
@@ -1299,15 +1412,27 @@ function renderGate(kind, preview){
       h += `<div style="text-align:center;margin-top:14px"><a href="#" data-showcode style="color:var(--faint,#8a94a0);font-size:13px">Already have an access code?</a></div>
         <div id="codebox" style="display:none;margin-top:12px">
           <div class="field"><label for="tok">Access code</label>
-            <input id="tok" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="paste your code" value="${esc(state.token)}" /></div>
+            <input id="tok" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="paste your code" value="${esc(codeFieldValue())}" /></div>
           <button class="btn ghost" data-signin>Unlock with code</button>
           <div class="msg" id="gmsg"></div>
         </div>`;
     } else {
       h += `<div class="field"><label for="tok">Access code</label>
-        <input id="tok" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="paste your code" value="${esc(state.token)}" /></div>
+        <input id="tok" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="paste your code" value="${esc(codeFieldValue())}" /></div>
         <button class="btn" data-signin>Unlock today's picks</button>
         <div class="msg" id="gmsg"></div>`;
+    }
+    const gst = getAuthStatus();
+    const linkForm = !!(gst && !gst.email && authBase());
+    if (_loginNote){ h += `<div class="msg err" role="status" style="margin-top:12px">${esc(loginCodeMessage(_loginNote, linkForm))}</div>`; _loginNote = ''; }
+    if (linkForm){
+      h += `<div id="linkbox" style="margin-top:18px;text-align:center">
+        <p class="hint">Already a member? Email me a sign-in link</p>
+        <div class="field"><input id="linkemail" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" placeholder="you@email.com" aria-label="Your email address" /></div>
+        <button class="btn ghost" data-linkreq>Email me a sign-in link</button>
+        <div class="msg" id="linkmsg" role="status" aria-live="polite"></div>
+        <p class="hint" style="margin-top:8px">If the link shows an 8-character code instead, type it into Settings.</p>
+      </div>`;
     }
   } else {
     h += `<button class="btn" data-retry>Try again</button>`;
@@ -1674,12 +1799,12 @@ function settingsSheet(){
     <h3>Settings</h3>
     <p class="hint">Point the app at your picks service and sign in.</p>
     <div class="field"><label for="s-api">Picks service URL</label>
-      <input id="s-api" type="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="https://your-service.onrender.com" value="${esc(state.api)}" /></div>
+      <input id="s-api" type="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="https://api.thecollect.nz" value="${esc(state.api)}" /></div>
     <div class="field"><label for="s-tok">Access code</label>
-      <input id="s-tok" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="your subscriber code" value="${esc(state.token)}" /></div>
+      <input id="s-tok" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="${isSessionToken(state.token) ? 'signed in: leave blank' : 'your subscriber code'}" value="${esc(codeFieldValue())}" /></div>
     <button class="btn" data-save-settings>Save &amp; reload</button>
     ${window.COLLECT_PORTAL ? '<a class="btn ghost" style="margin-top:10px;text-align:center;text-decoration:none;display:block" href="'+window.COLLECT_PORTAL+'">Manage billing</a>' : ''}
-    ${state.api || state.token || hasAccess() ? '<button class="btn ghost" style="margin-top:10px" data-signout>Sign out</button>' : ''}
+    ${state.api || state.token || hasAccess() || (getAuthStatus() || {}).email ? '<button class="btn ghost" style="margin-top:10px" data-signout>Sign out</button>' : ''}
     <div class="install-help">
       <h4>Add The Collect to your phone</h4>
       <p class="hint">Install it like an app — full-screen, straight from your home screen, no app store.</p>
@@ -1719,6 +1844,13 @@ function toggleTheme(){
    COLLECT_AUTH_URL. No status present = legacy invite-code behaviour, so the live app is
    undisturbed until the backend wires it. (Dev ?auth= URL stub removed — #108.) ---- */
 var _auth = { loaded:false, status:null };
+async function fetchAuthStatus(url, bearer){
+  var opts = { credentials:'include', cache:'no-store' };
+  if (bearer) opts.headers = { Authorization: 'Bearer ' + bearer };   // installed PWAs may have no cookie
+  var res = await fetch(url, opts);
+  if (res.ok){ var d = await res.json(); if (d && typeof d.access === 'boolean') return d; }
+  return null;
+}
 async function loadAuthStatus(){
   if (_auth.loaded) return _auth.status;
   _auth.loaded = true;
@@ -1728,8 +1860,15 @@ async function loadAuthStatus(){
   var url = window.COLLECT_AUTH_URL;   // BUILD's fetch endpoint — set ~3 Nov (stub), KV-backed ~10 Nov
   if (url){
     try {
-      var res = await fetch(url, { credentials:'include', cache:'no-store' });
-      if (res.ok){ var d = await res.json(); if (d && typeof d.access === 'boolean'){ _auth.status = d; return d; } }
+      var okHost = false; try { okHost = safeApi(new URL(url, location.href).origin) !== ''; } catch (e) { /* bad url */ }
+      var bearer = (okHost && isSessionToken(state.token)) ? state.token : '';   // only a real session token, only to the allowed host
+      var d = await fetchAuthStatus(url, bearer);
+      if (d && bearer && !d.email){
+        // The server did not know this token (revoked or expired). Forget it and ask again without it, so a web session can speak.
+        state.token = ''; try { localStorage.removeItem(LS.token); } catch (e) { /* ignore */ }
+        d = await fetchAuthStatus(url, '');
+      }
+      if (d){ _auth.status = d; return d; }
     } catch(e){ /* auth unreachable → fall through to legacy */ }
   }
   _auth.status = null; return null;   // nothing configured → legacy invite-code behaviour, live app undisturbed
@@ -1739,6 +1878,18 @@ function accessGranted(){
   var s = getAuthStatus();
   if (s) return !!s.access;      // BUILD computed access; we never compute the gate
   return hasAccess();            // legacy invite-code path
+}
+/* Trial offer copy. Terms: standard free trial 7 days; founding members and anyone joining
+   during December 2026 get the first month free; from 1 Jan 2027 NZ every new sign-up is 7 days.
+   Cutoff = 2026-12-31T11:00:00Z = 1 Jan 2027 00:00 NZDT. The words follow what checkout sets
+   (30 days before the cutoff, 7 after, founding members always 30). */
+var TRIAL_CUTOFF_MS = Date.parse('2026-12-31T11:00:00Z');
+function trialOffer(now, founding, trialDays){
+  // With a backend, status.trial_days (30 or 7) is the one number behind both this copy and
+  // Checkout's trial_period_days, so it wins. Our own cutoff is only the no-backend fallback.
+  var month = (trialDays === 30 || trialDays === 7) ? trialDays === 30 : (!!founding || now < TRIAL_CUTOFF_MS);
+  return month ? { month:true, button:'Start your free month', lead:'first month free' }
+               : { month:false, button:'Start your 7-day free trial', lead:'7-day free trial' };
 }
 function trialDaysLeft(s){
   if (!s || !s.current_period_end) return null;
@@ -1752,9 +1903,8 @@ function paywallBanner(){
   var act = function(color){ return 'type="button" data-settings style="background:none;border:0;padding:0;font:inherit;font-weight:800;text-decoration:underline;cursor:pointer;white-space:nowrap;color:' + color + '"'; };
   if (s.plan === 'trialing'){
     var d = trialDaysLeft(s);
-    var txt = (d === null) ? 'Your free month is running.'
-            : (d === 0 ? 'Last day of your free month.' : (d + (d === 1 ? ' day' : ' days') + ' left on your free month.'));
-    return '<div id="pw-banner" class="pw-banner pw-trial"><span><b>Free month</b> — ' + esc(txt) + ' Then A$25 / NZ$31.22 per week, billed weekly in advance.</span><button ' + act('#E0B357') + '>Manage</button></div>';
+    var txt = (d === null) ? 'running' : (d === 0 ? 'last day' : d + (d === 1 ? ' day' : ' days') + ' left');
+    return '<div id="pw-banner" class="pw-banner pw-trial"><span><b>Free trial</b> · ' + esc(txt) + '.' + ' Then A$25 / NZ$31.22 per week, billed weekly in advance.</span><button ' + act('#E0B357') + '>Manage</button></div>';
   }
   if (s.plan === 'past_due'){
     return '<div id="pw-banner" class="pw-banner pw-due"><span><b>Payment needed</b> — update your card to keep your picks.</span><button ' + act('#E9906B') + '>Fix it</button></div>';
@@ -1771,7 +1921,14 @@ function insertPaywallBanner(){
 }
 
 async function boot(){
+  _codeScreen = false;
   app().innerHTML = '<div class="spin"></div>';
+  if (PENDING_CODE){
+    const c = PENDING_CODE; PENDING_CODE = '';
+    if (!isStandalone()){ renderCodeScreen(c); return; }
+    const x = await exchangeLoginCode(c);
+    if (x.ok){ _auth.loaded = false; _auth.status = null; } else { _loginNote = x.reason; }
+  }
   await loadAuthStatus();
   const r = await loadPicks();
   if (r.ok){
@@ -1788,7 +1945,7 @@ async function boot(){
 }
 
 document.addEventListener('click', async (e) => {
-  const t = e.target.closest('[data-tab],[data-meeting],[data-back],[data-bestbets],[data-settings],[data-theme-toggle],[data-refresh],[data-signin],[data-subscribe],[data-showcode],[data-retry],[data-save-settings],[data-signout],[data-goto],[data-access],[data-bb],[data-bbdel],[data-bbnote],[data-bbnote-save]');
+  const t = e.target.closest('[data-tab],[data-meeting],[data-back],[data-bestbets],[data-settings],[data-theme-toggle],[data-refresh],[data-signin],[data-linkreq],[data-usecode],[data-subscribe],[data-showcode],[data-retry],[data-save-settings],[data-signout],[data-goto],[data-access],[data-bb],[data-bbdel],[data-bbnote],[data-bbnote-save]');
   if (!t) {
     if (e.target.id === 'scrim') closeSheet();
     return;
@@ -1865,6 +2022,17 @@ document.addEventListener('click', async (e) => {
   }
   else if (t.hasAttribute('data-signin')) {
     const v = ($('#tok')||{}).value || '';
+    if (!v.trim()){                         // the field hides a session token: an empty click must not drop it
+      const gm = $('#gmsg'); if (gm){ gm.className='msg err'; gm.textContent='Type your access code first.'; }
+      return;
+    }
+    if (looksLikeLoginCode(v)){
+      const gm = $('#gmsg'); if (gm){ gm.className='msg'; gm.textContent='Checking…'; }
+      const x = await exchangeLoginCode(v);
+      if (!x.ok){ if (gm){ gm.className='msg err'; gm.textContent = loginCodeMessage(x.reason, !!$('#linkbox')); } return; }
+      _auth.loaded = false; _auth.status = null;
+      return boot();
+    }
     state.token = v.trim();
     localStorage.setItem(LS.token, state.token);
     const msg = $('#gmsg'); if (msg){ msg.className='msg'; msg.textContent='Checking…'; }
@@ -1873,6 +2041,29 @@ document.addEventListener('click', async (e) => {
     else if (r.gate === 'subscribe'){ if(msg){msg.className='msg err'; msg.textContent='That code isn’t active. Renew to unlock.';} }
     else if (r.gate === 'signin'){ if(msg){msg.className='msg err'; msg.textContent='Code not recognised. Check and try again.';} }
     else if (msg){ msg.className='msg err'; msg.textContent='Couldn’t connect. Try again.'; }
+  }
+  else if (t.hasAttribute('data-usecode')) {
+    e.preventDefault();
+    const cm = $('#codemsg'); if (cm){ cm.className = 'msg'; cm.textContent = 'Checking…'; }
+    const x = await exchangeLoginCode(t.getAttribute('data-usecode'));
+    if (!x.ok){ if (cm){ cm.className = 'msg err'; cm.textContent = loginCodeMessage(x.reason); } return; }
+    _auth.loaded = false; _auth.status = null;
+    return boot();
+  }
+  else if (t.hasAttribute('data-linkreq')) {
+    e.preventDefault();
+    const email = (($('#linkemail')||{}).value||'').trim().toLowerCase();   // same normalisation as checkout
+    const lm = $('#linkmsg');
+    if (!email || email.indexOf('@') < 1){ if (lm){ lm.className='msg err'; lm.textContent='Enter the email address you joined with.'; } return; }
+    t.disabled = true; if (lm){ lm.className='msg'; lm.textContent=''; }
+    const r = await requestAppLink(email);
+    t.disabled = false;
+    if (lm){
+      lm.className = r === 'sent' ? 'msg' : 'msg err';
+      lm.textContent = r === 'sent' ? 'If that address is a member, a link is on its way.'
+                     : r === 'busy' ? 'Too many tries — please wait a few minutes and try again.'
+                     :                'That didn’t go through — please try again in a moment.';
+    }
   }
   else if (t.hasAttribute('data-subscribe')) {
     e.preventDefault();
@@ -1897,8 +2088,18 @@ document.addEventListener('click', async (e) => {
   }
   else if (t.hasAttribute('data-save-settings')) {
     const api = ($('#s-api')||{}).value || '';
-    const tok = ($('#s-tok')||{}).value || '';
-    state.api = api.trim();
+    let tok = ($('#s-tok')||{}).value || '';
+    if (api.trim() && !safeApi(api)){      // before anything is spent: a single-use code must not be traded for a save that is refused
+      const sm = $('#smsg'); if (sm){ sm.className = 'msg err'; sm.textContent = 'That address isn’t allowed. Leave it blank, or use https://api.thecollect.nz.'; }
+      return;
+    }
+    if (!tok.trim() && isSessionToken(state.token)) tok = state.token;   // the field hides the session token; empty keeps it
+    if (looksLikeLoginCode(tok)){
+      const x = await exchangeLoginCode(tok);
+      if (!x.ok){ const sm = $('#smsg'); if (sm){ sm.className = 'msg err'; sm.textContent = loginCodeMessage(x.reason); } return; }
+      tok = state.token; _auth.loaded = false; _auth.status = null;
+    }
+    state.api = safeApi(api);
     state.token = tok.trim();
     localStorage.setItem(LS.api, state.api);
     localStorage.setItem(LS.token, state.token);
@@ -1906,9 +2107,11 @@ document.addEventListener('click', async (e) => {
     boot();
   }
   else if (t.hasAttribute('data-signout')) {
+    await signOutRemote(state.token);          // end the session on the server, or the Bearer stays valid
     state.token = '';
     localStorage.removeItem(LS.token);
     localStorage.removeItem(LS.access);
+    _auth.loaded = false; _auth.status = null;  // the cached status said signed in: boot() would paint the picks again
     closeSheet();
     boot();
   }

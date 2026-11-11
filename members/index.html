@@ -375,6 +375,13 @@
         border:0; font-weight:800; font-size:15px; cursor:pointer;
         background:var(--turf); color:#06130C; }
   .gate .err{ color:#E07B54; font-size:13.5px; margin-top:10px; min-height:18px; }
+  .pw-banner{ display:flex; align-items:center; justify-content:space-between; gap:12px;
+    margin:16px 0 0; padding:11px 15px; border-radius:11px; font-size:13.5px; line-height:1.35; }
+  .pw-banner a{ font-weight:800; text-decoration:underline; white-space:nowrap; }
+  .pw-trial{ background:rgba(224,179,55,.12); border:1px solid rgba(224,179,55,.38); color:#E0B357; }
+  .pw-trial a{ color:#E0B357; }
+  .pw-due{ background:rgba(233,144,107,.12); border:1px solid rgba(233,144,107,.42); color:#E9906B; }
+  .pw-due a{ color:#E9906B; }
   footer{ padding:34px 0; color:var(--faint); font-size:12.5px; }
 </style>
 </head>
@@ -387,6 +394,7 @@
   <a class="plain" href="../">Public site</a>
 </div></div>
 
+<div id="pw-slot" class="wrap"></div>
 <div id="page" class="wrap"></div>
 
 <footer><div class="wrap">R18 · Please gamble responsibly · NZ 0800 654 655 · AU 1800 858 858
@@ -540,6 +548,112 @@ function startTicker(){
 
 function hasAccess(){ return localStorage.getItem('tc_access') === 'yes'; }
 
+/* ---- subscription / auth status (mirrors the phone app). The front-end only READS
+   access; it never computes the gate. Live: window.COLLECT_AUTH / COLLECT_AUTH_URL.
+   No status present = legacy invite-code behaviour, so the live members page is undisturbed
+   until the backend wires it. (Dev ?auth= URL stub removed — #108 sibling.) ---- */
+var _auth = { loaded:false, status:null };
+async function loadAuthStatus(){
+  if (_auth.loaded) return _auth.status;
+  _auth.loaded = true;
+  // Dev ?auth= stub removed (#108 sibling): it set access:true straight from the URL (and here,
+  // unlike the app, there was no stripQuery guard). Status comes only from the server
+  // (COLLECT_AUTH_URL) or an explicit push override — never a query param.
+  if (window.COLLECT_AUTH && typeof window.COLLECT_AUTH === 'object'){ _auth.status = window.COLLECT_AUTH; return _auth.status; }  // optional push override
+  var url = window.COLLECT_AUTH_URL;   // BUILD's fetch endpoint — set ~3 Nov (stub), KV-backed ~10 Nov
+  if (url){
+    try {
+      var res = await fetch(url, { credentials:'include', cache:'no-store' });
+      if (res.ok){ var d = await res.json(); if (d && typeof d.access === 'boolean'){ _auth.status = d; return d; } }
+    } catch(e){ /* auth unreachable → fall through to legacy */ }
+  }
+  _auth.status = null; return null;   // nothing configured → legacy invite-code behaviour
+}
+function getAuthStatus(){ return _auth.status; }
+function accessGranted(){
+  var s = getAuthStatus();
+  if (s) return !!s.access;   // BUILD computed access; we never compute the gate
+  return hasAccess();         // legacy invite-code path
+}
+/* Trial offer copy. Terms: standard free trial 7 days; founding members and anyone joining
+   during December 2026 get the first month free; from 1 Jan 2027 NZ every new sign-up is 7 days.
+   Cutoff = 2026-12-31T11:00:00Z = 1 Jan 2027 00:00 NZDT. The words follow what checkout sets
+   (30 days before the cutoff, 7 after, founding members always 30). */
+var TRIAL_CUTOFF_MS = Date.parse('2026-12-31T11:00:00Z');
+function trialOffer(now, founding, trialDays){
+  // With a backend, status.trial_days (30 or 7) is the one number behind both this copy and
+  // Checkout's trial_period_days, so it wins. Our own cutoff is only the no-backend fallback.
+  var month = (trialDays === 30 || trialDays === 7) ? trialDays === 30 : (!!founding || now < TRIAL_CUTOFF_MS);
+  return month ? { month:true, button:'Start your free month', lead:'first month free' }
+               : { month:false, button:'Start your 7-day free trial', lead:'7-day free trial' };
+}
+function trialDaysLeft(s){
+  if (!s || !s.current_period_end) return null;
+  var t = new Date(s.current_period_end).getTime();   // current_period_end is ISO8601
+  if (isNaN(t)) return null;
+  return Math.max(0, Math.ceil((t - Date.now()) / 86400000));
+}
+function paywallBanner(){
+  var s = getAuthStatus();
+  if (!s || !s.access) return '';
+  var manage = window.COLLECT_PORTAL || '../#join';
+  if (s.plan === 'trialing'){
+    var d = trialDaysLeft(s);
+    var txt = (d === null) ? 'running' : (d === 0 ? 'last day' : d + (d === 1 ? ' day' : ' days') + ' left');
+    return '<div id="pw-banner" class="pw-banner pw-trial"><span><b>Free trial</b> · ' + esc(txt) + '.' + ' Then NZ$31.22/week (A$25 in Australia), GST incl., billed weekly in advance until you cancel.</span><a href="' + esc(manage) + '">Manage</a></div>';
+  }
+  if (s.plan === 'past_due'){
+    return '<div id="pw-banner" class="pw-banner pw-due"><span><b>Payment needed</b> — update your card to keep your picks.</span><a href="' + esc(manage) + '">Fix it</a></div>';
+  }
+  return '';   // active member — no banner
+}
+function insertPaywallBanner(){
+  var slot = document.getElementById('pw-slot');
+  if (slot) slot.innerHTML = paywallBanner();
+}
+/* pw-slot sits outside the page area, so a gate render does not wipe it: clear it
+   on every gate so a lapsed member never sees a stale "Free month" banner. */
+function clearPaywallBanner(){
+  var slot = document.getElementById('pw-slot');
+  if (slot) slot.innerHTML = '';
+}
+/* Single choke point for PAID data fetches. Prep: same-origin static files.
+   When the auth Worker is live, this is the ONE place to prefix window.COLLECT_API
+   and add credentials:'include' — no call-site churn. */
+async function paidFetch(path){
+  const res = await fetch(path, { cache:'no-store' });
+  // Access went stale mid-visit: the server says this request isn't authorised
+  // (401) or isn't on an active subscription (402). Both bodies are valid JSON,
+  // so a raw fetch wouldn't throw and the caller would paint an empty desk.
+  // Drop the cached auth, re-read it, show the right gate, then throw 'auth-lost'
+  // so no caller renders the error body as data. Inert on same-origin static
+  // files (they only ever 200/404); fires once COLLECT_API returns 401/402.
+  if (res.status === 401 || res.status === 402){
+    _auth.loaded = false; _auth.status = null;
+    await loadAuthStatus();
+    // 402 = known member, no active subscription -> subscribe gate. 401 = not signed in:
+    // with auth on that is the subscribe/sign-in gate too (never the invite screen);
+    // only with no auth configured does the legacy invite gate apply.
+    if (res.status === 402 || getAuthStatus()) renderAuthGate(); else renderGate();
+    throw new Error('auth-lost');
+  }
+  return res;
+}
+function renderAuthGate(){
+  clearPaywallBanner();
+  var st = getAuthStatus() || {};
+  var offer = trialOffer(Date.now(), st.founding === true, st.trial_days);
+  page().innerHTML = `<div class="gate">
+    <img src="../logo.png" alt="" />
+    <h1>Members only</h1>
+    <p>This is the full desk — every meeting, every race, the archive.
+       Your subscription unlocks it: ${offer.lead}, then NZ$31.22/week (A$25 in Australia), GST incl., until you cancel.</p>
+    <button id="goSub">${offer.button}</button>
+    <p style="margin-top:16px"><a href="../">Back to the public site</a></p>
+  </div>`;
+  document.getElementById('goSub').onclick = () => { location.href = '../#join'; };
+}
+
 async function checkCode(code){
   const clean = (code||'').trim().toUpperCase();
   if (!clean) return false;
@@ -550,6 +664,7 @@ async function checkCode(code){
 }
 
 function renderGate(){
+  clearPaywallBanner();
   page().innerHTML = `<div class="gate">
     <img src="../logo.png" alt="" />
     <h1>Members only</h1>
@@ -586,8 +701,8 @@ function nf(n){ return (n||0).toLocaleString('en-NZ'); }
 async function renderHome(){
   const d = DATA || {}, w = d.week || {};
   if (!STATS){
-    try { STATS = await (await fetch('stats.json',{cache:'no-store'})).json(); }
-    catch(e){ STATS = {}; }
+    try { STATS = await (await paidFetch('stats.json')).json(); }
+    catch(e){ if (e && e.message === 'auth-lost') return; STATS = {}; }
   }
   const s = STATS || {};
   const best = (w.best && w.best[0]) ? w.best[0] : null;
@@ -995,8 +1110,8 @@ async function renderStats(){
     '<div class="sub">where we shine — straight from our published record</div>';
   if (!INSIGHTS){
     page().innerHTML = h + '<p class="sub">Crunching the numbers…</p>';
-    try { INSIGHTS = await (await fetch('insights.json',{cache:'no-store'})).json(); }
-    catch(e){ INSIGHTS = {}; }
+    try { INSIGHTS = await (await paidFetch('insights.json')).json(); }
+    catch(e){ if (e && e.message === 'auth-lost') return; INSIGHTS = {}; }
   }
   const s = INSIGHTS || {};
   if (!s.picks){ page().innerHTML = h + '<p class="sub">Not enough settled races yet — this fills out fast.</p>'; return; }
@@ -1074,10 +1189,10 @@ async function renderResults(){
   if (!RES_DATES){
     page().innerHTML = h + '<p class="sub">Loading dates…</p>';
     try {
-      const r = await fetch('results/index.json', {cache:'no-store'});
+      const r = await paidFetch('results/index.json');
       RES_DATES = (await r.json()).dates || [];
       RES_SEL = RES_DATES[0] || '';
-    } catch(e){ RES_DATES = []; }
+    } catch(e){ if (e && e.message === 'auth-lost') return; RES_DATES = []; }
   }
   if (!RES_DATES.length){
     page().innerHTML = h + '<p class="sub">No results loaded yet.</p>'; return; }
@@ -1099,9 +1214,9 @@ async function paintResults(){
   if (!body) return;
   let day;
   try {
-    const r = await fetch('results/' + RES_SEL + '.json', {cache:'no-store'});
+    const r = await paidFetch('results/' + RES_SEL + '.json');
     day = await r.json();
-  } catch(e){ body.innerHTML = '<p class="sub">Couldn’t load that day.</p>'; return; }
+  } catch(e){ if (e && e.message === 'auth-lost') return; body.innerHTML = '<p class="sub">Couldn’t load that day.</p>'; return; }
   try { btcScoreDay(day); } catch(e){}   // score any Beat-the-Collect tips
   let h = '';
   (day.meetings||[]).forEach(m => {
@@ -1188,9 +1303,9 @@ async function renderHorses(){
   if (!HORSES){
     document.getElementById('hBody').innerHTML = '<p class="sub">Loading the form book (one-off, a moment)…</p>';
     try {
-      const r = await fetch('horses.json', {cache:'no-store'});
+      const r = await paidFetch('horses.json');
       HORSES = (await r.json()).horses || [];
-    } catch(e){ HORSES = []; }
+    } catch(e){ if (e && e.message === 'auth-lost') return; HORSES = []; }
     document.getElementById('hBody').innerHTML = '';
   }
 }
@@ -1312,16 +1427,23 @@ document.addEventListener('change', e => {
 });
 
 async function boot(){
-  if (!hasAccess()) return renderGate();
+  await loadAuthStatus();
+  if (!accessGranted()){
+    // No access: a known-but-unsubscribed member gets the subscribe gate; with no auth
+    // status configured we keep the legacy invite gate so the live page is undisturbed.
+    return getAuthStatus() ? renderAuthGate() : renderGate();
+  }
+  insertPaywallBanner();   // trial / past-due notice for paying members
   page().innerHTML = '<p class="sub" style="margin-top:40px">Loading the desk…</p>';
   try {
     const [a, b] = await Promise.all([
-      fetch('../app/data.json', {cache:'no-store'}),
-      fetch('archive.json', {cache:'no-store'}).catch(() => null),
+      paidFetch('../app/data.json'),
+      paidFetch('archive.json').catch(e => { if (e && e.message === 'auth-lost') throw e; return null; }),
     ]);
     DATA = await a.json();
     ARCHIVE = b && b.ok ? await b.json() : {days: []};
   } catch(e){
+    if (e && e.message === 'auth-lost') return;   // gate already shown by paidFetch
     page().innerHTML = '<p class="sub" style="margin-top:40px">Couldn’t load — check your connection and refresh.</p>';
     return;
   }
