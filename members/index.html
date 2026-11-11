@@ -726,6 +726,9 @@ async function signOut(){
     ok = (st0 && st0.email && logoutUrl() !== '') ? await signOutRemote() : true;   // no member status: only the local invite flag to clear
     if (ok){
       try { localStorage.removeItem('tc_access'); } catch (e) { /* storage blocked: there is no flag to clear */ }
+      // The app (/app/, the same origin) remembers a member for up to 7 days so an API outage shows
+      // "can't load" rather than the home page. A sign-out here must end that too (Juan, 9 Nov, #213).
+      try { localStorage.removeItem('tc_member_seen'); } catch (e) { /* storage blocked: nothing remembered */ }
       _auth.loaded = false; _auth.status = null;   // the cached status said signed in
       clearPaywallBanner();
       await boot();                                // re-reads /auth/status and shows the right gate
