@@ -468,6 +468,7 @@ details.guide[open] summary::before{ transform:rotate(90deg); }
 .cont-h{ font-size:11px; font-weight:800; letter-spacing:.05em; text-transform:uppercase;
   color:var(--muted); margin-bottom:8px; }
 .cont-sub{ font-weight:700; color:var(--faint,#8a94a0); }
+.c-adj{ font-size:11px; font-weight:700; color:var(--faint,#8a94a0); margin-left:6px; }
 .cont-row{ display:flex; gap:11px; align-items:flex-start; padding:8px 0;
   border-bottom:1px solid color-mix(in srgb, var(--line) 55%, transparent); }
 .cont-row:last-child{ border-bottom:none; }
@@ -531,9 +532,9 @@ details.guide[open] summary::before{ transform:rotate(90deg); }
 .bb-row:active{ transform:scale(.99); }
 .bb-row.top1{ border-color:color-mix(in srgb, var(--brass) 50%, var(--line));
   background:linear-gradient(135deg, rgba(212,175,55,.09), var(--surface) 60%); }
-.br-rate{ flex:none; width:52px; text-align:center; }
+.br-rate{ flex:none; width:64px; text-align:center; }
 .br-num{ font-size:20px; font-weight:800; letter-spacing:-.5px; line-height:1; color:var(--accent); }
-.br-lab{ font-size:8.5px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--faint); margin-top:3px; }
+.br-lab{ white-space:nowrap; font-size:8.5px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--faint); margin-top:3px; }
 .br-main{ flex:1; min-width:0; }
 .br-name{ font-weight:700; font-size:15.5px; letter-spacing:-.2px; display:flex; align-items:center; gap:7px; }
 .br-rank{ font-size:11px; font-weight:800; color:var(--faint); }
@@ -662,7 +663,7 @@ function hasAccess(){ return localStorage.getItem(LS.access) === 'yes'; }
 // Stamped by the publisher at deploy time. When data.json carries a NEWER
 // shell version than the code that's running, the app reloads itself once —
 // so an always-open home-screen app picks up new features without sign-outs.
-const SHELL_VERSION = "f72d55a44db9";
+const SHELL_VERSION = "adbd6a9f3b98";
 
 // The "race day" the app shows is referenced to ONE zone, so every viewer —
 // NZ, Perth, Sydney, anywhere — agrees with the engine on what "today" is,
@@ -1082,7 +1083,7 @@ function renderBestBets(){
   h += `<div class="backbar"><button class="back" data-back>
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></svg>Today</button></div>`;
   h += `<div class="detail-head"><div class="t">Today's Best Bets</div>
-      <div class="m">${live.length} play${live.length===1?'':'s'} · ranked by our rating</div></div>`;
+      <div class="m">${live.length} play${live.length===1?'':'s'} · ranked by bet rating</div></div>`;
   if (!bb.length){
     h += `<div class="banner"><span>☕</span><div>No best bets flagged today — the engine only stars a pick when the evidence and the market line up. The full card is on the Today tab.</div></div>`;
   } else {
@@ -1092,7 +1093,7 @@ function renderBestBets(){
       const v = raceVoid(r);
       const rating = (p.bet_rating!=null) ? (+p.bet_rating).toFixed(1) : '—';
       h += `<button class="bb-row ${i===0 && !v.on?'top1':''}${v.on?' voided':''}" data-goto="${esc(m.track)}" data-race="${esc(r.race_no)}">
-        <div class="br-rate"><div class="br-num tnum">${esc(rating)}</div><div class="br-lab">Rating</div></div>
+        <div class="br-rate"><div class="br-num tnum">${esc(rating)}</div><div class="br-lab">Bet rating</div></div>
         <div class="br-main">
           <div class="br-name">${v.on ? '' : `<span class="br-rank tnum">${i+1}.</span> `}#${esc(p.number||'')} ${esc(p.horse||'')}</div>
           <div class="br-meta">${v.on ? `<span class="badge void">${v.label}</span>` : ''}${esc(m.track)} · ${esc(r.race_no)} · ${esc(hhmm(r.start_time))} · ${esc(r.distance||'')}</div>
@@ -1188,7 +1189,7 @@ function renderHome(){
     h += `<button class="bb-btn-big" data-bestbets>
       <div class="bbb-l"><span class="star">★</span>
         <div><div class="bbb-t">Today's Best Bets</div>
-          <div class="bbb-s">${bb.length} play${bb.length===1?'':'s'} · ranked by our rating</div></div></div>
+          <div class="bbb-s">${bb.length} play${bb.length===1?'':'s'} · ranked by bet rating</div></div></div>
       <svg class="chev" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
     </button>`;
   }
@@ -1298,12 +1299,13 @@ function raceCard(r, m){
       <div class="cont-h">Our rating<span class="cont-sub"> · our top ${r.contenders.length}</span></div>
       ${r.contenders.map(c=>`<div class="cont-row ${c.position===1?'top':''}">
         <div class="c-rate">
-          <div class="c-num tnum">${esc(String(c.rating))}</div>
+          <div class="c-num tnum">${esc((+c.rating).toFixed(1))}</div>
           <div class="c-bar"><span style="width:${Math.max(4,Math.min(100,+c.rating||0))}%"></span></div>
         </div>
         <div class="c-main">
           <div class="c-name"><span class="c-saddle tnum">${esc(c.number)}.</span> ${esc(c.horse)}
             <span class="g-chip ${esc(c.tier)}">${esc(c.label)}</span>
+            ${c.promoted?`<span class="c-adj">${esc(c.rating_label||'')}</span>`:''}
             ${c.price?`<span class="c-price tnum">$${(+c.price).toFixed(2)}</span>`:''}</div>
           ${(c.top3!=null||c.top4!=null)?`<div class="c-bands">${c.top3!=null?`<span>Top 3 <b>${c.top3}%</b></span>`:''}${c.top4!=null?`<span>Top 4 <b>${c.top4}%</b></span>`:''}</div>`:''}
           ${(c.why||[]).length?`<div class="c-why">${c.why.map(esc).join(' · ')}</div>`:''}

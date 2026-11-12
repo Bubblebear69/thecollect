@@ -107,7 +107,9 @@
   .why li{font-size:13.5px;color:var(--dim);padding-left:15px;position:relative}
   .why li::before{content:"";position:absolute;left:0;top:9px;width:5px;height:5px;border-radius:50%;background:var(--green)}
   .rt{text-align:right;min-width:88px}
-  .rtn{font-size:22px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
+  .rtn{font-size:22px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .rtn .adj{font-size:10.5px;font-weight:700;color:var(--faint);margin-right:2px;vertical-align:middle}
+  .rrow .hz{min-width:0;overflow-wrap:anywhere}
   .barw{height:5px;border-radius:999px;background:rgba(255,255,255,.08);margin:6px 0 0;overflow:hidden}
   .barf{height:100%;border-radius:999px;background:var(--green)}
   .rt.t-danger .barf{background:#E9906B} .rt.t-danger .rtn{color:#E9906B}
@@ -144,6 +146,12 @@
     .rrow{grid-template-columns:30px 1fr auto;gap:10px;padding:14px 12px}
     .rt{min-width:74px}
     .rtn{font-size:19px}
+    /* The market-check label sits ABOVE the number in its own cell, wrapped
+       narrow, so a long one-word name keeps the width (Charter, 5 Nov). */
+    .rtn .adj{display:block;white-space:normal;max-width:64px;margin:0 0 3px auto;text-align:right;line-height:1.15}
+    /* Stack the Top 3 / Top 4 chips: side by side they set the width of the
+       whole rating column and left a long name 110px (Charter, 5 Nov). */
+    .chips{flex-direction:column;align-items:flex-end;gap:4px}
     .band{flex-direction:column;align-items:flex-start}
   }
 </style>
@@ -194,10 +202,10 @@
 <section id="card" style="padding-top:34px"><div class="wrap">
   <div class="sec-head">
     <h2>The engine's card</h2>
-    <p class="sub" id="cardSub">Ranked 1 to 24 on the engine's rating. Scroll for the reasoning on each.</p>
+    <p class="sub" id="cardSub">Ranked 1 to 24 on our rating. Scroll for the reasoning on each.</p>
   </div>
   <p class="note-above" id="dataNote">Loading the card…</p>
-  <p class="note-above">Prices shown are TAB fixed-odds prices where available. Ratings are the engine's own, and they compare runners within this race only.</p>
+  <p class="note-above">Prices shown are TAB fixed-odds prices where available. Ratings compare runners within this race only. Every rating includes a capped market adjustment; the label marks the pick the market check lifted to lead the list.</p>
   <div class="fhead"><span>#</span><span>Runner</span><span class="rth">Rating</span></div>
   <div class="field" id="field"><div class="rrow"><span class="rk">—</span><div><div class="hz">Loading the field…</div></div><div class="rt"></div></div></div>
 </div></section>
@@ -205,8 +213,8 @@
 <!-- WHAT THE NUMBER MEANS -->
 <section style="padding-top:0"><div class="wrap prose">
   <div class="sec-head"><h2>What the number means</h2></div>
-  <p>The rating is a comparison inside this race, and nothing more. The top-rated runner is set at 100 and everything else is scaled against it, so you can see how far apart they are rather than just the order they came in.</p>
-  <p>It is not a probability. It is not a prediction. It is the engine saying: on the evidence available this morning, this is how these twenty-four horses stack up against each other.</p>
+  <p>The rating is our number for each runner, shown to one decimal, so you can see how far apart they really are rather than just the order they came in. Every rating includes a capped market adjustment, which can move a runner a few points either way. Where our selection is lifted by the market check to lead the list, its rating is shown one point above our top-rated runner and marked "includes market check".</p>
+  <p>It is not a probability. It is not a prediction. It is our rating of how these twenty-four horses stack up against each other on the evidence available this morning, with the capped market check included in every rating.</p>
   <p>The Cup is a 3,200 metre handicap with a capacity field. It is, on any honest reading, one of the hardest races of the year to rate. We have published the card anyway, because publishing only the easy ones would make the scoreboard worthless.</p>
 </div></section>
 
@@ -223,7 +231,7 @@
   <div class="band">
     <div>
       <h3>The printable sweep sheet</h3>
-      <p>The full field, the barriers and the engine's ratings on one page, with a blank column for names. Print it, stick it on the wall, and let the office argue about it.</p>
+      <p>The full field, the barriers and our ratings on one page, with a blank column for names. Print it, stick it on the wall, and let the office argue about it.</p>
     </div>
     <a class="btn btn-primary" href="cup-sweep.html">Download the sweep sheet (PDF)</a>
   </div>
@@ -319,7 +327,9 @@
       h += '<div class="rt"></div>';
     } else {
       h += '<div class="rt t-'+tier+'">';
-      h += '<div class="rtn">'+(r.rating!=null?Math.round(r.rating):'—')+'</div>';
+      // A market-promoted pick's label sits on the SAME line as its number.
+      h += '<div class="rtn">'+(r.promoted?'<small class="adj">'+esc(r.rating_label||'')+'</small> ':'')
+        +(r.rating!=null?Number(r.rating).toFixed(1):'—')+'</div>';
       h += '<div class="barw"><div class="barf" style="width:'+clamp(r.rating)+'%"></div></div>';
       if(!scr && !dropLive){
         var chips=[];
@@ -376,11 +386,14 @@
     var win = r.placings[0];
     var runner = (d.runners||[]).filter(function(x){ return String(x.number)===String(win.number); })[0];
     // only claim a rank if we actually rated the winner (ratings may never land)
-    var rank = (runner && runner.rating != null) ? runner.rank : null;
+    // engine_rank is the engine's own place; rank is the SHOWN place, which a
+    // promoted pick leads. An older feed has no engine_rank: say "we" then.
+    var hasEng = runner && runner.engine_rank != null;
+    var rank = (runner && runner.rating != null) ? (hasEng ? runner.engine_rank : runner.rank) : null;
     var sp = win.win_div!=null ? ' at $'+Number(win.win_div).toFixed(2) : '';
     document.getElementById('resultLede').innerHTML =
       '<b>'+esc(win.horse)+'</b> won the 2026 Melbourne Cup'+sp+'.' +
-      (rank? ' The engine had it ranked <b>'+rank+'</b> of '+rankedN(d)+'.' : '');
+      (rank? (hasEng ? ' The engine had it ranked <b>' : ' We had it ranked <b>')+rank+'</b> of '+rankedN(d)+'.' : '');
     document.getElementById('resultBlock').style.display='block';
   }
 
@@ -399,7 +412,7 @@
     window.__abandoned = (d.status === 'abandoned') || (__vo === 'abandoned') || ((d.void_reason || __vp.void_reason) === 'abandoned');
     window.__void = (d.void === true) || (__vp.void === true) || (__vo === 'scratched') || (__vo === 'abandoned') || window.__abandoned;
     // subtitle: like the hero, only change it once the field is declared; placeholder keeps the signed-off static line
-    try{ if(__hasField){ var _cs=document.getElementById('cardSub'); if(_cs) _cs.textContent = window.__unrated ? (__ran ? 'The declared field, in saddlecloth order.' : 'The declared field, in saddlecloth order — the engine\'s ratings land on Cup morning.') : ('Ranked 1 to '+rankedN(d)+' on the engine\'s rating. Scroll for the reasoning on each.'); } }catch(e){}
+    try{ if(__hasField){ var _cs=document.getElementById('cardSub'); if(_cs) _cs.textContent = window.__unrated ? (__ran ? 'The declared field, in saddlecloth order.' : 'The declared field, in saddlecloth order — our ratings land on Cup morning.') : ('Ranked 1 to '+rankedN(d)+' on our rating. Scroll for the reasoning on each.'); } }catch(e){}
     try{ var _rh=document.querySelector('.fhead .rth'); if(_rh) _rh.textContent = window.__unrated ? '' : 'Rating'; }catch(e){}
     // hero: leave the signed-off headline on placeholder; once the field is declared, Declared → Rated keyed on whether ratings have landed
     try{ if(__hasField){ var _hh=document.getElementById('heroHead'); var _ev=d.event||{}; var _n=(_ev.field_n>0)?_ev.field_n:((_ev.nominations!=null&&_ev.emergency_count!=null)?(_ev.field_cap?Math.min(_ev.field_cap,_ev.nominations-_ev.emergency_count):(_ev.nominations-_ev.emergency_count)):(_ev.field_cap!=null?_ev.field_cap:(d.runners||[]).length)); if(_hh) _hh.innerHTML = 'All '+_n+'.<br/>'+(window.__unrated?'Declared.':'Rated.'); } }catch(e){}

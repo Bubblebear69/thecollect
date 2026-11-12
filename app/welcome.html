@@ -59,6 +59,14 @@
   // paragraph loses its "After that". Nothing flashes: the claim is hidden in the static markup and only an identified answer reveals
   // it, however late. The status URL comes only from our own global COLLECT_AUTH_URL (never the page URL). Worker will make the Stripe
   // Checkout return carry the session id so the page can always look the member up.
+  // WORKER'S CHECKOUT RETURN (feat/stripe-test-mode, 7 Nov): Stripe sends the member to welcome.html?session_id={CHECKOUT_SESSION_ID}, and
+  // GET /billing/welcome?session_id=... says what the card they just added actually started. When the link carries a session_id, that
+  // answer is the ONLY source: the trial length is Stripe's own trial_days (30 or 7), the answer must name the member (a non-empty
+  // email, masked) and the plan must be 'trialing'; anything else (an error, a busy answer, no email, a cancelled subscription, any
+  // other length) leaves the claim hidden, and the page does not fall back on the clock or on /auth/status, so it never says a
+  // trial Stripe has not granted. A link with no session_id still follows the member through /auth/status, as before. The API host
+  // comes from our own COLLECT_AUTH_URL and must pass the same allow-list; nothing is read from the page URL except the session id
+  // itself, and only in the shape the server accepts.
   // APPROVED by Blair, 7 Nov: the neutral price paragraph for anyone the page cannot identify, "It's A$25 a week ...".
   (function(){
     var claim = document.querySelector('[data-trial="welcome-claim"]');
@@ -91,8 +99,35 @@
         .then(function(d){ return d && typeof d.access === 'boolean' ? d : null; });
     }
     function member(d){ return d && typeof d.email === 'string' && d.email !== '' ? d : null; }
+    var SESSION_ID_RE = /^cs_(test|live)_[A-Za-z0-9]{10,250}$/;                                         // as auth/billing.py CHECKOUT_SESSION_RE
+    // '' = the link carries no session_id; null = it carries one the server would refuse; otherwise the id
+    function checkoutId(){
+      var m = /[?&]session_id(?:=([^&#]*))?(?=[&#]|$)/.exec(location.search || '');    // the key itself, with or without a value
+      if (!m) return '';
+      try { var v = decodeURIComponent(m[1] || ''); return SESSION_ID_RE.test(v) ? v : null; } catch (e) { return null; }
+    }
+    function welcomeUrl(statusUrl, id){
+      try {
+        var origin = new URL(statusUrl, location.href).origin;
+        return API_ALLOW.test(origin) ? origin + '/billing/welcome?session_id=' + encodeURIComponent(id) : '';
+      } catch (e) { return ''; }
+    }
+    // what Stripe granted, for a member the answer names: nothing else is believed
+    function granted(d){
+      return d && typeof d.email === 'string' && d.email !== '' && d.plan === 'trialing' && (d.trial_days === 30 || d.trial_days === 7) ? d : null;
+    }
     var url = window.COLLECT_AUTH_URL;
     if (!url || typeof fetch !== 'function') return;
+    var id = checkoutId();
+    if (id !== '') {
+      var wurl = id === null ? '' : welcomeUrl(url, id);
+      if (!wurl) return;
+      fetch(wurl, { credentials: 'omit', cache: 'no-store' })
+        .then(function(r){ return r.ok ? r.json() : null; })
+        .then(function(d){ var g = granted(d); if (g) show(g); })
+        .catch(function(){});
+      return;
+    }
     var token = sessionToken(url);
     ask(url, token)
       .then(function(d){ return (token && !member(d)) ? ask(url, '') : d; })   // the server did not know the token: the website cookie can still speak

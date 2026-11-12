@@ -51,6 +51,9 @@
   .bar{flex:1;height:8px;border-radius:999px;background:#e9e9e4;overflow:hidden}
   .bar span{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--green),var(--green-hi))}
   .rtn{width:26px;text-align:right;font-weight:900;font-size:13px;color:var(--green);font-variant-numeric:tabular-nums}
+  .rtn.adj{width:auto;white-space:nowrap}
+  .rtn.adj small{font-size:8.5px;font-weight:700;color:#7a7f87;margin-right:2px}
+  .rt:has(.rtn.adj) .bar{display:none}
   .nm{height:20px;border:1px dashed #c4c4bd;border-radius:6px;background:#fff}
 
   .row.pick{background:rgba(200,161,58,.08);border-bottom:1px solid rgba(200,161,58,.25)}
@@ -102,12 +105,12 @@
   </div>
 
   <div class="intro">
-    <div class="lead" id="lead"><b>Draw a horse, write your name on it, and let the office argue.</b> Every runner ranked 1 to 24 by the engine — the bar shows how strongly we rate each one.</div>
+    <div class="lead" id="lead"><b>Draw a horse, write your name on it, and let the office argue.</b> Every runner ranked 1 to 24 on our rating — the bar shows how strongly we rate each one.</div>
     <div class="meta" id="meta">Loading the field…</div>
   </div>
 
   <div class="tbl">
-    <div class="hrow"><span style="text-align:center">#</span><span style="text-align:center">No</span><span>Horse</span><span class="rrt">Engine rating</span><span>Your name</span></div>
+    <div class="hrow"><span style="text-align:center">#</span><span style="text-align:center">No</span><span>Horse</span><span class="rrt">Rating</span><span>Your name</span></div>
     <div id="rows"><div class="row"><span class="rk">—</span><span></span><span class="hz">Loading…</span><span></span><span></span></div></div>
   </div>
 
@@ -172,7 +175,7 @@
       var _fl=document.getElementById('fieldLbl'); if(_fl) _fl.textContent='In the field';
       var _ld=document.getElementById('lead'); if(_ld) _ld.innerHTML = ran
         ? '<b>Draw a horse, write your name on it, and let the office argue.</b> The full field is declared.'
-        : '<b>Draw a horse, write your name on it, and let the office argue.</b> The full field is declared — the engine’s ratings land on Cup morning.';
+        : '<b>Draw a horse, write your name on it, and let the office argue.</b> The full field is declared — our ratings land on Cup morning.';
       var _rh=document.querySelector('.hrow .rrt'); if(_rh) _rh.textContent='';
     } else {
       // RATED: the static line promised "ranked 1 to 24". Wrong on a 22-runner
@@ -182,7 +185,7 @@
       // number from the same rankedN cup.html's subtitle uses. (#100 Charter.)
       var _ld2=document.getElementById('lead');
       if(_ld2) _ld2.innerHTML = '<b>Draw a horse, write your name on it, and let the office argue.</b> '
-        + 'Every runner ranked 1 to '+rankedN(d)+' by the engine — the bar shows how strongly we rate each one.';
+        + 'Every runner ranked 1 to '+rankedN(d)+' on our rating — the bar shows how strongly we rate each one.';
     }
     document.getElementById('rows').innerHTML = runners.map(function(r){
       var scr = !!r.scratched, pick = (r.tier==='pick') && !voided;
@@ -195,7 +198,9 @@
         '<div class="hz">'+star+'<b>'+esc(r.horse)+'</b>'+tag+emtag+'<span class="br">B'+(r.barrier!=null?r.barrier:'–')+'</span></div>'+
         (unrated ? '<div class="rt"></div>'
                   : '<div class="rt"><div class="bar"><span style="width:'+clamp(r.rating)+'%"></span></div>'+
-                    '<div class="rtn">'+(r.rating!=null?Math.round(r.rating):'')+'</div></div>')+
+                    '<div class="rtn'+(r.promoted?' adj':'')+'">'
+                    +(r.promoted?'<small>'+esc(r.rating_label||'')+'</small> ':'')
+                    +(r.rating!=null?Number(r.rating).toFixed(1):'')+'</div></div>')+
         '<div class="nm"></div>'+
       '</div>';
     }).join('');
