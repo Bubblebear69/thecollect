@@ -663,7 +663,7 @@ function hasAccess(){ return localStorage.getItem(LS.access) === 'yes'; }
 // Stamped by the publisher at deploy time. When data.json carries a NEWER
 // shell version than the code that's running, the app reloads itself once —
 // so an always-open home-screen app picks up new features without sign-outs.
-const SHELL_VERSION = "adbd6a9f3b98";
+const SHELL_VERSION = "bda3bf54b099";
 
 // The "race day" the app shows is referenced to ONE zone, so every viewer —
 // NZ, Perth, Sydney, anywhere — agrees with the engine on what "today" is,
@@ -801,6 +801,24 @@ let PENDING_CODE = '';
   catch (e) { /* ignore */ }
   try { if (location.search) history.replaceState(null, '', location.pathname + location.hash); }
   catch (e) { /* ignore */ }
+})();
+// A reload (pull-to-refresh) must not lose the code screen, but a code may never ride in the URL. So the first sight of one
+// is kept in THIS page's history entry: it survives a reload of that entry, not a new tab or a typed address, and nothing goes
+// to storage. It dies with the code (10 minutes from first sight; a reload never re-stamps it) and is cleared when it is spent.
+const CODE_KEEP_MS = 10 * 60 * 1000;
+function forgetLoginCode(){
+  try { const s = history.state; if (s && typeof s === 'object' && 'tcCode' in s){ const u = location.pathname + location.hash; history.replaceState(null, '', u); } }
+  catch (e) { /* ignore */ }
+}
+(function keepCodeAcrossReload(){
+  try {
+    if (PENDING_CODE !== ''){ history.replaceState({ tcCode: PENDING_CODE, t: Date.now() }, '', location.pathname + location.hash); return; }
+    const s = history.state;
+    if (!s || typeof s !== 'object' || !('tcCode' in s)) return;
+    const age = Date.now() - Number(s.t);
+    if (typeof s.tcCode === 'string' && CODE_RE.test(s.tcCode) && age >= 0 && age < CODE_KEEP_MS) PENDING_CODE = s.tcCode.trim();
+    else forgetLoginCode();
+  } catch (e) { /* ignore */ }
 })();
 
 // The Bearer is sent to whatever base is stored in LS.api, so that base is ALLOWLISTED, not just
@@ -2003,6 +2021,7 @@ async function boot(){
     const c = PENDING_CODE; PENDING_CODE = '';
     if (!isStandalone()){ renderCodeScreen(c); return; }
     const x = await exchangeLoginCode(c);
+    if (x.ok) forgetLoginCode();   // spent: nothing is left to keep. A failed trade (busy, no connection) leaves a still-good code for the next reload to retry
     if (x.ok){ _auth.loaded = false; _auth.status = null; } else { _loginNote = x.reason; }
   }
   await loadAuthStatus();
@@ -2127,6 +2146,7 @@ document.addEventListener('click', async (e) => {
     const cm = $('#codemsg'); if (cm){ cm.className = 'msg'; cm.textContent = 'Checking…'; }
     const x = await exchangeLoginCode(t.getAttribute('data-usecode'));
     if (!x.ok){ if (cm){ cm.className = 'msg err'; cm.textContent = loginCodeMessage(x.reason); } return; }
+    forgetLoginCode();   // spent: a reload must not bring the dead code back
     _auth.loaded = false; _auth.status = null;
     return boot();
   }
