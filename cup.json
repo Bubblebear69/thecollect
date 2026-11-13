@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-13T13:04:32+00:00",
+  "generated_at": "2026-11-13T14:10:56+00:00",
   "status": "result",
   "void": false,
   "void_reason": "",
@@ -619,7 +619,7 @@
     }
   ],
   "result": {
-    "settled_at": "2026-11-13T13:04:32+00:00",
+    "settled_at": "2026-11-13T14:10:56+00:00",
     "placings": [
       {
         "pos": 1,
