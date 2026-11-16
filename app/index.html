@@ -663,7 +663,7 @@ function hasAccess(){ return localStorage.getItem(LS.access) === 'yes'; }
 // Stamped by the publisher at deploy time. When data.json carries a NEWER
 // shell version than the code that's running, the app reloads itself once —
 // so an always-open home-screen app picks up new features without sign-outs.
-const SHELL_VERSION = "bda3bf54b099";
+const SHELL_VERSION = "98190952ee4b";
 
 // The "race day" the app shows is referenced to ONE zone, so every viewer —
 // NZ, Perth, Sydney, anywhere — agrees with the engine on what "today" is,
@@ -2021,7 +2021,8 @@ async function boot(){
     const c = PENDING_CODE; PENDING_CODE = '';
     if (!isStandalone()){ renderCodeScreen(c); return; }
     const x = await exchangeLoginCode(c);
-    if (x.ok) forgetLoginCode();   // spent: nothing is left to keep. A failed trade (busy, no connection) leaves a still-good code for the next reload to retry
+    if (x.ok || x.reason === 'invalid') forgetLoginCode();   // spent, or refused (wrong, used or expired): nothing is left to keep, and a refused code
+    // retried on every reload counts toward the per-IP limit (Juan, #297). A busy or failed trade (no connection) leaves a still-good code for the next reload to retry
     if (x.ok){ _auth.loaded = false; _auth.status = null; } else { _loginNote = x.reason; }
   }
   await loadAuthStatus();
@@ -2145,7 +2146,11 @@ document.addEventListener('click', async (e) => {
     e.preventDefault();
     const cm = $('#codemsg'); if (cm){ cm.className = 'msg'; cm.textContent = 'Checking…'; }
     const x = await exchangeLoginCode(t.getAttribute('data-usecode'));
-    if (!x.ok){ if (cm){ cm.className = 'msg err'; cm.textContent = loginCodeMessage(x.reason); } return; }
+    if (!x.ok){
+      if (x.reason === 'invalid') forgetLoginCode();   // refused (wrong, used or expired): it can never succeed, and every tap counts toward the per-IP limit
+      if (cm){ cm.className = 'msg err'; cm.textContent = loginCodeMessage(x.reason); }
+      return;   // busy or no connection: the code is still good, so it is kept
+    }
     forgetLoginCode();   // spent: a reload must not bring the dead code back
     _auth.loaded = false; _auth.status = null;
     return boot();
