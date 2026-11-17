@@ -48,8 +48,8 @@
   </footer>
 </div>
 <script>
-  // The trial claim follows the MEMBER, never the clock alone (Blair, 2 Nov): a founding member always gets 30 days; before 1 Jan
-  // (2026-12-31T11:00:00Z = 1 Jan 2027 00:00 NZDT) everyone gets 30; from then others get 7. And the page claims NOTHING about the trial
+  // The trial claim follows the MEMBER, never the clock alone (Blair, 2 Nov): a founding member always gets 30 days; before the cutoff
+  // (none until there is a launch date, Blair 15 Nov; it was 1 Jan 2027) everyone gets 30; from then others get 7. And the page claims NOTHING about the trial
   // unless it can tell who is looking (Blair, 31 Oct, reaffirmed 7 Nov): the card is taken before the access link or code is sent, so this
   // page always comes after card entry and must know the member. An IDENTIFIED answer is one that carries the member's email (Charter,
   // 5 Nov): an anonymous /auth/status says "7 days" about everyone after 1 Jan, including a founding member signed in only in the app,
@@ -73,7 +73,7 @@
     var el = document.querySelector('[data-trial="welcome"]');
     var after = document.querySelector('[data-trial="welcome-after"]');
     if (!claim || !el) return;
-    var CUTOFF = Date.parse('2026-12-31T11:00:00Z');
+    var CUTOFF = Infinity;   // no cutoff until there is a launch date (Blair, 15 Nov)
     var API_ALLOW = /^(https:\/\/api\.thecollect\.nz|http:\/\/(localhost|127\.0\.0\.1)(:\d{1,5})?)$/i;   // as phoneapp/index.html
     var SESSION_TOKEN_RE = /^[A-Za-z0-9_-]{43}$/;                                                       // as phoneapp/index.html
     // d = an answer that identified a member; the claim is never shown for anyone else

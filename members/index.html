@@ -606,11 +606,12 @@ function accessGranted(){
   if (s) return !!s.access;   // BUILD computed access; we never compute the gate
   return hasAccess();         // legacy invite-code path
 }
-/* Trial offer copy. Terms: standard free trial 7 days; founding members and anyone joining
-   during December 2026 get the first month free; from 1 Jan 2027 NZ every new sign-up is 7 days.
-   Cutoff = 2026-12-31T11:00:00Z = 1 Jan 2027 00:00 NZDT. The words follow what checkout sets
+/* Trial offer copy. Terms: standard free trial 7 days; founding members and anyone on the founding list
+   before doors open get the first month free; once doors open every new sign-up is 7 days.
+   Cutoff = NONE (Blair, 15 Nov): there is no launch date, so the 1 Jan 2027 switch is off and TRIAL_CUTOFF_MS is Infinity. When there is a
+   date, set it here as Date.parse('...Z') and in website/index.html, signup.gs and welcome.html. The words follow what checkout sets
    (30 days before the cutoff, 7 after, founding members always 30). */
-var TRIAL_CUTOFF_MS = Date.parse('2026-12-31T11:00:00Z');
+var TRIAL_CUTOFF_MS = Infinity;   // no cutoff until there is a launch date
 function trialOffer(now, founding, trialDays){
   // With a backend, status.trial_days (30 or 7) is the one number behind both this copy and
   // Checkout's trial_period_days, so it wins. Our own cutoff is only the no-backend fallback.

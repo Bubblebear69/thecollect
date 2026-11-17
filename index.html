@@ -74,8 +74,6 @@
   h1.hero-h{font-size:clamp(46px,7.5vw,80px);line-height:.98;letter-spacing:-.03em;margin:6px 0 18px;font-weight:800}
   .hero-sub{font-size:19px;color:#cfe0d6;max-width:530px;margin:0 0 24px}
   .hero-cta{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px}
-  .countdown{display:inline-flex;align-items:center;gap:8px;background:rgba(212,175,55,.1);color:var(--green);font-weight:700;font-size:13.5px;padding:8px 14px;border-radius:999px;margin-bottom:22px}
-  .countdown b{font-variant-numeric:tabular-nums}
   .ticks{display:flex;gap:22px;flex-wrap:wrap}
   .tick{display:flex;align-items:center;gap:8px;font-size:14px;color:#cfe0d6;font-weight:600}
   .tick svg{flex:none}
@@ -230,7 +228,6 @@
       <a class="btn btn-primary btn-lg" href="#join" data-trial="cta" data-arrow="1">Get first month free →</a>
       <a class="btn btn-ghost btn-lg" href="#free">See today's free race</a>
     </div>
-    <div class="countdown" id="countdown"></div>
     <div class="ticks">
       <div class="tick"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M20 6 9 17l-5-5" stroke="#D4AF37" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Every pick published</div>
       <div class="tick"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M20 6 9 17l-5-5" stroke="#D4AF37" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Live results &amp; dividends</div>
@@ -334,7 +331,7 @@
       </div>
       <div class="join-box">
         <h3 data-trial="spot">Claim your founding spot</h3>
-        <p class="founding" data-trial="founding">Doors open 1 December — founding members get their first month free.</p>
+        <p class="founding" data-trial="founding">Doors open soon — founding members get their first month free.</p>
         <form id="joinForm" novalidate>
           <input type="text" name="first_name" placeholder="First name" aria-label="First name" required maxlength="60" autocomplete="given-name" />
           <input type="email" name="email" placeholder="Email" aria-label="Email" required autocomplete="email" />
@@ -357,14 +354,14 @@
           <input type="text" name="hp_field" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true" />
           <input type="hidden" name="source" /><input type="hidden" name="campaign" /><input type="hidden" name="refcode" />
           <button class="btn btn-primary" type="submit" style="width:100%;justify-content:center" data-trial="cta">Get first month free</button>
-          <div class="fmini"><span data-trial="lead">First month free</span>, from the day you start. A card will be required before your access code is sent.<span data-trial="launch"> Your access code will be emailed to you on 1 December 2026.</span> Then NZ$31.22/week in New Zealand or A$25/week in Australia (GST incl.), charged weekly in advance until you cancel. Cancel any time in your account. 18+.</div>
+          <div class="fmini"><span data-trial="lead">First month free</span>, from the day you start. A card will be required before your access code is sent.<span data-trial="launch"> We'll email your access code when doors open.</span> Then NZ$31.22/week in New Zealand or A$25/week in Australia (GST incl.), charged weekly in advance until you cancel. Cancel any time in your account. 18+.</div>
           <div id="joinErr" class="fmini" role="alert" tabindex="-1" style="display:none;color:var(--green)">That didn't go through — please try again, or email
             <a href="mailto:hello@thecollect.nz" style="color:var(--green)">hello@thecollect.nz</a>.</div>
         </form>
         <div id="joinDone" style="display:none">
           <h4 data-trial="thanks">You're on the founding list.</h4>
-          <p><span data-trial="freefrom">Your first month is free from 1 December. </span>Watch your inbox — we publish every result, win or lose.</p>
-          <p class="muted" style="font-size:13px;margin:8px 0 0">A card will be required before your access code is sent.<span data-trial="launch"> Your access code will be emailed to you on 1 December 2026.</span></p>
+          <p><span data-trial="freefrom">Your first month is free when doors open. </span>Watch your inbox — we publish every result, win or lose.</p>
+          <p class="muted" style="font-size:13px;margin:8px 0 0">A card will be required before your access code is sent.<span data-trial="launch"> We'll email your access code when doors open.</span></p>
           <p class="muted" style="font-size:13px;margin:8px 0 0">While you wait, <a href="install.html" style="color:var(--green)">add The Collect to your home screen</a> — it opens like an app.</p>
           <div style="margin-top:16px;border-top:1px solid var(--line);padding-top:14px">
             <p style="font-size:14px;color:var(--green);font-weight:700;margin:0 0 6px" data-trial="refhead">Want 7 days free?</p>
@@ -428,13 +425,14 @@
 <!-- live data: proof strip, free race, week winners -->
 <script>
 /* Trial offer copy — same switch as members.html and the app (terms.html): first month free
-   for sign-ups before 1 Jan 2027 NZ, a 7-day free trial for every new sign-up from then.
-   Cutoff = 2026-12-31T11:00:00Z = 1 Jan 2027 00:00 NZDT. The static HTML is the pre-cutoff
+   for the founding list before doors open, a 7-day free trial for every new sign-up from then.
+   Cutoff = NONE: TRIAL_CUTOFF_MS is Infinity (Blair, 15 Nov: off until there is a launch date). The static HTML is the pre-cutoff
    wording, so it is right with scripts off.
    Three eras, as the welcome email in Ops/apps-script/signup.gs: before doors open (the static wording), from doors open to the
-   cutoff, and from the cutoff. DOORS_OPEN_MS = 2026-11-30T11:00:00Z = 1 Dec 2026 00:00 NZDT, the instant the countdown below flips
-   to "Doors are open". From then the lines that name 1 December or say "before it opens" are false, so they change; the offer
-   itself does not change until the cutoff.
+   cutoff, and from the cutoff. DOORS_OPEN_MS is Infinity: there is NO doors-open date (Blair, 14 Nov: the 1 December launch is
+   cancelled and the countdown is gone), so the middle era never shows and the static wording stays until the cutoff. When there is
+   a date, set it here as Date.parse('...Z') and in signup.gs; from that instant the lines that say "before it opens" are false, so
+   they change; the offer itself does not change until the cutoff.
    DRAFT (Blair's decision card): the post-cutoff referral heading and text below are new wording, listed in
    docs/DRAFT-trial-cutoff-copy.md, and stay DRAFT until he answers. APPROVED by Blair on 7 Nov: the post-cutoff band, section heading,
    join line and share text, and the doors-open object's founding (without "founding"), share and freefrom strings and dropped code date.
@@ -446,8 +444,8 @@
    the earlier offer of an extra free month for two referrals, which was too generous and which nothing granted. The first reward cannot fall due before a
    referred member's fourth weekly payment (late January at the earliest), and Worker's reward build must be live before then.
    Its heading is REFERRAL_HEAD (APPROVED by Blair, 8 Nov about 19:05); the post-cutoff headings are as they were. */
-var TRIAL_CUTOFF_MS = Date.parse('2026-12-31T11:00:00Z');
-var DOORS_OPEN_MS = Date.parse('2026-11-30T11:00:00Z');
+var TRIAL_CUTOFF_MS = Infinity;   // no cutoff until there is a launch date (Blair, 15 Nov); the 7-day wording below never shows until one is set
+var DOORS_OPEN_MS = Infinity;   // no doors-open date (Blair, 14 Nov): the doors-open wording below never shows until a date is set
 var REFERRAL_REWARD_LIVE = false;
 // APPROVED by Blair, 8 Nov (referral card): the home-page line, word for word. Also the static wording in #joinDone above.
 var REFERRAL_HEAD = 'Want 7 days free?';   // APPROVED by Blair, 8 Nov (about 19:05); shown above REFERRAL_LINE
@@ -463,9 +461,9 @@ function trialOffer(now){
                                      refhead:REFERRAL_HEAD, refbody:REFERRAL_LINE,   // doors open: the paid rule under its heading (Blair, 8 Nov)
                                      share:'Getting on The Collect — free first month. Join with my link: ', freefrom:'Your first month is free. ' };
   return { cta:'Get first month free', lead:'First month free', thanks:"You're on the founding list.", launch:true,
-           band:'Founding members get their first month free.', spot:'Claim your founding spot', founding:'Doors open 1 December — founding members get their first month free.',
+           band:'Founding members get their first month free.', spot:'Claim your founding spot', founding:'Doors open soon — founding members get their first month free.',
            refhead:REFERRAL_HEAD, refbody:REFERRAL_LINE,   // before doors open: the paid rule under its heading (Blair, 8 Nov)
-           share:'Getting on The Collect before it opens — free first month. Join with my link: ', freefrom:'Your first month is free from 1 December. ' };
+           share:'Getting on The Collect before it opens — free first month. Join with my link: ', freefrom:'Your first month is free when doors open. ' };
 }
 // Runs at load and again when the sign-up is confirmed (show() below): a page loaded before the doors-open instant or the cutoff
 // and submitted after it must thank the visitor for the offer in force now, which is the one the welcome email is written for.
@@ -475,7 +473,7 @@ function applyTrialOffer(){
     var kind = el.getAttribute('data-trial');
     if (kind === 'cta') el.textContent = o.cta + (el.getAttribute('data-arrow') ? ' \u2192' : '');
     else if (kind === 'thanks') el.textContent = o.thanks;
-    else if (kind === 'launch') { if (!o.launch) el.textContent = ''; }   // "emailed on 1 December 2026" is past from doors open: drop it, add no new claim
+    else if (kind === 'launch') { if (!o.launch) el.textContent = ''; }   // "We'll email your access code when doors open" is past from doors open: drop it, add no new claim
     else if (kind === 'lead') el.textContent = o.lead;
     else if (typeof o[kind] === 'string') el.textContent = o[kind];   // band, spot, founding, freefrom, refhead, refbody
   });
@@ -688,29 +686,6 @@ applyTrialOffer();
       });
     })();
   }
-})();
-</script>
-
-<!-- countdown -->
-<script>
-(function(){
-  var el = document.getElementById('countdown');
-  if(!el) return;
-  // "days to go" is anchored to the NZ calendar date (Pacific/Auckland) so every
-  // viewer sees the same count regardless of their own timezone.
-  function nzToday(){
-    try { return new Date().toLocaleDateString('en-CA', { timeZone: 'Pacific/Auckland' }); }
-    catch(e){ return new Date().toISOString().slice(0,10); }
-  }
-  var launch = new Date('2026-12-01T12:00:00Z');
-  function tick(){
-    var days = Math.round((launch - new Date(nzToday()+'T12:00:00Z')) / 86400000);
-    if(days > 1) el.innerHTML = '⏳ Doors open 1 December — <b>' + days + '</b> days to go';
-    else if(days === 1) el.innerHTML = '⏳ Doors open <b>tomorrow</b> — last call for founding members';
-    else if(days === 0) el.innerHTML = '<b>Doors are open.</b> Welcome to The Collect';
-    else el.style.display = 'none';
-  }
-  tick();
 })();
 </script>
 
